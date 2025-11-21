@@ -541,6 +541,7 @@ static sgl_page_t* sgl_page_create(void)
     obj->clickable = 0;
     obj->construct_fn = sgl_page_construct_cb;
     obj->dirty = 1;
+    obj->page = 1;
     obj->coords = (sgl_area_t) {
         .x1 = 0,
         .y1 = 0,
@@ -1009,6 +1010,35 @@ void sgl_obj_free(sgl_obj_t *obj)
 }
 
 
+/**
+ * @brief delete object
+ * @param obj point to object
+ * @return none
+ * @note this function will set object and his childs to be destroyed, then next draw cycle, the object will be removed.
+ *       if object is NULL, the all objects of active page will be delete, but the page object will not be deleted.
+ *       if object is a page, the page object will be deleted and all its children will be deleted.
+ */
+void sgl_obj_delete(sgl_obj_t *obj)
+{
+    if (obj == NULL || obj == sgl_screen_act()) {
+        obj = sgl_screen_act();
+        sgl_obj_dirty_merge(obj);
+        if (obj->child) {
+            sgl_obj_free(obj->child);
+        }
+        sgl_obj_node_init(obj);
+        return;
+    }
+    else if (obj->page == 1) {
+        sgl_obj_free(obj);
+        return;
+    }
+
+    sgl_obj_set_destroyed(obj);
+    sgl_obj_set_dirty(obj);
+}
+
+
 #if (CONFIG_SGL_TEXT_UTF8)
 /**
  * @brief Convert UTF-8 string to Unicode
@@ -1464,13 +1494,6 @@ static inline void sgl_dirty_area_calculate(sgl_obj_t *obj)
         if (unlikely(sgl_obj_is_destroyed(obj))) {
             /* merge destroy area */
             sgl_obj_dirty_merge(obj);
-
-            /* if the object is active, do not remove it */
-            if (unlikely(obj == sgl_screen_act())) {
-                obj->destroyed = 0;
-                sgl_obj_node_init(obj);
-                return;
-            }
 
             /* update parent layout */
             sgl_obj_set_layout(obj->parent, (sgl_layout_type_t)obj->parent->layout);

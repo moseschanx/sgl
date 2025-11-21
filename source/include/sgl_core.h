@@ -375,7 +375,7 @@ typedef struct sgl_obj {
     uint16_t           flexible : 1;
     uint16_t           invalid : 1;
     uint16_t           pressed : 1;
-    uint16_t           reserved : 1;
+    uint16_t           page : 1;
     uint16_t           radius : 12;
 #if CONFIG_SGL_OBJ_USE_NAME
     const char         *name;
@@ -1421,20 +1421,23 @@ sgl_obj_t* sgl_obj_create(sgl_obj_t *parent);
 
 
 /**
+ * @brief  free an object
+ * @param  obj: object to free
+ * @retval none
+ * @note this function will free all the children of the object
+ */
+void sgl_obj_free(sgl_obj_t *obj);
+
+
+/**
  * @brief delete object
  * @param obj point to object
  * @return none
  * @note this function will set object and his childs to be destroyed, then next draw cycle, the object will be removed.
- *       if object is NULL, the all objects of active page will be delete
+ *       if object is NULL, the all objects of active page will be delete, but the page object will not be deleted.
+ *       if object is a page, the page object will be deleted and all its children will be deleted.
  */
-static inline void sgl_obj_delete(sgl_obj_t *obj)
-{
-    if (obj == NULL) {
-        obj = sgl_screen_act();
-    }
-    sgl_obj_set_destroyed(obj);
-    sgl_obj_set_dirty(obj);
-}
+void sgl_obj_delete(sgl_obj_t *obj);
 
 
 /**
@@ -1625,15 +1628,6 @@ static inline void sgl_surf_buffer_swap(sgl_surf_t *surf)
  * @return none
  */
 void sgl_init(void);
-
-
-/**
- * @brief  free an object
- * @param  obj: object to free
- * @retval none
- * @note this function will free all the children of the object
- */
-void sgl_obj_free(sgl_obj_t *obj);
 
 
 /**
