@@ -66,9 +66,6 @@ extern "C" {
  * CONFIG_SGL_DEBUG:
  *      If you want to use debug, please define this macro to 1
  * 
- * CONFIG_SGL_TEXT_UTF8:
- *      If you want to use text utf8, please define this macro to 1
- * 
  * CONFIG_SGL_EXTERNAL_PIXMAP:
  *      If you want to use external pixmap, please define this macro to 1
  * 
@@ -86,9 +83,6 @@ extern "C" {
  * 
  * CONFIG_SGL_FONT_CONSOLAS23:
  *      If you want to use font consolas23, please define this macro to 1
- * 
- * CONFIG_SGL_FONT_KAI33:
- *      If you want to use font kai33, please define this macro to 1
  * 
  */
 
@@ -131,10 +125,6 @@ extern "C" {
 #   endif
 #endif
 
-#ifndef CONFIG_SGL_TEXT_UTF8
-#define CONFIG_SGL_TEXT_UTF8                                       (0)
-#endif
-
 #ifndef CONFIG_SGL_EXTERNAL_PIXMAP
 #define CONFIG_SGL_EXTERNAL_PIXMAP                                 (0)
 #endif
@@ -158,12 +148,20 @@ extern "C" {
 #define CONFIG_SGL_FONT_SONG23                                     (0)
 #endif
 
+#ifndef CONFIG_SGL_FONT_CONSOLAS14
+#define CONFIG_SGL_FONT_CONSOLAS14                                 (0)
+#endif
+
 #ifndef CONFIG_SGL_FONT_CONSOLAS23
 #define CONFIG_SGL_FONT_CONSOLAS23                                 (0)
 #endif
 
-#ifndef CONFIG_SGL_FONT_KAI33
-#define CONFIG_SGL_FONT_KAI33                                      (0)
+#ifndef CONFIG_SGL_FONT_CONSOLAS24
+#define CONFIG_SGL_FONT_CONSOLAS24                                 (0)
+#endif
+
+#ifndef CONFIG_SGL_FONT_CONSOLAS32
+#define CONFIG_SGL_FONT_CONSOLAS32                                 (0)
 #endif
 
 #if !(defined(CONFIG_SGL_THEME_DARK) || defined(CONFIG_SGL_THEME_LIGHT))

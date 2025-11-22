@@ -153,18 +153,11 @@ void sgl_draw_character(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y
 void sgl_draw_string(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y, const char *str, sgl_color_t color, uint8_t alpha, const sgl_font_t *font)
 {
     uint32_t ch_index;
-    #if CONFIG_SGL_TEXT_UTF8
     uint32_t unicode = 0;
-    #endif
 
     while (*str) {
-        #if CONFIG_SGL_TEXT_UTF8
         str += sgl_utf8_to_unicode(str, &unicode);
         ch_index = sgl_search_unicode_ch_index(font, unicode);
-        #else
-        ch_index = ((uint32_t)*str) - SGL_TEXT_ASCII_OFFSET;
-        str++;
-        #endif
         sgl_draw_character(surf, area, x, y, ch_index, color, alpha, font);
         x += font->table[ch_index].box_w;
     }
@@ -189,9 +182,7 @@ void sgl_draw_string_mult_line(sgl_surf_t *surf, sgl_area_t *area, int16_t x, in
 {
     int16_t ch_index, ch_width;
     int16_t x_off = x;
-    #if CONFIG_SGL_TEXT_UTF8
     uint32_t unicode = 0;
-    #endif
     x_off += edge_margin;
 
     while (*str) {
@@ -202,13 +193,8 @@ void sgl_draw_string_mult_line(sgl_surf_t *surf, sgl_area_t *area, int16_t x, in
             continue;
         }
 
-        #if CONFIG_SGL_TEXT_UTF8
         str += sgl_utf8_to_unicode(str, &unicode);
         ch_index = sgl_search_unicode_ch_index(font, unicode);
-        #else
-        ch_index = ((uint32_t)*str) - SGL_TEXT_ASCII_OFFSET;
-        str++;
-        #endif
 
         ch_width = font->table[ch_index].box_w;
 

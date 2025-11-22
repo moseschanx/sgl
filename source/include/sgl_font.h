@@ -51,6 +51,10 @@ extern const sgl_font_t consolas23;
 extern const sgl_font_t consolas24;
 #endif
 
+#if CONFIG_SGL_FONT_CONSOLAS24
+extern const sgl_font_t consolas32;
+#endif
+
 #if CONFIG_SGL_FONT_KAI33
 extern const sgl_font_t kai33;
 #endif

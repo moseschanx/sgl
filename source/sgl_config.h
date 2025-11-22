@@ -16,7 +16,6 @@
 #define  CONFIG_SGL_DEBUG                                  0
 #define  CONFIG_SGL_LOG_COLOR                              1
 #define  CONFIG_SGL_LOG_LEVEL                              0
-#define  CONFIG_SGL_TEXT_UTF8                              0
 #define  CONFIG_SGL_EXTERNAL_PIXMAP                        0  
 #define  CONFIG_SGL_OBJ_USE_NAME                           0
 #define  CONFIG_SGL_BOOT_LOGO                              0
@@ -24,9 +23,10 @@
 #define  CONFIG_SGL_HEAP_ALGO                              lwmem
 #define  CONFIG_SGL_HEAP_MEMORY_SIZE                       10240
 #define  CONFIG_SGL_FONT_SONG23                            1
-#define  CONFIG_SGL_FONT_CONSOLAS23                        0
-#define  CONFIG_SGL_FONT_KAI33                             0
 #define  CONFIG_SGL_FONT_CONSOLAS14                        0
+#define  CONFIG_SGL_FONT_CONSOLAS23                        0
+#define  CONFIG_SGL_FONT_CONSOLAS24                        0
+#define  CONFIG_SGL_FONT_CONSOLAS32                        0
 
 
 #endif  //!__CONFIG_H__

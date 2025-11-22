@@ -298,6 +298,21 @@ typedef struct sgl_font_table {
 
 
 /**
+ * @brief This structure defines a font unicode information, which is a collection of fonts
+ * @offset: offset of unicode for unicode list
+ * @len: length of unicode list
+ * @list: point to unicode list
+ * @tab_offset: offset of font table
+ */
+typedef struct sgl_font_unicode {
+    const uint32_t offset;
+    const uint32_t len;
+    const uint16_t *list;
+    const uint32_t tab_offset;
+} sgl_font_unicode_t;
+
+
+/**
 * @brief A structure used to describe information about a font, Defining a font set requires
 *        the use of this structure to describe relevant information
 *
@@ -306,17 +321,19 @@ typedef struct sgl_font_table {
 * @font_table_size: size of struct sgl_font_table
 * @font_height: height of font
 * @bpp: The anti aliasing level of the font
+* @compress: compress flag, 0: no compress, 1: compress
+* @unicode: point to struct sgl_font_unicode struct
+* @unicode_num: number of unicode parts
 */
 typedef struct sgl_font {
     const uint8_t  *bitmap;
     const sgl_font_table_t  *table;
-    uint16_t  font_table_size;
-    uint16_t  font_height : 12;
-    uint16_t  bpp : 4;          // AA depth TODO: add 1, 2, 4, 8 bpp
-#if (CONFIG_SGL_TEXT_UTF8)
-    const uint16_t *unicode_list;
-    uint32_t unicode_list_len;
-#endif
+    const uint16_t  font_table_size;
+    const uint16_t  font_height : 12;
+    const uint16_t  bpp : 3;          // AA depth, only support 2, 4
+    const uint16_t  compress : 1;     // compress flag
+    const sgl_font_unicode_t *unicode;
+    const uint32_t  unicode_num;
 } sgl_font_t;
 
 
@@ -1639,8 +1656,6 @@ void sgl_init(void);
 int sgl_obj_init(sgl_obj_t *obj, sgl_obj_t *parent);
 
 
-#if (CONFIG_SGL_TEXT_UTF8)
-
 /**
  * @brief Convert UTF-8 string to Unicode
  * @param utf8_str Pointer to the UTF-8 string to be converted
@@ -1657,8 +1672,6 @@ uint32_t sgl_utf8_to_unicode(const char *utf8_str, uint32_t *p_unicode_buffer);
  * @return Index of the character in the font table
  */
 uint32_t sgl_search_unicode_ch_index(const sgl_font_t *font, uint32_t unicode);
-
-#endif // !CONFIG_SGL_TEXT_UTF8
 
 
 /**

@@ -1039,7 +1039,6 @@ void sgl_obj_delete(sgl_obj_t *obj)
 }
 
 
-#if (CONFIG_SGL_TEXT_UTF8)
 /**
  * @brief Convert UTF-8 string to Unicode
  * @param utf8_str Pointer to the UTF-8 string to be converted
@@ -1083,16 +1082,35 @@ uint32_t sgl_utf8_to_unicode(const char *utf8_str, uint32_t *p_unicode_buffer)
  */
 uint32_t sgl_search_unicode_ch_index(const sgl_font_t *font, uint32_t unicode)
 {
-    uint32_t left = 0;
-    uint32_t right = font->unicode_list_len - 1, mid = 0;
+    uint32_t left = 0, right = 0, mid = 0;
+    uint32_t target = unicode;
+    const sgl_font_unicode_t *code = font->unicode;
 
+    for (int i = 1; i < font->unicode_num; i ++) {
+        if (target < (code->offset + code->len)) {
+            break;
+        }
+        code ++;
+    }
+
+    target -= code->offset;
+
+    if (code->list == NULL) {
+        if (target >= code->len) {
+            SGL_LOG_WARN("sgl_search_unicode_ch_index: [0x%x]unicode not found in font table", unicode);
+            return 0;
+        }
+        return target + code->tab_offset;
+    }
+
+    right = code->len - 1;
     while (left <= right) {
         mid = left + (right - left) / 2;
 
-        if (font->unicode_list[mid] == unicode) {
-            return mid;
+        if (code->list[mid] == target) {
+            return mid + code->tab_offset;
         }
-        else if (font->unicode_list[mid] < unicode) {
+        else if (code->list[mid] < target) {
             left = mid + 1;
         }
         else {
@@ -1100,10 +1118,9 @@ uint32_t sgl_search_unicode_ch_index(const sgl_font_t *font, uint32_t unicode)
         }
     }
 
-    SGL_LOG_WARN("sgl_search_unicode_ch_index: unicode not found in font table");
+    SGL_LOG_WARN("sgl_search_unicode_ch_index: [0x%x]unicode not found in font table", unicode);
     return 0;
 }
-#endif // !CONFIG_SGL_TEXT_UTF8
 
 
 /**
@@ -1116,7 +1133,6 @@ int32_t sgl_font_get_string_width(const char *str, const sgl_font_t *font)
 {
     SGL_ASSERT(font != NULL);
     int32_t len = 0;
-#if CONFIG_SGL_TEXT_UTF8
     uint32_t unicode = 0;
     uint32_t ch_index = 0;
     while (*str) {
@@ -1124,12 +1140,6 @@ int32_t sgl_font_get_string_width(const char *str, const sgl_font_t *font)
         ch_index = sgl_search_unicode_ch_index(font, unicode);
         len += font->table[ch_index].box_w;
     }
-#else
-    while (*str) {
-        len += font->table[(uint8_t)(*str) - 32].box_w;
-        str++;
-    }
-#endif
     return len;
 }
 
@@ -1150,10 +1160,7 @@ int32_t sgl_font_get_string_height(sgl_area_t *rect, const char *str, const sgl_
     int16_t ch_index;
     int16_t ch_width;
     int16_t lines = 1;
-
-    #if CONFIG_SGL_TEXT_UTF8
     uint32_t unicode = 0;
-    #endif
 
     while (*str) {
         if (*str == '\n') {
@@ -1163,13 +1170,8 @@ int32_t sgl_font_get_string_height(sgl_area_t *rect, const char *str, const sgl_
             continue;
         }
 
-        #if CONFIG_SGL_TEXT_UTF8
         str += sgl_utf8_to_unicode(str, &unicode);
         ch_index = sgl_search_unicode_ch_index(font, unicode);
-        #else
-        ch_index = ((uint32_t)*str) - SGL_TEXT_ASCII_OFFSET;
-        str++;
-        #endif
 
         ch_width = font->table[ch_index].box_w;
 
