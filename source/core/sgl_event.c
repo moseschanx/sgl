@@ -354,8 +354,8 @@ void sgl_event_task(void)
  *              true: touch down
  *              false: touch up
  * @return none
- * @note: for example, you can call it in while loop for 30ms tick handler function
- *        void exapmle_30ms_tick_handler(void)
+ * @note: for example, you can call it in 30ms tick handler function
+ *        void example_30ms_tick_handler(void)
  *        {
  *            int pos_x, pos_y;
  *            bool button_status;
@@ -373,13 +373,13 @@ void sgl_event_read_pos_helper(int16_t x, int16_t y, bool flag)
     sgl_event_pos_t pos = { .x = x, .y = y };
 
     if (flag) {
-        if (pressed_flag == false) {
+        if (!pressed_flag) {
             pressed_flag = true;
             sgl_event_send_pos(pos, SGL_EVENT_PRESSED);
             SGL_LOG_INFO("Touch SGL_EVENT_PRESSED x: %d, y: %d", x, y);
         }
     } else {
-        if (pressed_flag == true) {
+        if (pressed_flag) {
             pressed_flag = false;
             sgl_event_send_pos(pos, SGL_EVENT_RELEASED);
             SGL_LOG_INFO("Touch SGL_EVENT_RELEASED x: %d, y: %d", x, y);

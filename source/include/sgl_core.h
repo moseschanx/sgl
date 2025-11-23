@@ -612,6 +612,35 @@ static inline void sgl_tick_inc(uint8_t ms)
 
 
 /**
+ * @brief helper function to increase tick milliseconds
+ * @param reg_addr register address of timer 
+ * @param period  timer period that is counter increment interval of the timer
+ * @return none
+ * @note this function is used to loop, you should enable a timer for 1ms/period.
+ *       For example: - if you set the timer period to 1us, you should call this function:
+ *                         sgl_tick_inc_helper(reg_us, 1000);
+ *                    - if you set the timer period to 10us, you should call this function:
+ *                         sgl_tick_inc_helper(reg_us, 100);
+ *                    - if you set the timer period to 100us, you should call this function:
+ *                         sgl_tick_inc_helper(reg_us, 10);
+ * 
+ * @details: Of course, you can increase 2,3,4,5 ... tick milliseconds, such as:
+ *                    The period of the timer is 1us, you can call this function:
+ *                    sgl_tick_inc_helper(reg_us, 2000);
+ *                    that means you increase 2ms tick.
+ */
+static inline void sgl_tick_inc_helper(size_t reg_addr, size_t period)
+{
+    static size_t us_cnt = 0;
+    size_t cur_us = *((volatile size_t*)reg_addr);
+    if ((cur_us - us_cnt) >= period) {
+        sgl_ctx.tick_ms ++;
+        us_cnt = cur_us;
+    }
+}
+
+
+/**
  * @brief reset tick milliseconds
  * @param none
  * @return none

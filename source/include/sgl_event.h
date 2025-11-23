@@ -163,8 +163,8 @@ void sgl_event_task(void);
  *              true: touch down
  *              false: touch up
  * @return none
- * @note: for example, you can call it in while loop for 30ms tick handler function
- *        void exapmle_30ms_tick_handler(void)
+ * @note: for example, you can call it in 30ms tick handler function
+ *        void example_30ms_tick_handler(void)
  *        {
  *            int pos_x, pos_y;
  *            bool button_status;
