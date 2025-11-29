@@ -23,7 +23,6 @@
  */
 
 #include <sgl_core.h>
-#include <sgl_draw.h>
 #include <sgl_font.h>
 
 

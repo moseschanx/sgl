@@ -23,7 +23,6 @@
  */
 
 #include <sgl_core.h>
-#include <sgl_draw.h>
 #include <sgl_font.h>
 
 #if (CONFIG_SGL_FONT_CONSOLAS24)
