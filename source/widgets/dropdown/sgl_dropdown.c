@@ -133,7 +133,7 @@ static void sgl_dropdown_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
         }
     }
     else if (evt->type == SGL_EVENT_MOVE_UP) {
-        //dropdown->expend_start = dropdown->expend_start->next;
+        
     }
     else if (evt->type == SGL_EVENT_MOVE_DOWN) {
 
@@ -203,12 +203,37 @@ sgl_obj_t* sgl_dropdown_create(sgl_obj_t* parent)
     dropdown->head = NULL;
     dropdown->is_open = false;
 
-    dropdown->selected = 0;
+    dropdown->selected = -1;
 
     return obj;
 }
 
+/**
+ * @brief get the selected text of the dropdown
+ * @param obj pointer to the dropdown object
+ * @return pointer to the selected text
+ */
+const char *sgl_dropdown_get_selected_text(sgl_obj_t *obj)
+{
+    sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
+    sgl_dropdown_option_t *option = dropdown->head;
 
+    for (int i = 0; i < dropdown->option_num; i++) {
+        if (i == dropdown->selected) {
+            return option->text;
+        }
+        option = option->next;
+    }
+    return NULL;
+}
+
+/**
+ * @brief add an option to the dropdown
+ * @param obj pointer to the dropdown object
+ * @param text pointer to the text
+ * @param icon pointer to the icon
+ * @return none
+ */
 void sgl_dropdown_add_option(sgl_obj_t *obj, const char *text, const sgl_icon_pixmap_t *icon)
 {
     sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
@@ -237,4 +262,88 @@ void sgl_dropdown_add_option(sgl_obj_t *obj, const char *text, const sgl_icon_pi
     add->text = text;
     add->icon = icon;
     add->next = NULL;
+
+    if (dropdown->selected == -1) {
+        dropdown->selected = 0;
+    }
+
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief delete an option from the dropdown
+ * @param obj pointer to the dropdown object
+ * @param text pointer to the text
+ * @return none
+ */
+void sgl_dropdown_delete_option_by_text(sgl_obj_t *obj, const char *text)
+{
+    sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
+    sgl_dropdown_option_t *curr = dropdown->head;
+    sgl_dropdown_option_t *temp = dropdown->head;
+    sgl_dropdown_option_t *prev = NULL;
+    int deleted_index = 0;
+
+    if (obj == NULL || text == NULL) {
+        return;
+    }
+
+    while (curr != NULL) {
+        if (curr->text && strcmp(curr->text, text) == 0) {
+            break;
+        }
+        prev = curr;
+        curr = curr->next;
+    }
+
+    if (curr == NULL) {
+        return;
+    }
+
+    while (temp != curr) {
+        temp = temp->next;
+        deleted_index ++;
+    }
+
+    if (prev == NULL) {
+        dropdown->head = curr->next;
+    } else {
+        prev->next = curr->next;
+    }
+
+    sgl_free(curr);
+    dropdown->option_num--;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief delete an option from the dropdown
+ * @param obj pointer to the dropdown object
+ * @param index index of the option
+ * @return none
+ */
+void sgl_dropdown_delete_option_by_index(sgl_obj_t *obj, int index)
+{
+    sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
+    sgl_dropdown_option_t *curr = dropdown->head;
+    sgl_dropdown_option_t *prev = NULL;
+
+    if (obj == NULL || index < 0 || index >= dropdown->option_num) {
+        return;
+    }
+
+    for (int i = 0; i < index; i++) {
+        prev = curr;
+        curr = curr->next;
+    }
+
+    // 删除节点
+    if (prev == NULL) {
+        dropdown->head = curr->next;
+    } else {
+        prev->next = curr->next;
+    }
+
+    sgl_free(curr);
+    dropdown->option_num--;
 }
