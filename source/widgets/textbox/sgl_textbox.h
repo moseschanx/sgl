@@ -44,11 +44,9 @@ typedef struct sgl_textbox {
     const char       *text;
     const sgl_font_t *font;
     uint8_t          line_margin;
-    uint8_t          edge_margin;
     sgl_color_t      text_color;
     int32_t          y_offset;
-    sgl_draw_rect_t  scroll_bg;
-    sgl_draw_rect_t  scroll_fg;
+    sgl_draw_rect_t  scroll;
     uint32_t         text_height: 31;
     uint32_t         scroll_enable: 1;
 }sgl_textbox_t;
@@ -93,7 +91,7 @@ static inline void sgl_textbox_set_text_color(sgl_obj_t *obj, sgl_color_t color)
  * @param font font of text
  * @return none
  */
-static inline void sgl_textbox_set_font(sgl_obj_t *obj, const sgl_font_t *font)
+static inline void sgl_textbox_set_text_font(sgl_obj_t *obj, const sgl_font_t *font)
 {
     sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
     textbox->font = font;
@@ -178,17 +176,5 @@ static inline void sgl_textbox_set_line_margin(sgl_obj_t *obj, uint8_t margin)
     sgl_obj_set_dirty(obj);
 }
 
-/**
- * @brief set textbox edge margin
- * @param obj textbox object
- * @param margin edge margin to be set
- * @return none
- */
-static inline void sgl_textbox_set_edge_margin(sgl_obj_t *obj, uint8_t margin)
-{
-    sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
-    textbox->edge_margin = margin;
-    sgl_obj_set_dirty(obj);
-}
 
 #endif // !__SGL_TEXTBOX_H__

@@ -113,11 +113,11 @@ static void sgl_dropdown_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
         }
 
         if (dropdown->is_open) {
+            pos_y = body_area.y2;
             option = dropdown->expend_start;
             body_area.y1 = obj->coords.y1 + dropdown->option_h;
             body_area.y2 = body_area.y1 + dropdown->expand_h - 1;
             sgl_draw_rect(surf, &body_area, &body_area, &dropdown->body_desc);
-            pos_y += dropdown->option_h;
 
             for (int i = 0; option != NULL; i++) {
                 pos_x = text_area.x1 + dropdown->body_desc.radius;
@@ -139,7 +139,7 @@ static void sgl_dropdown_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
 
     }
     else if (evt->type == SGL_EVENT_PRESSED) {
-        dropdown->expand_h = dropdown->font->font_height * sgl_min(10, dropdown->option_num) + 5;
+        dropdown->expand_h = dropdown->font->font_height * sgl_min(10, dropdown->option_num);
 
         if (dropdown->is_open) {
             dropdown->is_open = false;
@@ -204,6 +204,7 @@ sgl_obj_t* sgl_dropdown_create(sgl_obj_t* parent)
     dropdown->is_open = false;
 
     dropdown->selected = -1;
+    dropdown->clicked = 0;
 
     return obj;
 }

@@ -51,11 +51,12 @@ typedef struct sgl_dropdown {
     const sgl_font_t      *font;
     sgl_color_t           text_color;
     sgl_dropdown_option_t *head;
-    int32_t               option_num;
-    int32_t               selected;
+    uint16_t              option_num;
+    int16_t               selected;
     int16_t               option_h;
     int16_t               expand_h;
     sgl_dropdown_option_t *expend_start;
+    uint8_t               clicked;
     bool                  is_open;
 }sgl_dropdown_t;
 
@@ -111,7 +112,7 @@ static inline void sgl_dropdown_set_border_color(sgl_obj_t *obj, sgl_color_t col
 static inline void sgl_dropdown_set_radius(sgl_obj_t *obj, uint8_t radius)
 {
     sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
-    dropdown->body_desc.radius = radius;
+    dropdown->body_desc.radius = sgl_obj_fix_radius(obj, radius);
     sgl_obj_set_dirty(obj);
 }
 
