@@ -174,20 +174,18 @@ void sgl_draw_string(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y, c
  * @param color Foreground color of the string
  * @param alpha Alpha value for blending
  * @param font Pointer to the font structure containing character data
- * @param edge_margin Margin between characters
  * @param line_margin Margin between lines
  * @return none
  */
-void sgl_draw_string_mult_line(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y, const char *str, sgl_color_t color, uint8_t alpha, const sgl_font_t *font, uint8_t edge_margin, uint8_t line_margin)
+void sgl_draw_string_mult_line(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y, const char *str, sgl_color_t color, uint8_t alpha, const sgl_font_t *font, uint8_t line_margin)
 {
     int16_t ch_index, ch_width;
     int16_t x_off = x;
     uint32_t unicode = 0;
-    x_off += edge_margin;
 
     while (*str) {
         if (*str == '\n') {
-            x_off = (x + edge_margin);
+            x_off = x;
             y += (font->font_height + line_margin);
             str ++;
             continue;
@@ -198,8 +196,8 @@ void sgl_draw_string_mult_line(sgl_surf_t *surf, sgl_area_t *area, int16_t x, in
 
         ch_width = (font->table[ch_index].adv_w >> 4);
 
-        if ((x_off + ch_width + edge_margin) > area->x2) {
-            x_off = x + edge_margin;
+        if ((x_off + ch_width) > area->x2) {
+            x_off = x;
             y += (font->font_height + line_margin);
         }
 

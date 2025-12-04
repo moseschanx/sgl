@@ -56,7 +56,6 @@ typedef struct event_queue {
  */
 static struct event_context {
     struct sgl_obj *last_click;
-    struct sgl_obj *last_focus;
     sgl_event_pos_t last_touch;
     event_queue_t   evtq;
 } evt_ctx;
@@ -76,7 +75,6 @@ int sgl_event_queue_init(void)
     }
 
     evt_ctx.evtq.head = evt_ctx.evtq.tail = 0;
-    evt_ctx.last_focus = NULL;
     return 0;
 }
 
@@ -325,31 +323,6 @@ void sgl_event_task(void)
                 }
                 obj->pressed = true;
                 evt_ctx.last_click = obj;
-
-                if (evt_ctx.last_focus != obj) {
-                    if (evt_ctx.last_focus && evt_ctx.last_focus != obj) {
-                        sgl_event_t unfocus_evt = {
-                            .type = SGL_EVENT_UNFOCUSED,
-                            .obj = evt_ctx.last_focus,
-                            .param = evt_ctx.last_focus->event_data
-                        };
-                        SGL_ASSERT(obj->construct_fn);
-                        sgl_obj_set_dirty(evt_ctx.last_focus);
-                        evt_ctx.last_focus->construct_fn(NULL, evt_ctx.last_focus, &unfocus_evt);
-                    }
-
-                    evt_ctx.last_focus = obj;
-
-                    if (obj->focus) {
-                        sgl_event_t focus_evt = {
-                            .type = SGL_EVENT_FOCUSED,
-                            .obj = obj,
-                            .param = obj->event_data
-                        };
-                        SGL_ASSERT(obj->construct_fn);
-                        obj->construct_fn(NULL, obj, &focus_evt);
-                    }
-                }
             }
             else if (evt.type == SGL_EVENT_RELEASED) {
                 if (!obj->pressed) {
@@ -411,19 +384,19 @@ void sgl_event_pos_input(int16_t x, int16_t y, bool flag)
             sgl_event_send_pos(pos, SGL_EVENT_PRESSED);
             SGL_LOG_INFO("Touch SGL_EVENT_PRESSED x: %d, y: %d", x, y);
         }
-    } else {
+        else {
+            if (last_pos.x != x || last_pos.y != y) {
+                sgl_event_send_pos(pos, SGL_EVENT_MOTION);
+                last_pos = pos;
+                SGL_LOG_INFO("Touch SGL_EVENT_MOTION x: %d, y: %d", x, y);
+            }
+        }
+    }
+    else {
         if (pressed_flag) {
             pressed_flag = false;
             sgl_event_send_pos(pos, SGL_EVENT_RELEASED);
             SGL_LOG_INFO("Touch SGL_EVENT_RELEASED x: %d, y: %d", x, y);
-        }
-    }
-
-    if (pressed_flag) {
-        if (last_pos.x != x || last_pos.y != y) {
-            sgl_event_send_pos(pos, SGL_EVENT_MOTION);
-            last_pos = pos;
-            SGL_LOG_INFO("Touch SGL_EVENT_MOTION x: %d, y: %d", x, y);
         }
     }
 }

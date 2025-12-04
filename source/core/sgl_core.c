@@ -1161,17 +1161,15 @@ int32_t sgl_font_get_string_width(const char *str, const sgl_font_t *font)
 
 /**
  * @brief get the height of a string, which is in a rect area
- * @param rect object rect, it is usually the parent of text
+ * @param width width of the rect area
  * @param str string
  * @param font sgl font of the string
  * @param line_space peer line space
- * @param margin margin of left and right
  * @return height size of string
  */
-int32_t sgl_font_get_string_height(sgl_area_t *rect, const char *str, const sgl_font_t *font, uint8_t line_space, int16_t margin)
+int32_t sgl_font_get_string_height(int16_t width, const char *str, const sgl_font_t *font, uint8_t line_space)
 {
-    int16_t offset_x = margin;
-    int16_t width = rect->x2 - rect->x1 + 1;
+    int16_t offset_x = 0;
     int16_t ch_index;
     int16_t ch_width;
     int16_t lines = 1;
@@ -1180,7 +1178,7 @@ int32_t sgl_font_get_string_height(sgl_area_t *rect, const char *str, const sgl_
     while (*str) {
         if (*str == '\n') {
             lines ++;
-            offset_x = margin;
+            offset_x = 0;
             str ++;
             continue;
         }
@@ -1190,8 +1188,8 @@ int32_t sgl_font_get_string_height(sgl_area_t *rect, const char *str, const sgl_
 
         ch_width = (font->table[ch_index].adv_w >> 4);
 
-        if ((offset_x + ch_width + margin) >= width) {
-            offset_x = margin;
+        if ((offset_x + ch_width) >= width) {
+            offset_x = 0;
             lines ++;
         }
 

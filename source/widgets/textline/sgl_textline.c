@@ -35,18 +35,23 @@
 static void sgl_textline_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
     sgl_textline_t *textline = (sgl_textline_t*)obj;
-
+    sgl_area_t text_area;
     SGL_ASSERT(textline->font != NULL);
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
-        sgl_obj_set_height(obj, sgl_font_get_string_height(&obj->coords, textline->text, textline->font, textline->line_margin, textline->edge_margin));
+        sgl_obj_set_height(obj, sgl_font_get_string_height(obj->coords.x2 - obj->coords.x1 + 1, textline->text, textline->font, textline->line_margin) + obj->radius * 2);
         sgl_area_clip(&obj->parent->area, &obj->coords, &obj->area);
+
+        text_area.x1 = obj->area.x1 + obj->radius;
+        text_area.x2 = obj->area.x2 - obj->radius;
+        text_area.y1 = obj->area.y1 + obj->radius;
+        text_area.y2 = obj->area.y2 - obj->radius;
 
         if (textline->bg_flag) {
             sgl_draw_fill_round_rect(surf, &obj->area, &obj->coords, obj->radius, textline->bg_color, textline->alpha);
         }
 
-        sgl_draw_string_mult_line(surf, &obj->area, obj->coords.x1, obj->coords.y1, textline->text, textline->color, textline->alpha, textline->font, textline->edge_margin, textline->line_margin);
+        sgl_draw_string_mult_line(surf, &text_area, obj->coords.x1 + obj->radius, obj->coords.y1 + obj->radius, textline->text, textline->color, textline->alpha, textline->font, textline->line_margin);
     }
 
     if(obj->event_fn) {
@@ -80,7 +85,6 @@ sgl_obj_t* sgl_textline_create(sgl_obj_t* parent)
     textline->bg_color = SGL_THEME_COLOR;
     textline->color = SGL_THEME_TEXT_COLOR;
     textline->line_margin = 1;
-    textline->edge_margin = 2;
     textline->text = "textline";
 
     return obj;

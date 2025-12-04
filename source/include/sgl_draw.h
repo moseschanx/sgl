@@ -432,11 +432,10 @@ void sgl_draw_string(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y, c
  * @param color Foreground color of the string
  * @param alpha Alpha value for blending
  * @param font Pointer to the font structure containing character data
- * @param edge_margin Margin between characters
  * @param line_margin Margin between lines
  * @return none
  */
-void sgl_draw_string_mult_line(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y, const char *str, sgl_color_t color, uint8_t alpha, const sgl_font_t *font, uint8_t edge_margin, uint8_t line_margin);
+void sgl_draw_string_mult_line(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y, const char *str, sgl_color_t color, uint8_t alpha, const sgl_font_t *font, uint8_t line_margin);
 
 
 /**

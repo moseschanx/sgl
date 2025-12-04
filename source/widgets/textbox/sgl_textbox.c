@@ -37,50 +37,54 @@
 static int16_t textbox_scroll_get_pos(sgl_obj_t* obj, int16_t scroll_h)
 {
     sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
-    int16_t height = obj->coords.y2 - obj->coords.y1 + 1;
-
-    return (-textbox->y_offset) * (height - scroll_h) / (textbox->text_height - height) - scroll_h;
+    int16_t height = obj->coords.y2 - obj->coords.y1 - 2 * textbox->bg.radius;
+    return (-textbox->y_offset) * (height + scroll_h) / (textbox->text_height - height);
 }
 
 
 static void sgl_textbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
     sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
-    int16_t height = obj->coords.y2 - obj->coords.y1 - textbox->bg.radius;
+    int16_t height = obj->coords.y2 - obj->coords.y1 - 2 * textbox->bg.radius;
+    int16_t width = obj->coords.x2 - obj->coords.x1 - 2 * textbox->bg.radius;
     int16_t scroll_height = sgl_max(height / 8, SGL_TEXTBOX_SCROLL_WIDTH);
-
-    sgl_rect_t scroll_coords = {
-        .x1 = obj->coords.x2 - SGL_TEXTBOX_SCROLL_WIDTH - textbox->bg.radius,
-        .y1 = obj->coords.y1,
-        .x2 = obj->coords.x2 - textbox->bg.radius,
-        .y2 = obj->coords.y2
-    };
+    sgl_rect_t area;
 
     SGL_ASSERT(textbox->font != NULL);
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
+        area.x1 = obj->coords.x1 + textbox->bg.radius;
+        area.y1 = obj->coords.y1 + textbox->bg.radius;
+        area.x2 = obj->coords.x2 - textbox->bg.radius;
+        area.y2 = obj->coords.y2 - textbox->bg.radius;
+
         sgl_draw_rect(surf, &obj->area, &obj->coords, &textbox->bg);
-        sgl_draw_string_mult_line(surf, &obj->area, obj->coords.x1, 
-                                 obj->coords.y1 + textbox->bg.radius + textbox->y_offset, 
-                                 textbox->text, textbox->text_color, textbox->bg.alpha, textbox->font, textbox->bg.radius, textbox->line_margin
+        sgl_draw_string_mult_line(surf, &area, area.x1, 
+                                 area.y1 + textbox->y_offset, 
+                                 textbox->text, textbox->text_color, textbox->bg.alpha, textbox->font, textbox->line_margin
                                  );
 
         if(textbox->scroll_enable) {
-            scroll_coords.y1 = textbox_scroll_get_pos(obj, scroll_height) + obj->coords.y1;
-            scroll_coords.y2 = scroll_coords.y1 + scroll_height;
+            area.x1 = obj->coords.x2 - SGL_TEXTBOX_SCROLL_WIDTH - textbox->bg.radius;
+            area.y1 = obj->coords.y1;
+            area.x2 = obj->coords.x2 - textbox->bg.radius;
+            area.y2 = obj->coords.y2;
 
-            sgl_draw_fill_round_rect(surf, &obj->area, &scroll_coords, SGL_TEXTBOX_SCROLL_WIDTH / 2, textbox->text_color, 128);
+            area.y1 = textbox_scroll_get_pos(obj, scroll_height) + obj->coords.y1;
+            area.y2 = area.y1 + scroll_height;
+
+            sgl_draw_fill_round_rect(surf, &obj->area, &area, SGL_TEXTBOX_SCROLL_WIDTH / 2, textbox->text_color, 128);
         }
     }
     else if(evt->type == SGL_EVENT_MOVE_UP) {
-        textbox->text_height = sgl_font_get_string_height(&obj->coords, textbox->text, textbox->font, textbox->line_margin, textbox->bg.radius);
+        textbox->text_height = sgl_font_get_string_height(width, textbox->text, textbox->font, textbox->line_margin);
         textbox->scroll_enable = 1;
         if((textbox->text_height + textbox->y_offset) > height ) {
            textbox->y_offset -= evt->distance;
         }
     }
     else if(evt->type == SGL_EVENT_MOVE_DOWN) {
-        textbox->text_height = sgl_font_get_string_height(&obj->coords, textbox->text, textbox->font, textbox->line_margin, textbox->bg.radius);
+        textbox->text_height = sgl_font_get_string_height(width, textbox->text, textbox->font, textbox->line_margin);
         textbox->scroll_enable = 1;
         if(textbox->y_offset < 0) {
             textbox->y_offset += evt->distance;

@@ -91,8 +91,8 @@ static void sgl_msgbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
     };
 
     sgl_area_t text_coords = {
-        .x1 = obj->coords.x1 + border,
-        .x2 = obj->coords.x2 - border,
+        .x1 = obj->coords.x1 + border + 2,
+        .x2 = obj->coords.x2 - border - 2,
         .y1 = obj->coords.y1 + font_height + border,
         .y2 = obj->coords.y2 - (font_height + border),
     };
@@ -115,7 +115,7 @@ static void sgl_msgbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
                             msgbox->body_desc.alpha
                            );
 
-        sgl_draw_string_mult_line(surf, &text_coords, text_coords.x1, text_coords.y1, msgbox->msg_text, msgbox->msg_color, msgbox->body_desc.alpha, font, 2, msgbox->msg_line_margin);
+        sgl_draw_string_mult_line(surf, &text_coords, text_coords.x1, text_coords.y1, msgbox->msg_text, msgbox->msg_color, msgbox->body_desc.alpha, font, msgbox->msg_line_margin);
 
         if(msgbox->status & SGL_MSGBOX_STATUS_APPLY) {
             tmp_color = msgbox->apply_color;

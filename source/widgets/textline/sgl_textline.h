@@ -78,7 +78,7 @@ static inline void sgl_textline_set_text(sgl_obj_t *obj, const char *text)
  * @param font font
  * @return none
  */
-static inline void sgl_textline_set_font(sgl_obj_t *obj, const sgl_font_t *font)
+static inline void sgl_textline_set_text_font(sgl_obj_t *obj, const sgl_font_t *font)
 {
     sgl_textline_t *textline = (sgl_textline_t *)obj;
     textline->font = font;
