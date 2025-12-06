@@ -453,7 +453,7 @@ typedef struct sgl_page {
  */
 typedef struct sgl_device_fb {
     void      *buffer[SGL_DRAW_BUFFER_MAX];
-    size_t     buffer_size;
+    uint32_t   buffer_size;
     int16_t    xres;
     int16_t    yres;
     int16_t    xres_virtual;
