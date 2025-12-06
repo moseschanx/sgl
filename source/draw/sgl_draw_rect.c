@@ -264,10 +264,10 @@ void sgl_draw_fill_round_rect_with_border(sgl_surf_t *surf, sgl_area_t *area, sg
         if (y > cy1 && y < cy2) {
             for (int x = clip.x1; x <= clip.x2; x++, buf++) {
                 if (x < cx1i || x > cx2i) {
-                    *buf = sgl_color_mixer(border_color, *buf, alpha);
+                    *buf = (alpha == SGL_ALPHA_MAX ? border_color : sgl_color_mixer(border_color, *buf, alpha));
                 }
                 else {
-                    *buf = sgl_color_mixer(color, *buf, alpha);
+                    *buf = (alpha == SGL_ALPHA_MAX ? color: sgl_color_mixer(color, *buf, alpha));
                 }
             }
         }
@@ -358,7 +358,7 @@ void sgl_draw_fill_round_rect_pixmap(sgl_surf_t *surf, sgl_area_t *area, sgl_are
 
         if (y > cy1 && y < cy2) {
             for (int x = clip.x1; x <= clip.x2; x++, buf++, pbuf++) {
-                *buf = sgl_color_mixer(*pbuf, *buf, alpha);
+                *buf = (alpha == SGL_ALPHA_MAX ? *pbuf : sgl_color_mixer(*pbuf, *buf, alpha));
             }
         }
         else {
@@ -367,7 +367,7 @@ void sgl_draw_fill_round_rect_pixmap(sgl_surf_t *surf, sgl_area_t *area, sgl_are
 
             for (int x = clip.x1; x <= clip.x2; x++, buf++, pbuf++) {
                 if(x > cx1 && x < cx2) {
-                    *buf = sgl_color_mixer(*pbuf, *buf, alpha);
+                    *buf = (alpha == SGL_ALPHA_MAX ? *pbuf : sgl_color_mixer(*pbuf, *buf, alpha));
                 }
                 else {
                     cx_tmp = x > cx1 ? cx2 : cx1;
