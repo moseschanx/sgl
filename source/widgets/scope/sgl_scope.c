@@ -199,7 +199,7 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
             .color = scope->bg_color,
             .alpha = scope->alpha,
             .radius = 0,
-            .border = scope->outer_border,
+            .border = scope->border_width,
         };
         sgl_draw_rect(surf, &obj->area, &obj->coords, &bg_rect);
 
@@ -391,11 +391,11 @@ sgl_obj_t* sgl_scope_create(sgl_obj_t* parent)
     obj->construct_fn = scope_construct_cb;
     
     // Initialize default parameters
-    scope->waveform_color = sgl_rgb(0, 255, 0);  // Green waveform
-    scope->bg_color = sgl_rgb(0, 0, 0);          // Black background
-    scope->grid_color = sgl_rgb(50, 50, 50);     // Gray grid lines
-    scope->border_color = sgl_rgb(100, 100, 100); // Gray border
-    scope->outer_border_color = sgl_rgb(150, 150, 150); // Light gray outer border
+    scope->waveform_color = sgl_rgb(0, 255, 0);   // Green waveform
+    scope->bg_color = sgl_rgb(0, 0, 0);           // Black background
+    scope->grid_color = sgl_rgb(50, 50, 50);      // Gray grid lines
+    scope->border_width = 0;                      // border width is 0
+    scope->border_color = sgl_rgb(150, 150, 150); // Light gray outer border
     scope->min_value = 0;
     scope->max_value = 0xFFFF;
     scope->running_min = 0xFFFF;  // Initialize runtime minimum
@@ -405,7 +405,6 @@ sgl_obj_t* sgl_scope_create(sgl_obj_t* parent)
     scope->max_display_points = 0; // Display all points by default
     scope->show_y_labels = 0;      // Hide Y-axis labels by default
     scope->alpha = SGL_ALPHA_MAX;  // Fully opaque by default
-    scope->outer_border = 0;       // Hide outer border by default
     scope->grid_style = 0;         // Solid grid lines by default
     scope->y_label_font = NULL;    // No font by default
     scope->y_label_color = sgl_rgb(255, 255, 255); // White label color

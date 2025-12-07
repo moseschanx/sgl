@@ -46,14 +46,13 @@ typedef struct {
     sgl_color_t bg_color;              // background color
     sgl_color_t grid_color;            // grid line color
     sgl_color_t border_color;          // border color
-    sgl_color_t outer_border_color;    // outer border color
     uint16_t min_value;                // min value of data
     uint16_t max_value;                // max value of data
     uint16_t running_min;              // min value of runtime
     uint16_t running_max;              // max value of runtime
     uint8_t auto_scale : 1;            // whether to automatically scale
     uint8_t show_y_labels : 1;         // whether to show Y axis labels
-    uint8_t outer_border;              // outer border width
+    uint8_t border_width;              // outer border width
     uint8_t line_width;                // width of waveform line
     uint8_t display_count;             // data count that has been displayed
     uint32_t max_display_points;       // max display points
@@ -191,10 +190,10 @@ static inline void sgl_scope_set_line_width(sgl_obj_t* obj, uint8_t width)
  * @param enable enable/disable
  * @return none
  */
-static inline void sgl_scope_enable_auto_scale(sgl_obj_t* obj, uint8_t enable)
+static inline void sgl_scope_enable_auto_scale(sgl_obj_t* obj, bool enable)
 {
     sgl_scope_t *scope = (sgl_scope_t*)obj;
-    scope->auto_scale = enable;
+    scope->auto_scale = (uint8_t)enable;
     sgl_obj_set_dirty(obj);
 }
 
@@ -217,10 +216,10 @@ static inline void sgl_scope_set_alpha(sgl_obj_t* obj, uint8_t alpha)
  * @param show show/hide
  * @return none
  */
-static inline void sgl_scope_show_y_labels(sgl_obj_t* obj, uint8_t show)
+static inline void sgl_scope_show_y_labels(sgl_obj_t* obj, bool show)
 {
     sgl_scope_t *scope = (sgl_scope_t*)obj;
-    scope->show_y_labels = show;
+    scope->show_y_labels = (uint8_t)show;
     sgl_obj_set_dirty(obj);
 }
 
@@ -264,28 +263,15 @@ static inline void sgl_scope_set_border_color(sgl_obj_t* obj, sgl_color_t color)
 }
 
 /**
- * @brief set scope outer border color
- * @param obj scope object
- * @param color outer border color
- * @return none
- */
-static inline void sgl_scope_set_outer_border_color(sgl_obj_t* obj, sgl_color_t color)
-{
-    sgl_scope_t *scope = (sgl_scope_t*)obj;
-    scope->outer_border_color = color;
-    sgl_obj_set_dirty(obj);
-}
-
-/**
- * @brief show/hide outer border
+ * @brief set scope border width
  * @param obj scope object
  * @param width border width
  * @return none
  */
-static inline void sgl_scope_set_outer_border_width(sgl_obj_t* obj, uint8_t width)
+static inline void sgl_scope_set_border_width(sgl_obj_t* obj, uint8_t width)
 {
     sgl_scope_t *scope = (sgl_scope_t*)obj;
-    scope->outer_border = width;
+    scope->border_width = width;
     sgl_obj_set_dirty(obj);
 }
 
