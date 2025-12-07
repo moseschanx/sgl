@@ -1397,6 +1397,7 @@ static inline void sgl_obj_set_event_cb(sgl_obj_t *obj, void (*event_fn)(sgl_eve
     SGL_ASSERT(obj != NULL);
     obj->event_fn = event_fn;
     obj->event_data = data;
+    obj->clickable = 1;
 }
 
 

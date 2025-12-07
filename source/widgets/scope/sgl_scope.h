@@ -292,7 +292,7 @@ static inline void sgl_scope_show_outer_border(sgl_obj_t* obj, uint8_t show)
 /**
  * @brief set scope grid style
  * @param obj scope object
- * @param style grid style
+ * @param style grid style, 0-solid line，1-dashed line
  * @return none
  */
 static inline void sgl_scope_set_grid_style(sgl_obj_t* obj, uint8_t style)

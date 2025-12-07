@@ -54,7 +54,12 @@ void sgl_draw_fill_rect(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *rect, sg
         buf = sgl_surf_get_buf(surf, clip.x1 - surf->x, y - surf->y);
 
         for (int x = clip.x1; x <= clip.x2; x++, buf++) {
-            *buf = alpha == SGL_ALPHA_MAX ? color : sgl_color_mixer(color, *buf, alpha);
+            if (alpha == SGL_ALPHA_MAX) {
+                *buf = color;
+            }
+            else if (alpha > SGL_ALPHA_MIN) {
+                *buf = sgl_color_mixer(color, *buf, alpha);
+            }
         }
     }
 }

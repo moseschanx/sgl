@@ -503,6 +503,7 @@ void sgl_page_set_color(sgl_obj_t* obj, sgl_color_t color)
 {
     sgl_page_t* page = (sgl_page_t*)obj;
     page->color = color;
+    sgl_obj_set_dirty(obj);
 }
 
 
@@ -516,6 +517,7 @@ void sgl_page_set_pixmap(sgl_obj_t* obj, const sgl_pixmap_t *pixmap)
 {
     sgl_page_t* page = (sgl_page_t*)obj;
     page->bg_img = pixmap;
+    sgl_obj_set_dirty(obj);
 }
 
 

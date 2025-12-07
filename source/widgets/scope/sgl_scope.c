@@ -405,10 +405,9 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
                 uint32_t prev_index = (scope->current_index >= i + 1) ? scope->current_index - (i + 1) : scope->data_count - (i + 1 - scope->current_index);
                 
                 uint16_t current_value = scope->data_buffer[prev_index];
-                
+
                 // Clamp value to display range
-                if (current_value < display_min) current_value = display_min;
-                if (current_value > display_max) current_value = display_max;
+                current_value = sgl_clamp(current_value, display_min, display_max);
                 
                 end.x = obj->coords.x2 - (i * width / (data_points - 1));  // Move leftward
                 end.y = obj->coords.y2 - ((int32_t)(current_value - display_min) * height) / (display_max - display_min);
@@ -499,7 +498,7 @@ void sgl_scope_append_data(sgl_obj_t* obj, uint16_t value)
 {
     sgl_scope_t *scope = (sgl_scope_t*)obj;
     
-    // 更新运行极值（仅当启用 auto_scale）
+    // update the auto scale only if the auto_scale is enabled
     if (scope->auto_scale) {
         if (value < scope->running_min) scope->running_min = value;
         if (value > scope->running_max) scope->running_max = value;
