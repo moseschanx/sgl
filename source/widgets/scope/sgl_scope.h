@@ -41,7 +41,7 @@ extern "C" {
 typedef struct {
     sgl_obj_t obj;
     uint16_t *data_buffer;             // channel data buffer
-    uint32_t  data_count;              // data count
+    uint32_t  data_len;                // data length
     sgl_color_t waveform_color;        // waveform color
     sgl_color_t bg_color;              // background color
     sgl_color_t grid_color;            // grid line color
@@ -71,11 +71,18 @@ typedef struct {
  */
 sgl_obj_t* sgl_scope_create(sgl_obj_t* parent);
 
-static inline void sgl_scope_set_data_buffer(sgl_obj_t* obj, uint16_t *data_buffer, uint32_t data_count)
+/**
+ * @brief set scope data buffer
+ * @param obj scope object
+ * @param data_buffer data buffer
+ * @param data_len data length
+ * @return none
+ */
+static inline void sgl_scope_set_data_buffer(sgl_obj_t* obj, uint16_t *data_buffer, uint32_t data_len)
 {
     sgl_scope_t *scope = (sgl_scope_t*)obj;
     scope->data_buffer = data_buffer;
-    scope->data_count = data_count;
+    scope->data_len = data_len;
 }
 
 /**
@@ -97,7 +104,7 @@ void sgl_scope_append_data(sgl_obj_t* obj, uint16_t value);
 static inline uint16_t sgl_scope_get_data(sgl_obj_t* obj, uint32_t index)
 {
     sgl_scope_t *scope = (sgl_scope_t*)obj;
-    if (index >= scope->data_count) 
+    if (index >= scope->data_len) 
         return 0;
 
     return scope->data_buffer[index];

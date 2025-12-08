@@ -310,14 +310,14 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
             sgl_pos_t start, end;
             
             // Determine number of points to display
-            uint32_t display_points = scope->max_display_points > 0 ? scope->max_display_points : scope->data_count;
-            if (display_points > scope->data_count) display_points = scope->data_count;
+            uint32_t display_points = scope->max_display_points > 0 ? scope->max_display_points : scope->data_len;
+            if (display_points > scope->data_len) display_points = scope->data_len;
             
             // Number of actual data points to render
             uint32_t data_points = scope->display_count < display_points ? scope->display_count : display_points;
             
             // Compute index of the most recent data point (rightmost on screen)
-            uint32_t last_index = (scope->current_index == 0) ? scope->data_count - 1 : scope->current_index - 1;
+            uint32_t last_index = (scope->current_index == 0) ? scope->data_len - 1 : scope->current_index - 1;
             uint16_t last_value = scope->data_buffer[last_index];
             
             // Clamp value to display range
@@ -329,8 +329,8 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
             
             // Draw waveform from right to left
             for (uint32_t i = 1; i < data_points; i++) {
-                //int index = (scope->current_index >= i) ? scope->current_index - i : scope->data_count - (i - scope->current_index);
-                uint32_t prev_index = (scope->current_index >= i + 1) ? scope->current_index - (i + 1) : scope->data_count - (i + 1 - scope->current_index);
+                //int index = (scope->current_index >= i) ? scope->current_index - i : scope->data_len - (i - scope->current_index);
+                uint32_t prev_index = (scope->current_index >= i + 1) ? scope->current_index - (i + 1) : scope->data_len - (i + 1 - scope->current_index);
                 
                 uint16_t current_value = scope->data_buffer[prev_index];
 
@@ -433,14 +433,14 @@ void sgl_scope_append_data(sgl_obj_t* obj, uint16_t value)
 
     scope->data_buffer[scope->current_index] = value;
 
-    if (sgl_is_pow2(scope->data_count)) {
-        scope->current_index = (scope->current_index + 1) & (scope->data_count - 1);
+    if (sgl_is_pow2(scope->data_len)) {
+        scope->current_index = (scope->current_index + 1) & (scope->data_len - 1);
     } else {
-        scope->current_index = (scope->current_index + 1) % scope->data_count;
+        scope->current_index = (scope->current_index + 1) % scope->data_len;
     }
 
     // update display count
-    if (scope->display_count < scope->data_count) {
+    if (scope->display_count < scope->data_len) {
         scope->display_count++;
     }
 
