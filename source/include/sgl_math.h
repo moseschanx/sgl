@@ -42,7 +42,7 @@ extern "C" {
 #define sgl_max3(a, b, c)                 (sgl_max(sgl_max((a), (b)), (c)))
 #define sgl_max4(a, b, c, d)              (sgl_max(sgl_max((a), (b)), sgl_max((c), (d))))
 
-#define sgl_clamp(min, val, max)          (sgl_max(min, (sgl_min((val), (max)))))
+#define sgl_clamp(val, min, max)          (sgl_max(min, (sgl_min((val), (max)))))
 
 #define sgl_abs(x)                        ((x) > 0 ? (x) : (- (x)))
 

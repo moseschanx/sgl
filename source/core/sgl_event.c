@@ -314,8 +314,8 @@ void sgl_event_task(void)
         }
 
         if (obj) {
-            evt.pos.x = sgl_clamp(obj->coords.x1, evt.pos.x, obj->coords.x2);
-            evt.pos.y = sgl_clamp(obj->coords.y1, evt.pos.y, obj->coords.y2);
+            evt.pos.x = sgl_clamp(evt.pos.x, obj->coords.x1, obj->coords.x2);
+            evt.pos.y = sgl_clamp(evt.pos.y, obj->coords.y1, obj->coords.y2);
 
             if (evt.type == SGL_EVENT_PRESSED) {
                 if (obj->pressed) {

@@ -336,7 +336,7 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
 
                 // Clamp value to display range
                 current_value = sgl_clamp(current_value, display_min, display_max);
-                
+
                 end.x = obj->coords.x2 - (i * width / (data_points - 1));  // Move leftward
                 end.y = obj->coords.y2 - ((int32_t)(current_value - display_min) * height) / (display_max - display_min);
                 
