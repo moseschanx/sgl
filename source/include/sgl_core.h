@@ -522,10 +522,9 @@ int sgl_device_fb_register(sgl_device_fb_t *fb_dev);
 static inline void sgl_panel_flush_area(int16_t x, int16_t y, int16_t w, int16_t h, sgl_color_t *src)
 {
 #if CONFIG_SGL_COLOR16_SWAP
-    uint32_t *dst = (uint32_t *)src;
-    for (uint32_t i = 0; i < ((w * h) * sizeof(sgl_color_t) / 4); i++) {
-        *dst = ((*dst << 8) & 0xFF00FF00) | ((*dst >> 8) & 0x00FF00FF);
-        dst++;
+    uint16_t *dst = (uint16_t *)src;
+    for (size_t i = 0; i < (size_t)(w * h); i++) {
+        dst[i] = (dst[i] << 8) | (dst[i] >> 8);
     }
 #endif
     sgl_ctx.fb_dev.flush_area(x, y, w, h, src);
