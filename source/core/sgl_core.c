@@ -1585,9 +1585,9 @@ static inline void sgl_draw_task(sgl_area_t *dirty)
 
     /* fix dirty area if it is out of screen */
     dirty->x1 = sgl_max(dirty->x1, 0);
-    dirty->x2 = sgl_min(dirty->x2, sgl_panel_resolution_width() - 1);
+    dirty->x2 = sgl_min(dirty->x2, SGL_SCREEN_WIDTH - 1);
     dirty->y1 = sgl_max(dirty->y1, 0);
-    dirty->y2 = sgl_min(dirty->y2, sgl_panel_resolution_height() - 1);
+    dirty->y2 = sgl_min(dirty->y2, SGL_SCREEN_HEIGHT - 1);
 
 #if (!CONFIG_SGL_USE_FULL_FB)
     /* to set start x and y position for dirty area */
