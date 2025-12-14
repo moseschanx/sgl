@@ -27,7 +27,7 @@
 
 
 // Draw a dashed line using Bresenham's algorithm with dash pattern
-static void draw_dashed_line(sgl_surf_t *surf, sgl_draw_line_t *line)
+static void draw_dashed_line(sgl_surf_t *surf, sgl_area_t *area, sgl_draw_line_t *line)
 {
     int16_t x0 = line->start.x;
     int16_t y0 = line->start.y;
@@ -50,6 +50,8 @@ static void draw_dashed_line(sgl_surf_t *surf, sgl_draw_line_t *line)
         .x2 = surf->x + surf->w - 1,
         .y2 = surf->y + surf->h - 1
     };
+
+    sgl_area_selfclip(&clip_area, area);
 
     while (1) {
         // Draw dash segment
@@ -83,7 +85,7 @@ static void draw_dashed_line(sgl_surf_t *surf, sgl_draw_line_t *line)
 
 
 // Custom line drawing function supporting variable line width
-static void custom_draw_line(sgl_surf_t *surf, sgl_pos_t start, sgl_pos_t end, sgl_color_t color, int16_t width)
+static void custom_draw_line(sgl_surf_t *surf, sgl_area_t *area, sgl_pos_t start, sgl_pos_t end, sgl_color_t color, int16_t width)
 {
     int16_t x0 = start.x;
     int16_t y0 = start.y;
@@ -144,6 +146,8 @@ static void custom_draw_line(sgl_surf_t *surf, sgl_pos_t start, sgl_pos_t end, s
         .x2 = surf->x + surf->w - 1,
         .y2 = surf->y + surf->h - 1
     };
+
+    sgl_area_selfclip(&clip_area, area);
     
     // Compute half-width for symmetric thickening
     int16_t half_width = width / 2;
@@ -168,7 +172,7 @@ static void custom_draw_line(sgl_surf_t *surf, sgl_pos_t start, sgl_pos_t end, s
                 *buf = color;
             }
         }
-        
+
         if (x0 == x1 && y0 == y1) break;
         e2 = 2 * err;
         if (e2 > -dy) {
@@ -186,7 +190,7 @@ static void custom_draw_line(sgl_surf_t *surf, sgl_pos_t start, sgl_pos_t end, s
 static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
     sgl_scope_t *scope = (sgl_scope_t*)obj;
-    
+
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
         // Skip drawing if object is completely outside screen bounds
         if (obj->area.x2 < surf->x || obj->area.x1 >= surf->x + surf->w ||
@@ -250,7 +254,7 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
         
         if (scope->grid_style == 1) {
             // Draw dashed line
-            draw_dashed_line(surf, &grid_line);
+            draw_dashed_line(surf, &obj->area, &grid_line);
         } else {
             // Draw solid line
             sgl_draw_line(surf, &grid_line);
@@ -264,7 +268,7 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
         
         if (scope->grid_style == 1) {
             // Draw dashed line
-            draw_dashed_line(surf, &grid_line);
+            draw_dashed_line(surf, &obj->area, &grid_line);
         } else {
             // Draw solid line
             sgl_draw_line(surf, &grid_line);
@@ -281,7 +285,7 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
             
             if (scope->grid_style == 1) {
                 // Draw dashed line
-                draw_dashed_line(surf, &grid_line);
+                draw_dashed_line(surf, &obj->area, &grid_line);
             } else {
                 // Draw solid line
                 sgl_draw_line(surf, &grid_line);
@@ -298,7 +302,7 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
             
             if (scope->grid_style == 1) {
                 // Draw dashed line
-                draw_dashed_line(surf, &grid_line);
+                draw_dashed_line(surf, &obj->area, &grid_line);
             } else {
                 // Draw solid line
                 sgl_draw_line(surf, &grid_line);
@@ -339,8 +343,8 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
 
                 end.x = obj->coords.x2 - (i * width / (data_points - 1));  // Move leftward
                 end.y = obj->coords.y2 - ((int32_t)(current_value - display_min) * height) / (display_max - display_min);
-                
-                custom_draw_line(surf, start, end, scope->waveform_color, scope->line_width);
+
+                custom_draw_line(surf, &obj->area, start, end, scope->waveform_color, scope->line_width);
                 
                 start = end;
             }
@@ -355,6 +359,8 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
                 .x2 = obj->coords.x1 + 50,
                 .y2 = obj->coords.y2
             };
+
+            sgl_area_selfclip(&text_area, &obj->area);
             
             // Display maximum value
             sprintf(label_text, "%u", display_max);

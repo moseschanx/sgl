@@ -190,7 +190,7 @@ static inline void sgl_anim_set_path(sgl_anim_t *anim, sgl_anim_path_cb_t path_c
  * @param  value start value
  * @return none
  */
-static inline void sgl_anim_set_start_value(sgl_anim_t *anim, uint16_t value)
+static inline void sgl_anim_set_start_value(sgl_anim_t *anim, int32_t value)
 {
     SGL_ASSERT(anim != NULL);
     anim->start_value = value;
@@ -203,7 +203,7 @@ static inline void sgl_anim_set_start_value(sgl_anim_t *anim, uint16_t value)
  * @param  value end value
  * @return none
  */
-static inline void sgl_anim_set_end_value(sgl_anim_t *anim, uint16_t value)
+static inline void sgl_anim_set_end_value(sgl_anim_t *anim, int32_t value)
 {
     SGL_ASSERT(anim != NULL);
     anim->end_value = value;

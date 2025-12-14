@@ -222,7 +222,7 @@ void sgl_anim_task(void)
  */
 int32_t sgl_anim_path_linear(uint32_t elaps, uint32_t duration, int32_t start, int32_t end)
 {
-    uint64_t progress_fixed, delta, result;
+    int64_t progress_fixed, delta, result;
 
     // If duration is zero or elapsed time exceeds duration, return end value
     if (duration == 0 || elaps >= duration) {
@@ -236,14 +236,14 @@ int32_t sgl_anim_path_linear(uint32_t elaps, uint32_t duration, int32_t start, i
 
     // Calculate progress (elaps / duration) as a fixed-point number with 16 fractional bits
     // Use 64-bit intermediate to prevent overflow during multiplication
-    progress_fixed = ((uint64_t)elaps << 16) / duration;
+    progress_fixed = ((int64_t)elaps << 16) / duration;
 
     // Calculate the difference between end and start
-    delta = (int32_t)end - (int32_t)start;
+    delta = end - start;
 
     // Compute the interpolated result: start + delta * (elaps/duration)
     // Right-shift by 16 to scale back from fixed-point representation
-    result = (int32_t)start + ((delta * (int32_t)progress_fixed) >> 16);
+    result = start + ((delta * progress_fixed) >> 16);
 
     return result;
 }
