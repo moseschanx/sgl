@@ -44,7 +44,7 @@ include(${SGL_SOURCE_PATH}/build.cmake)
 
 configure_file(
     ${SGL_MODULE_PATH}/config.h.in
-    ${SGL_GENERATED_PATH}/sgl_config.h
+    ${SGL_SOURCE_PATH}/sgl_config.h
 )
 
 set(SGL_LIBRARY_HEADER

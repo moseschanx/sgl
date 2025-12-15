@@ -29,6 +29,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "FreeRTOS.h"
+
+
 static sgl_mm_monitor_t mem = {
     .total_size = 0,
     .free_size = 0,
@@ -69,7 +72,7 @@ void sgl_mm_add_pool(void *mem_start, size_t len)
 */
 void* sgl_malloc(size_t size)
 {
-    void *p = malloc(size);
+    void *p = pvPortMalloc(size);
     memset(p, 0, size);
     return p;
 }
@@ -97,7 +100,7 @@ void* sgl_realloc(void *p, size_t size)
 void sgl_free(void *p)
 {
     //mem.used_size -= ;
-    free(p);
+    vPortFree(p);
 }
 
 
