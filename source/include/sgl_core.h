@@ -27,6 +27,7 @@
 
 #include <sgl_cfgfix.h>
 #include <stddef.h>
+#include <stdarg.h>
 #include <sgl_log.h>
 #include <sgl_list.h>
 #include <sgl_event.h>
