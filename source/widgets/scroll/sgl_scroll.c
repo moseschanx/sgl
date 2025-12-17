@@ -87,7 +87,7 @@ static void sgl_scroll_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
 
             sgl_draw_rect(surf, &obj->coords, &obj->coords, &scroll->desc);
             tmp = sgl_color_mixer(tmp, SGL_THEME_BG_COLOR, 128);
-            sgl_draw_fill_round_rect(surf, &fill, &fill, scroll->desc.radius - scroll->desc.border, tmp, scroll->desc.alpha);
+            sgl_draw_fill_rect(surf, &fill, &fill, scroll->desc.radius - scroll->desc.border, tmp, scroll->desc.alpha);
         }
     }
     else if (evt->type == SGL_EVENT_MOVE_DOWN) {

@@ -50,12 +50,7 @@ static void sgl_label_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t
 
     if (evt->type == SGL_EVENT_DRAW_MAIN) {
         if (label->bg_flag) {
-            if (obj->radius > 0) {
-                sgl_draw_fill_round_rect(surf, &obj->area, &obj->coords, obj->radius, label->bg_color, label->alpha);
-            }
-            else {
-                sgl_draw_fill_rect(surf, &obj->area, &obj->coords, label->bg_color, label->alpha);
-            }
+            sgl_draw_fill_rect(surf, &obj->area, &obj->coords, obj->radius, label->bg_color, label->alpha);
         }
         if (label->icon) {
             text_x = label->icon->width + 2;

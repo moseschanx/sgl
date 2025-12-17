@@ -73,7 +73,7 @@ static void sgl_textbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
             area.y1 = textbox_scroll_get_pos(obj, scroll_height) + obj->coords.y1;
             area.y2 = area.y1 + scroll_height;
 
-            sgl_draw_fill_round_rect(surf, &obj->area, &area, SGL_TEXTBOX_SCROLL_WIDTH / 2, textbox->text_color, 128);
+            sgl_draw_fill_rect(surf, &obj->area, &area, SGL_TEXTBOX_SCROLL_WIDTH / 2, textbox->text_color, 128);
         }
     }
     else if(evt->type == SGL_EVENT_MOVE_UP) {

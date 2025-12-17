@@ -479,10 +479,10 @@ static void sgl_page_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t 
 
     if (evt->type == SGL_EVENT_DRAW_MAIN) {
         if (pixmap == NULL) {
-            sgl_draw_fill_rect(surf, &obj->area, &obj->coords, page->color, SGL_ALPHA_MAX);
+            sgl_draw_fill_rect(surf, &obj->area, &obj->coords, 0, page->color, SGL_ALPHA_MAX);
         }
         else {
-            sgl_draw_fill_rect_pixmap(surf, &obj->area, &obj->coords, page->bg_img, SGL_ALPHA_MAX);
+            sgl_draw_fill_rect_pixmap(surf, &obj->area, &obj->coords, 0, page->bg_img, SGL_ALPHA_MAX);
         }
     }
     else {

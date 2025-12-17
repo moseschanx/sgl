@@ -126,8 +126,8 @@ static void sgl_msgbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
             msgbox->close_color = sgl_color_mixer(msgbox->btn_text_color, msgbox->body_desc.color, 128);
         }
 
-        sgl_draw_fill_round_rect(surf, &button_coords, &apply_coords, obj->radius, msgbox->apply_color, msgbox->body_desc.alpha);
-        sgl_draw_fill_round_rect(surf, &button_coords, &close_coords, obj->radius, msgbox->close_color, msgbox->body_desc.alpha);
+        sgl_draw_fill_rect(surf, &button_coords, &apply_coords, obj->radius, msgbox->apply_color, msgbox->body_desc.alpha);
+        sgl_draw_fill_rect(surf, &button_coords, &close_coords, obj->radius, msgbox->close_color, msgbox->body_desc.alpha);
         msgbox_draw_text(surf, &obj->area, &apply_coords, msgbox->apply_icon, msgbox->apply_text, font, msgbox->btn_text_color, msgbox->body_desc.alpha, font_height / 2);
         msgbox_draw_text(surf, &obj->area, &close_coords, msgbox->close_icon, msgbox->close_text, font, msgbox->btn_text_color, msgbox->body_desc.alpha, font_height / 2);
     
