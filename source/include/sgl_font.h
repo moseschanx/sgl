@@ -59,4 +59,16 @@ extern const sgl_font_t consolas32;
 extern const sgl_font_t kai33;
 #endif
 
+#if CONFIG_SGL_FONT_OPPOSANS_MEDIUM_24
+extern const sgl_font_t OPPOSans_Medium_24;
+#endif
+
+#if CONFIG_SGL_FONT_OPPOSANS_MEDIUM_16
+extern const sgl_font_t OPPOSans_Medium_16;
+#endif
+
+#if CONFIG_SGL_FONT_HARMONY_16
+extern const sgl_font_t Harmony_16;
+#endif
+
 #endif // !__SGL_FONT_H__

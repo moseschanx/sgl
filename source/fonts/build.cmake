@@ -21,37 +21,58 @@
 # SOFTWARE.
 #
 
-if(SGL_FONT_SONG23)
+if(CONFIG_SGL_FONT_SONG23)
     set(SGL_SOURCE
         ${SGL_SOURCE}
         ${CMAKE_CURRENT_LIST_DIR}/sgl_ascii_song23.c
     )
 endif()
 
-if(SGL_FONT_CONSOLAS14)
+if(CONFIG_SGL_FONT_CONSOLAS14)
     set(SGL_SOURCE
         ${SGL_SOURCE}
         ${CMAKE_CURRENT_LIST_DIR}/sgl_ascii_consolas14.c
     )
 endif()
 
-if(SGL_FONT_CONSOLAS23)
+if(CONFIG_SGL_FONT_CONSOLAS23)
     set(SGL_SOURCE
         ${SGL_SOURCE}
         ${CMAKE_CURRENT_LIST_DIR}/sgl_ascii_consolas23.c
     )
 endif()
 
-if(SGL_FONT_CONSOLAS24)
+if(CONFIG_SGL_FONT_CONSOLAS24)
     set(SGL_SOURCE
         ${SGL_SOURCE}
         ${CMAKE_CURRENT_LIST_DIR}/sgl_ascii_consolas24.c
     )
 endif()
 
-if(SGL_FONT_CONSOLAS32)
+if(CONFIG_SGL_FONT_CONSOLAS32)
     set(SGL_SOURCE
         ${SGL_SOURCE}
         ${CMAKE_CURRENT_LIST_DIR}/sgl_ascii_consolas34.c
+    )
+endif()
+
+if(CONFIG_SGL_FONT_OPPOSANS_MEDIUM_24)
+    set(SGL_SOURCE
+        ${SGL_SOURCE}
+        ${CMAKE_CURRENT_LIST_DIR}/OPPOSans_Medium_24.c
+    )
+endif()
+
+if(CONFIG_SGL_FONT_OPPOSANS_MEDIUM_16)
+    set(SGL_SOURCE
+        ${SGL_SOURCE}
+        ${CMAKE_CURRENT_LIST_DIR}/OPPOSans_Medium_16.c
+    )
+endif()
+
+if(CONFIG_SGL_FONT_HARMONY_16)
+    set(SGL_SOURCE
+        ${SGL_SOURCE}
+        ${CMAKE_CURRENT_LIST_DIR}/Harmony_16.c
     )
 endif()

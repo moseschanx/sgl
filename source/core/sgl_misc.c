@@ -110,7 +110,7 @@ void sgl_boot_animation(void)
 
     sgl_obj_set_size(logo.text, 40, 30);
     sgl_label_set_text_color(logo.text, SGL_COLOR_ROYAL_BLUE);
-    sgl_label_set_font(logo.text, &song23);
+    sgl_label_set_font(logo.text, &consolas14);
     sgl_obj_set_pos_align(logo.text, SGL_ALIGN_LEFT_MID);
     sgl_label_set_text(logo.text, "SGL");
 
