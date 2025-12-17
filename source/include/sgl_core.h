@@ -1823,6 +1823,28 @@ static inline sgl_obj_t* sgl_obj_get_patent(sgl_obj_t* obj)
 }
 
 
+/**
+ * @brief format a string, a simple version of vsnprintf
+ * @param buf buffer
+ * @param size buffer size
+ * @param fmt format string
+ * @param ap argument list
+ * @return number of characters written
+ */
+int sgl_vsnprintf(char *buf, size_t size, const char *fmt, va_list ap);
+
+
+/**
+ * @brief format a string, a simple version of snprintf
+ * @param buf buffer
+ * @param size buffer size
+ * @param fmt format string
+ * @param ... arguments
+ * @return number of characters written
+ */
+int sgl_snprintf(char *buf, size_t size, const char *fmt, ...);
+
+
 #if (CONFIG_SGL_OBJ_USE_NAME)
 /**
  * @brief set object name
