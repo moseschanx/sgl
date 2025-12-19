@@ -314,7 +314,7 @@ typedef struct sgl_font_table {
 typedef struct sgl_font_unicode {
     const uint32_t offset;
     const uint32_t len;
-    const uint16_t *list;
+    const uint32_t *list;
     const uint32_t tab_offset;
 } sgl_font_unicode_t;
 
