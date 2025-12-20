@@ -28,33 +28,161 @@
 #include <sgl_math.h>
 
 /**
-    font bitmap example is:
-    <----------------Width--------------->   font is 4bpp Anti-Aliasing.   
-    |                                    |
-    |                                    |  
-    |               x..@@@@@@@..x        |
-  Height            x@.........@x        |
-    |               @@.........@@        |
-    |               @@.........@@        |
-    |               .@@@.....@@@@        | 
-    |               ....@@@@@..@@        |
-    |               ...........@@        |
-    |               ...........@@        |
-    |               .@@.......@@.        |
-    |<--offset_x-->|x..@@@@@@@..x        |
-    |              |       ^             |
-    |              |       |             |
-    |              |    offset_y         |
-    |              |       |             |
-    |              |       V             |
-    --------------------------------------
-***/
-
-/**
  * @brief Alpha blending table for 4 bpp and 2 bpp
  */
 static const uint8_t opa4_table[16] = {0,  17, 34,  51, 68, 85, 102, 119, 136, 153, 170, 187, 204, 221, 238, 255 };
 static const uint8_t opa2_table[4]  = {0, 85, 170, 255};
+
+#if (CONFIG_SGL_FONT_COMPRESSED)
+/**
+ * @brief RLE state, refrence LVGL
+ */
+typedef enum {
+    RLE_STATE_SINGLE = 0,
+    RLE_STATE_REPEATED,
+    RLE_STATE_COUNTER,
+} sgl_font_rle_state_t;
+
+/**
+ * @brief RLE decompress information structure
+ */
+typedef struct {
+    uint32_t rdp;
+    const uint8_t * in;
+    uint8_t bpp;
+    uint8_t prev_v;
+    uint8_t count;
+    sgl_font_rle_state_t state;
+} sgl_font_rle_t;
+
+static sgl_font_rle_t font_rle;
+
+/**
+ * @brief Get bits from a byte array
+ * @param in the byte array
+ * @param bit_pos the bit position
+ * @param len the bit length
+ * @return the bits of a byte
+ */
+static inline uint8_t get_bits(const uint8_t * in, uint32_t bit_pos, uint8_t len)
+{
+    uint8_t bit_mask;
+    switch(len) {
+        case 1:
+            bit_mask = 0x1;
+            break;
+        case 2:
+            bit_mask = 0x3;
+            break;
+        case 3:
+            bit_mask = 0x7;
+            break;
+        case 4:
+            bit_mask = 0xF;
+            break;
+        case 8:
+            bit_mask = 0xFF;
+            break;
+        default:
+            bit_mask = (uint16_t)((uint16_t) 1 << len) - 1;
+    }
+
+    uint32_t byte_pos = bit_pos >> 3;
+    bit_pos = bit_pos & 0x7;
+
+    if(bit_pos + len >= 8) {
+        uint16_t in16 = (in[byte_pos] << 8) + in[byte_pos + 1];
+        return (in16 >> (16 - bit_pos - len)) & bit_mask;
+    }
+    else {
+        return (in[byte_pos] >> (8 - bit_pos - len)) & bit_mask;
+    }
+}
+
+/**
+ * @brief Decompress a line of RLE data
+ * @param out the decompressed data
+ * @param w the width of the decompressed data
+ * @return none
+ */
+static inline void decompress_line(uint8_t * out, int32_t w)
+{
+    int32_t i;
+    uint8_t v = 0;
+    uint8_t ret = 0;
+    sgl_font_rle_t *rle = NULL;
+
+    for(i = 0; i < w; i++) {
+        rle = &font_rle;
+
+        if(rle->state == RLE_STATE_SINGLE) {
+            ret = get_bits(rle->in, rle->rdp, rle->bpp);
+            if(rle->rdp != 0 && rle->prev_v == ret) {
+                rle->count = 0;
+                rle->state = RLE_STATE_REPEATED;
+            }
+
+            rle->prev_v = ret;
+            rle->rdp += rle->bpp;
+        }
+        else if(rle->state == RLE_STATE_REPEATED) {
+            v = get_bits(rle->in, rle->rdp, 1);
+            rle->count++;
+            rle->rdp += 1;
+            if(v == 1) {
+                ret = rle->prev_v;
+                if(rle->count == 11) {
+                    rle->count = get_bits(rle->in, rle->rdp, 6);
+                    rle->rdp += 6;
+                    if(rle->count != 0) {
+                        rle->state = RLE_STATE_COUNTER;
+                    }
+                    else {
+                        ret = get_bits(rle->in, rle->rdp, rle->bpp);
+                        rle->prev_v = ret;
+                        rle->rdp += rle->bpp;
+                        rle->state = RLE_STATE_SINGLE;
+                    }
+                }
+            }
+            else {
+                ret = get_bits(rle->in, rle->rdp, rle->bpp);
+                rle->prev_v = ret;
+                rle->rdp += rle->bpp;
+                rle->state = RLE_STATE_SINGLE;
+            }
+
+        }
+        else if(rle->state == RLE_STATE_COUNTER) {
+            ret = rle->prev_v;
+            rle->count--;
+            if(rle->count == 0) {
+                ret = get_bits(rle->in, rle->rdp, rle->bpp);
+                rle->prev_v = ret;
+                rle->rdp += rle->bpp;
+                rle->state = RLE_STATE_SINGLE;
+            }
+        }
+        out[i] = ret;
+    }
+}
+
+/**
+ * @brief Initialize the RLE decompression state
+ * @param in Pointer to the input data
+ * @param bpp Bits per pixel of the input data
+ * @return none
+ */
+static inline void font_rle_init(const uint8_t * in, uint8_t bpp)
+{
+    font_rle.in = in;
+    font_rle.bpp = bpp;
+    font_rle.state = RLE_STATE_SINGLE;
+    font_rle.rdp = 0;
+    font_rle.prev_v = 0;
+    font_rle.count = 0;
+}
+#endif // (!CONFIG_SGL_FONT_COMPRESSED)
 
 
 /**
@@ -79,7 +207,7 @@ void sgl_draw_character(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y
 
     uint8_t shift = 0;
     uint32_t pixel_index, rel_x, rel_y;
-    uint16_t byte_index, alpha_dot;
+    uint16_t byte_index, alpha_dot = 0;
     sgl_color_t color_mix, *buf = NULL;
     sgl_area_t clip;
 
@@ -97,26 +225,7 @@ void sgl_draw_character(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y
         return;
     }
 
-    if (font->bpp == 4) {
-        for (int y = clip.y1; y <= clip.y2; y++) {
-            buf = sgl_surf_get_buf(surf, clip.x1 - surf->x, y - surf->y);
-            rel_y = y - text_rect.y1;
-
-            for (int x = clip.x1; x <= clip.x2; x++) {
-                rel_x = x - text_rect.x1;
-
-                pixel_index = rel_y * font_w + rel_x;
-
-                byte_index = pixel_index >> 1;
-                alpha_dot =  opa4_table[(pixel_index & 1) ? (dot[byte_index] & 0x0F) : (dot[byte_index] >> 4)];
-
-                color_mix = sgl_color_mixer(color, *buf, alpha_dot);
-                *buf = sgl_color_mixer(color_mix, *buf, alpha);
-                buf++;
-            }
-        }
-    }
-    else if (font->bpp == 2) {
+    if (font->compress == 0) {
         for (int y = clip.y1; y <= clip.y2; y++) {
             buf = sgl_surf_get_buf(surf, clip.x1 - surf->x, y - surf->y);
             rel_y = y - text_rect.y1;
@@ -125,9 +234,15 @@ void sgl_draw_character(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y
                 rel_x = x - text_rect.x1;
                 pixel_index = rel_y * font_w + rel_x;
 
-                byte_index = pixel_index >> 2;
-                shift = (3 - (pixel_index & 0x3)) * 2;
-                alpha_dot = opa2_table[(dot[byte_index] >> shift) & 0x03];
+                if  (font->bpp == 4) {
+                    byte_index = pixel_index >> 1;
+                    alpha_dot =  opa4_table[(pixel_index & 1) ? (dot[byte_index] & 0x0F) : (dot[byte_index] >> 4)];
+                }
+                else if (font->bpp == 2) {
+                    byte_index = pixel_index >> 2;
+                    shift = (3 - (pixel_index & 0x3)) * 2;
+                    alpha_dot = opa2_table[(dot[byte_index] >> shift) & 0x03];
+                }
 
                 color_mix = sgl_color_mixer(color, *buf, alpha_dot);
                 *buf = sgl_color_mixer(color_mix, *buf, alpha);
@@ -135,6 +250,28 @@ void sgl_draw_character(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y
             }
         }
     }
+/* support compressed font */
+#if (CONFIG_SGL_FONT_COMPRESSED)
+    else {
+        uint8_t line_buf[128];
+        font_rle_init(dot, font->bpp);
+
+        for (int y = clip.y1; y <= clip.y2; y++) {
+            buf = sgl_surf_get_buf(surf, clip.x1 - surf->x, y - surf->y);
+            decompress_line(line_buf, font_w);
+
+            for (int x = clip.x1; x <= clip.x2; x++) {
+                if (font->bpp == 4) {
+                    *buf = sgl_color_mixer(color, *buf, opa4_table[line_buf[x - clip.x1]]);
+                }
+                else if (font->bpp == 2) {
+                    *buf = sgl_color_mixer(color, *buf, opa2_table[line_buf[x - clip.x1]]);
+                }
+                buf++;
+            }
+        }
+    }
+#endif
 }
 
 
