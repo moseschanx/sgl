@@ -72,7 +72,3 @@ add_library(sgl ALIAS sgl_object)
 target_include_directories(sgl_object PUBLIC
     ${SGL_INCLUDE_DIRS}
 )
-
-target_link_libraries(sgl_object PRIVATE
-    freertos_kernel
-)
