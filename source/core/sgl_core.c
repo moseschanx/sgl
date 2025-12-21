@@ -128,10 +128,13 @@ uint8_t sgl_pixmal_get_bits(const sgl_pixmap_t *pixmap)
     {
     case SGL_PIXMAP_FMT_NONE:
         bits = sizeof(sgl_color_t); break;
+    case SGL_PIXMAP_FMT_RGB332:
     case SGL_PIXMAP_FMT_RLE_RGB332:
         bits = 1; break;
+    case SGL_PIXMAP_FMT_RGB565:
     case SGL_PIXMAP_FMT_RLE_RGB565:
         bits = 2; break;
+    case SGL_PIXMAP_FMT_RGB888:
     case SGL_PIXMAP_FMT_RLE_RGB888:
         bits = 3; break;
     case SGL_PIXMAP_FMT_RLE_RGBA8888:

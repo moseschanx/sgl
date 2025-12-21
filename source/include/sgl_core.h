@@ -1476,7 +1476,7 @@ static inline sgl_page_t* sgl_page_get_active(void)
  * @brief sgl task handle function with sync mode
  * @param none
  * @return none
- * @note you can call this function for force update screen
+ * @note you can call this function to force update screen
  */
 void sgl_task_handle_sync(void);
 
