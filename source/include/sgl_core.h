@@ -53,14 +53,6 @@ extern "C" {
 /* the ASCII offset of fonts */
 #define  SGL_TEXT_ASCII_OFFSET             (32)
 
-/* the pixmap format */
-#define  SGL_PIXMAP_FMT_NONE               (0)
-#define  SGL_PIXMAP_FMT_RLE_RGB332         (1)
-#define  SGL_PIXMAP_FMT_RLE_RGB565         (2)
-#define  SGL_PIXMAP_FMT_RLE_RGB888         (3)
-#define  SGL_PIXMAP_FMT_RLE_RGBA8888       (4)
-#define  SGL_PIXMAP_FMT_RLE_1              (4)
-#define  SGL_PIXMAP_FMT_MAX                (7)
 
 /**
 * @brief This enumeration type defines the alignment of controls in sgl,
