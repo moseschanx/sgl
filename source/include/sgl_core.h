@@ -262,16 +262,16 @@ typedef struct sgl_pixmap {
 
 /**
  * @brief This structure defines an icon, with a bitmap pointing to the
- * @bitmap: point to icon bitmap
  * @width: pixmap width
  * @height: pixmap height
  * @bpp: bitmap pixel deepth
+ * @bitmap: point to icon bitmap
  */
 typedef struct sgl_icon_pixmap {
-    const uint8_t *bitmap;
     uint32_t       width : 12;
     uint32_t       height : 12;
     uint32_t       bpp : 8;
+    const uint8_t *bitmap;
 } sgl_icon_pixmap_t;
 
 
@@ -1473,6 +1473,33 @@ static inline sgl_page_t* sgl_page_get_active(void)
 
 
 /**
+ * @brief sgl task handle function with sync mode
+ * @param none
+ * @return none
+ * @note you can call this function for force update screen
+ */
+void sgl_task_handle_sync(void);
+
+
+/**
+ * @brief sgl task handle function
+ * @param none
+ * @return none
+ * @note this function should be called in main loop or timer or thread
+ */
+static inline void sgl_task_handle(void)
+{
+    /* If the system tick time has not been reached, skip directly. */
+    if (sgl_tick_get() < SGL_SYSTEM_TICK_MS) {
+        return;
+    }
+
+    /* If the system tick time has been reached, execute the task. */
+    sgl_task_handle_sync();
+}
+
+
+/**
  * @brief Create an object
  * @param parent parent object
  * @return sgl_obj_t
@@ -1499,6 +1526,19 @@ void sgl_obj_free(sgl_obj_t *obj);
  *       if object is a page, the page object will be deleted and all its children will be deleted.
  */
 void sgl_obj_delete(sgl_obj_t *obj);
+
+
+/**
+ * @brief delete object
+ * @param obj point to object
+ * @return none
+ * @note this function will take effect immediately
+ */
+static inline void sgl_obj_delete_sync(sgl_obj_t *obj)
+{
+    sgl_obj_delete(obj);
+    sgl_task_handle_sync();
+}
 
 
 /**
@@ -1750,15 +1790,6 @@ sgl_pos_t sgl_get_text_pos(sgl_area_t *area, const sgl_font_t *font, const char 
  * @param type align type
  */
 sgl_pos_t sgl_get_icon_pos(sgl_area_t *area, const sgl_icon_pixmap_t *icon, int16_t offset, sgl_align_type_t type);
-
-
-/**
- * @brief sgl task handle function
- * @param none
- * @return none
- * @note this function should be called in main loop or timer or thread
- */
-void sgl_task_handle(void);
 
 
 /**

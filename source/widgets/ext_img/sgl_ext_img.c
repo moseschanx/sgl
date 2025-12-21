@@ -47,7 +47,7 @@ rlecontext_t rlectx = {
     .remainder = 0,
 };
 
-static inline void rel_init(const uint8_t *bitmap, uint8_t format, uint8_t alpha)
+static inline void rle_init(const uint8_t *bitmap, uint8_t format, uint8_t alpha)
 {
     if (rlectx.bitmap == NULL) {
         rlectx.bitmap = bitmap;
@@ -140,7 +140,7 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
         }
 
         /* RLE pixmap support */
-        rel_init(bitmap, ext_img->pixmap->format, ext_img->alpha);
+        rle_init(bitmap, ext_img->pixmap->format, ext_img->alpha);
         for (int y = clip.y1; y <= clip.y2; y++) {
             buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, y - surf->y1);
             rle_decompress_line(&area, &obj->area, buf);

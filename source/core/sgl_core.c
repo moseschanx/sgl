@@ -128,16 +128,16 @@ uint8_t sgl_pixmal_get_bits(const sgl_pixmap_t *pixmap)
     {
     case SGL_PIXMAP_FMT_NONE:
         bits = sizeof(sgl_color_t); break;
-    case SGL_PIXMAP_FMT_RLE_RGB565:
-        bits = 2; break;
     case SGL_PIXMAP_FMT_RLE_RGB332:
         bits = 1; break;
+    case SGL_PIXMAP_FMT_RLE_RGB565:
+        bits = 2; break;
     case SGL_PIXMAP_FMT_RLE_RGB888:
         bits = 3; break;
     case SGL_PIXMAP_FMT_RLE_RGBA8888:
         bits = 4; break;
     default:
-        SGL_LOG_ERROR("[ERROR] pixmap format error\n");
+        SGL_LOG_ERROR("pixmap format error");
         break;
     }
     return bits;
@@ -1611,17 +1611,13 @@ static inline void sgl_draw_task(sgl_area_t *dirty)
 
 
 /**
- * @brief sgl task handle function
+ * @brief sgl task handle function with sync mode
  * @param none
  * @return none
- * @note this function should be called in main loop or timer or thread
+ * @note you can call this function for force update screen
  */
-void sgl_task_handle(void)
+void sgl_task_handle_sync(void)
 {
-    /* If the system tick time has not been reached, skip directly. */
-    if (sgl_tick_get() < SGL_SYSTEM_TICK_MS) {
-        return;
-    }
     /* event task */
     sgl_event_task();
 
