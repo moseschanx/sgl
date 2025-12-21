@@ -64,7 +64,7 @@ static inline void rle_decompress_line(sgl_area_t *coords, sgl_area_t *area, sgl
             rlectx.remainder = rlectx.bitmap[rlectx.index++];
 
             if (rlectx.remainder == 0) {
-                rel_init(NULL, SGL_PIXMAP_FMT_MAX, 0);
+                rlectx.bitmap = NULL;
                 return;
             }
 
