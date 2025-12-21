@@ -116,6 +116,35 @@ static inline void sgl_dirty_area_init(void)
 
 
 /**
+ * @brief get pixmap format bits
+ * @param pixmap pointer to pixmap
+ * @return pixmap bits of per pixel
+ */
+uint8_t sgl_pixmal_get_bits(const sgl_pixmap_t *pixmap)
+{
+    SGL_ASSERT(pixmap != NULL);
+    uint8_t bits = 0;
+    switch (pixmap->format)
+    {
+    case SGL_PIXMAP_FMT_NONE:
+        bits = sizeof(sgl_color_t); break;
+    case SGL_PIXMAP_FMT_RLE_RGB565:
+        bits = 2; break;
+    case SGL_PIXMAP_FMT_RLE_RGB332:
+        bits = 1; break;
+    case SGL_PIXMAP_FMT_RLE_RGB888:
+        bits = 3; break;
+    case SGL_PIXMAP_FMT_RLE_RGBA8888:
+        bits = 4; break;
+    default:
+        SGL_LOG_ERROR("[ERROR] pixmap format error\n");
+        break;
+    }
+    return bits;
+}
+
+
+/**
  * @brief add object to parent
  * @param parent: pointer of parent object
  * @param obj: pointer of object
@@ -479,10 +508,10 @@ static void sgl_page_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t 
 
     if (evt->type == SGL_EVENT_DRAW_MAIN) {
         if (pixmap == NULL) {
-            sgl_draw_fill_rect(surf, &obj->area, &obj->coords, page->color, SGL_ALPHA_MAX);
+            sgl_draw_fill_rect(surf, &obj->area, &obj->coords, 0, page->color, SGL_ALPHA_MAX);
         }
         else {
-            sgl_draw_fill_rect_pixmap(surf, &obj->area, &obj->coords, page->bg_img, SGL_ALPHA_MAX);
+            sgl_draw_fill_rect_pixmap(surf, &obj->area, &obj->coords, 0, page->bg_img, SGL_ALPHA_MAX);
         }
     }
     else {
@@ -546,10 +575,10 @@ static sgl_page_t* sgl_page_create(void)
     }
 
     page->surf.buffer = (sgl_color_t*)sgl_ctx.fb_dev.buffer[0];
-    page->surf.x = 0;
-    page->surf.y = 0;
-    page->surf.w = sgl_ctx.fb_dev.xres;
-    page->surf.h = sgl_ctx.fb_dev.yres;
+    page->surf.x1 = 0;
+    page->surf.y1 = 0;
+    page->surf.x2 = sgl_ctx.fb_dev.xres - 1;
+    page->surf.y2 = sgl_ctx.fb_dev.yres - 1;
     page->surf.size = sgl_ctx.fb_dev.buffer_size;
     page->color = SGL_THEME_DESKTOP;
 
@@ -727,33 +756,6 @@ sgl_color_t sgl_color_mixer(sgl_color_t fg_color, sgl_color_t bg_color, uint8_t 
 
 #endif
     return ret;
-}
-
-
-/**
- * @brief  Get area intersection between surface and area
- * @param surf: surface
- * @param area: area
- * @param clip: intersection area
- * @return true: intersect, otherwise false
- * @note: this function is unsafe, you should check the surf and area is not NULL by yourself
- */
-bool sgl_surf_clip(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *clip)
-{
-    SGL_ASSERT(surf != NULL && area != NULL && clip != NULL);
-    int16_t h_pos = surf->y + surf->h - 1;
-    int16_t w_pos = surf->x + surf->w - 1;
-
-    if (area->y1 > h_pos || area->y2 < surf->y || area->x1 > w_pos || area->x2 < surf->x) {
-        return false;
-    }
-
-    clip->x1 = sgl_max(surf->x, area->x1);
-    clip->x2 = sgl_min(w_pos, area->x2);
-    clip->y1 = sgl_max(surf->y, area->y1);
-    clip->y2 = sgl_min(h_pos, area->y2);
-
-    return true;
 }
 
 
@@ -1447,7 +1449,7 @@ void sgl_obj_set_pos_align_ref(sgl_obj_t *ref, sgl_obj_t *obj, sgl_align_type_t 
  * @param dirty_h dirty height
  * @return none
  */
-static inline void draw_obj_slice(sgl_obj_t *obj, sgl_surf_t *surf, int16_t dirty_h)
+static inline void draw_obj_slice(sgl_obj_t *obj, sgl_surf_t *surf)
 {
     int top = 0;
 	sgl_event_t evt;
@@ -1480,7 +1482,7 @@ static inline void draw_obj_slice(sgl_obj_t *obj, sgl_surf_t *surf, int16_t dirt
 	}
 
     /* flush dirty area into screen */
-    sgl_panel_flush_area(surf->x, surf->y, surf->w, dirty_h, surf->buffer);
+    sgl_panel_flush_area(surf->x1, surf->y1, surf->x2, surf->y2, surf->buffer);
 }
 
 
@@ -1576,44 +1578,42 @@ static inline void sgl_dirty_area_calculate(sgl_obj_t *obj)
 static inline void sgl_draw_task(sgl_area_t *dirty)
 {
     sgl_surf_t *surf = &sgl_ctx.page->surf;
-    sgl_obj_t *head = &sgl_ctx.page->obj;
-    uint16_t max_h = 0, draw_h = 0, remaining = 0, dirty_w = 0, dirty_h = 0;
+    sgl_obj_t  *head = &sgl_ctx.page->obj;
 
-    /* fix dirty area if it is out of screen */
-    dirty->x1 = sgl_max(dirty->x1, 0);
-    dirty->x2 = sgl_min(dirty->x2, SGL_SCREEN_WIDTH - 1);
-    dirty->y1 = sgl_max(dirty->y1, 0);
-    dirty->y2 = sgl_min(dirty->y2, SGL_SCREEN_HEIGHT - 1);
+    /* check dirty area, ensure it is valid */
+    SGL_ASSERT(dirty != NULL && dirty->x1 >= 0 && dirty->y1 >= 0 && dirty->x2 < SGL_SCREEN_WIDTH && dirty->y2 < SGL_SCREEN_HEIGHT);
 
 #if (!CONFIG_SGL_USE_FULL_FB)
-    /* to set start x and y position for dirty area */
-    dirty_w = dirty->x2 - dirty->x1 + 1;
+    uint16_t dirty_h = 0, draw_h = 0;
     dirty_h = dirty->y2 - dirty->y1 + 1;
 
-    SGL_ASSERT(dirty_w > 0);
+    surf->x1 = dirty->x1;
+    surf->y1 = dirty->y1;
+    surf->x2 = dirty->x2;
+    surf->pitch = surf->x2 - surf->x1 + 1;
+    dirty_h = sgl_min(surf->size / surf->pitch, (uint32_t)(dirty->y2 - dirty->y1 + 1));
 
-    surf->x = dirty->x1;
-    surf->y = dirty->y1;
-    surf->w = dirty_w;
+    SGL_LOG_TRACE("sgl_draw_task: dirty area  x1:%d y1:%d x2:%d y2:%d", dirty->x1, dirty->y1, dirty->x2, dirty->y2);
 
-    max_h = surf->size / dirty_w;
-    surf->h = (uint16_t)sgl_min(max_h, (uint16_t)dirty_h);
+    while (surf->y1 <= dirty->y2) {
+        draw_h = sgl_min(dirty->y2 - surf->y1 + 1, dirty_h);
 
-    SGL_LOG_TRACE("sgl_draw_task: dirty area: x: %d, y: %d, w: %d, h: %d", dirty->x1, dirty->y1, dirty_w, dirty_h);
+        surf->y2 = surf->y1 + draw_h - 1;
+        draw_obj_slice(head, surf);
+        surf->y1 += draw_h;
 
-    while (surf->y <= dirty->y2) {
-        remaining = dirty->y2 - surf->y + 1;
-        draw_h = (remaining < surf->h) ? remaining : surf->h;
-
-        draw_obj_slice(head, surf, draw_h);
-        surf->y += draw_h;
-        /* swap buffer for dma operation, but it depends on double buffer */
+        /* swap the double buffer */
         sgl_surf_buffer_swap(surf);
     }
 #else
-    SGL_LOG_TRACE("sgl_draw_task: dirty area: x: %d, y: %d, w: %d, h: %d", dirty->x1, dirty->y1, surf->w, dirty->y2 - dirty->y1 + 1);
-    draw_obj_slice(head, surf, sgl_min(dirty->y2 - surf->y + 1, surf->h));
-    /* swap buffer for dma operation, but it depends on double buffer */
+    surf->x1 = dirty->x1;
+    surf->y1 = dirty->y1;
+    surf->x2 = dirty->x2;
+    surf->y2 = dirty->y2;
+
+    SGL_LOG_TRACE("sgl_draw_task: dirty area  x1:%d y1:%d x2:%d y2:%d", dirty->x1, dirty->y1, dirty->x2, dirty->y2);
+
+    draw_obj_slice(head, surf);
     sgl_surf_buffer_swap(surf);
 #endif
 }

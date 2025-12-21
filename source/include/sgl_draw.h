@@ -161,7 +161,7 @@ typedef struct sgl_draw_icon {
  */
 static inline void sgl_surf_set_pixel(sgl_surf_t *surf, int16_t x, int16_t y, sgl_color_t color) 
 {
-    surf->buffer[y * surf->w + x] = color;
+    surf->buffer[y * surf->pitch + x] = color;
 }
 
 
@@ -175,7 +175,7 @@ static inline void sgl_surf_set_pixel(sgl_surf_t *surf, int16_t x, int16_t y, sg
  */
 static inline sgl_color_t* sgl_surf_get_buf(sgl_surf_t *surf, int16_t x, int16_t y)
 {
-    return &surf->buffer[y * surf->w + x];
+    return &surf->buffer[y * surf->pitch + x];
 }
 
 
@@ -189,7 +189,7 @@ static inline sgl_color_t* sgl_surf_get_buf(sgl_surf_t *surf, int16_t x, int16_t
  */
 static inline sgl_color_t sgl_surf_get_pixel(sgl_surf_t *surf, int16_t x, int16_t y) 
 {
-    return surf->buffer[y * surf->w + x];
+    return surf->buffer[y * surf->pitch + x];
 }
 
 
@@ -204,7 +204,7 @@ static inline sgl_color_t sgl_surf_get_pixel(sgl_surf_t *surf, int16_t x, int16_
  */
 static inline void sgl_surf_hline(sgl_surf_t *surf, int16_t y, int16_t x1, int16_t x2, sgl_color_t color) 
 {
-    sgl_color_t *dst = surf->buffer + y * surf->w + x1;
+    sgl_color_t *dst = surf->buffer + y * surf->pitch + x1;
     for (int16_t i = x1; i <= x2; i++) {
         *dst = color;
         dst++;
@@ -223,50 +223,12 @@ static inline void sgl_surf_hline(sgl_surf_t *surf, int16_t y, int16_t x1, int16
  */
 static inline void sgl_surf_vline(sgl_surf_t *surf, int16_t x, int16_t y1, int16_t y2, sgl_color_t color) 
 {
-    sgl_color_t *dst = surf->buffer + y1 * surf->w + x;
+    sgl_color_t *dst = surf->buffer + y1 * surf->pitch + x;
     for (int16_t i = y1; i <= y2; i++) {
         *dst = color;
-        dst += surf->w;
+        dst += surf->pitch;
     }
 }
-
-
-/**
- * @brief fill rect on surface with alpha
- * @param surf point to surface
- * @param area area of that you want to fill
- * @param rect rect of that you want to fill
- * @param color color of rect
- * @param alpha alpha of rect
- * @return none
- */
-void sgl_draw_fill_rect(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *rect, sgl_color_t color, uint8_t alpha);
-
-
-/**
- * @brief fill rect on surface with alpha
- * @param surf point to surface
- * @param area area of that you want to fill
- * @param rect rect of that you want to fill
- * @param color color of rect
- * @param border_color color of border
- * @param border_width width of border
- * @param alpha alpha of rect
- * @return none
- */
-void sgl_draw_fill_rect_with_border(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *rect, sgl_color_t color, sgl_color_t border_color, int16_t border_width, uint8_t alpha);
-
-
-/**
- * @brief fill rect on surface with pixmap and alpha
- * @param surf  surface pointer
- * @param area  area that you want to fill
- * @param rect  rect that you want to fill
- * @param pixmap pixmap pointer
- * @param alpha alpha
- * @return none
- */
-void sgl_draw_fill_rect_pixmap(sgl_surf_t *surf, sgl_area_t *area, sgl_rect_t *rect, const sgl_pixmap_t *pixmap, uint8_t alpha);
 
 
 /**
@@ -279,7 +241,7 @@ void sgl_draw_fill_rect_pixmap(sgl_surf_t *surf, sgl_area_t *area, sgl_rect_t *r
  * @param alpha alpha of rectangle
  * @return none
  */
-void sgl_draw_fill_round_rect(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *rect, int16_t radius, sgl_color_t color, uint8_t alpha);
+void sgl_draw_fill_rect(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *rect, int16_t radius, sgl_color_t color, uint8_t alpha);
 
 
 /**
@@ -294,7 +256,7 @@ void sgl_draw_fill_round_rect(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *re
  * @param alpha alpha of rectangle
  * @return none
  */
-void sgl_draw_fill_round_rect_with_border(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *rect, int16_t radius, sgl_color_t color, sgl_color_t border_color, uint8_t border_width, uint8_t alpha);
+void sgl_draw_fill_rect_with_border(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *rect, int16_t radius, sgl_color_t color, sgl_color_t border_color, uint8_t border_width, uint8_t alpha);
 
 
 /**
@@ -307,7 +269,7 @@ void sgl_draw_fill_round_rect_with_border(sgl_surf_t *surf, sgl_area_t *area, sg
  * @param alpha alpha of rectangle
  * @return none
  */
-void sgl_draw_fill_round_rect_pixmap(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *rect, int16_t radius, const sgl_pixmap_t *pixmap, uint8_t alpha);
+void sgl_draw_fill_rect_pixmap(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *rect, int16_t radius, const sgl_pixmap_t *pixmap, uint8_t alpha);
 
 
 /**

@@ -27,6 +27,7 @@
 
 #include <sgl_cfgfix.h>
 #include <stddef.h>
+#include <stdarg.h>
 #include <sgl_log.h>
 #include <sgl_list.h>
 #include <sgl_event.h>
@@ -52,6 +53,14 @@ extern "C" {
 /* the ASCII offset of fonts */
 #define  SGL_TEXT_ASCII_OFFSET             (32)
 
+/* the pixmap format */
+#define  SGL_PIXMAP_FMT_NONE               (0)
+#define  SGL_PIXMAP_FMT_RLE_RGB565         (1)
+#define  SGL_PIXMAP_FMT_RLE_RGB332         (2)
+#define  SGL_PIXMAP_FMT_RLE_RGB888         (3)
+#define  SGL_PIXMAP_FMT_RLE_RGBA8888       (4)
+#define  SGL_PIXMAP_FMT_RLE_1              (4)
+#define  SGL_PIXMAP_FMT_MAX                (7)
 
 /**
 * @brief This enumeration type defines the alignment of controls in sgl,
@@ -222,21 +231,23 @@ typedef union {
 
 /**
  * @brief This structure defines a surface, which is a rectangular area of the screen.
+ * @x1:     x1 coordinate
+ * @y1:     y1 coordinate
+ * @x2:     x2 coordinate
+ * @y2:     y2 coordinate
  * @buffer: buffer pointer
- * @x:      x coordinate
- * @y:      y coordinate
- * @w:      width
- * @h:      height
+ * @size:   bytes of buffer
  * @pitch:  bytes per line
  * @h_max:  maximum height
  */
 typedef struct sgl_surf {
+    int16_t x1;
+    int16_t y1;
+    int16_t x2;
+    int16_t y2;
     sgl_color_t *buffer;
-    int16_t      x;
-    int16_t      y;
-    uint16_t     w;
-    int16_t      h;
     uint32_t     size;
+    uint32_t     pitch;
 } sgl_surf_t;
 
 
@@ -248,23 +259,12 @@ typedef struct sgl_surf {
 * @height: pixmap height
 * @format: bitmap format 0: no compression, 1:
 * @bitmap: point to image bitmap
-* @read: read pixel map from external storage
-* @data: user private data for @read
 */
 typedef struct sgl_pixmap {
     uint32_t width : 12;
     uint32_t height : 12;
     uint32_t format : 8;
-
-#if (CONFIG_SGL_EXTERNAL_PIXMAP == 0)
     const uint8_t *bitmap;
-#else
-    void (*read)(void *buff, uint32_t pos, size_t size, void *data);
-    union {
-        const uint8_t *bitmap;
-        void          *data;
-    };
-#endif
 } sgl_pixmap_t;
 
 
@@ -313,7 +313,7 @@ typedef struct sgl_font_table {
 typedef struct sgl_font_unicode {
     const uint32_t offset;
     const uint32_t len;
-    const uint16_t *list;
+    const uint32_t *list;
     const uint32_t tab_offset;
 } sgl_font_unicode_t;
 
@@ -458,7 +458,7 @@ typedef struct sgl_device_fb {
     int16_t    yres;
     int16_t    xres_virtual;
     int16_t    yres_virtual;
-    void       (*flush_area)(int16_t x, int16_t y, int16_t w, int16_t h, sgl_color_t *src);
+    void       (*flush_area)(int16_t x1, int16_t y1, int16_t x2, int16_t y2, sgl_color_t *src);
 } sgl_device_fb_t;
 
 
@@ -519,15 +519,17 @@ int sgl_device_fb_register(sgl_device_fb_t *fb_dev);
  * @param src [in] source color
  * @return none
  */
-static inline void sgl_panel_flush_area(int16_t x, int16_t y, int16_t w, int16_t h, sgl_color_t *src)
+static inline void sgl_panel_flush_area(int16_t x1, int16_t y1, int16_t x2, int16_t y2, sgl_color_t *src)
 {
 #if CONFIG_SGL_COLOR16_SWAP
+    uint16_t w = x2 - x1 + 1;
+    uint16_t h = y2 - y1 + 1;
     uint16_t *dst = (uint16_t *)src;
     for (size_t i = 0; i < (size_t)(w * h); i++) {
         dst[i] = (dst[i] << 8) | (dst[i] >> 8);
     }
 #endif
-    sgl_ctx.fb_dev.flush_area(x, y, w, h, src);
+    sgl_ctx.fb_dev.flush_area(x1, y1, x2, y2, src);
 }
 
 
@@ -600,6 +602,14 @@ static inline void sgl_log_stdout(const char *str)
         sgl_ctx.log_dev.log_puts(str);
     }
 }
+
+
+/**
+ * @brief get pixmap format bits
+ * @param pixmap pointer to pixmap
+ * @return pixmap bits
+ */
+uint8_t sgl_pixmal_get_bits(const sgl_pixmap_t *pixmap);
 
 
 /**
@@ -1555,48 +1565,14 @@ static inline sgl_color_t sgl_pixmap_get_pixel(const sgl_pixmap_t *pixmap, int16
  * @pixmap: pointe to pixmap
  * @param x: x position
  * @param y: y position
- * @param size: pixel size
  * @return sgl_color_t: pixel color address
  */
-static inline sgl_color_t* sgl_pixmap_get_buf(const sgl_pixmap_t *pixmap, int16_t x, int16_t y, size_t size)
+static inline sgl_color_t* sgl_pixmap_get_buf(const sgl_pixmap_t *pixmap, int16_t x, int16_t y)
 {
     uint32_t pos;
-
     SGL_ASSERT(pixmap != NULL);
     pos = y * pixmap->width + x;
-
-#if (CONFIG_SGL_EXTERNAL_PIXMAP)
-    SGL_ASSERT(size <= sgl_panel_resolution_width());
-    if (pixmap->read) {
-        pixmap->read(sgl_ctx.pixmap_buff, pos * sizeof(sgl_color_t), size * sizeof(sgl_color_t), pixmap->data);
-        return sgl_ctx.pixmap_buff;
-    }
-#else
-    SGL_UNUSED(size);
-#endif
-
     return &((sgl_color_t*)pixmap->bitmap)[pos];
-}
-
-
-/**
- * @brief check surf and other area is overlap
- * @param surf surfcare
- * @param area area b
- * @return true or false, true means overlap, false means not overlap
- * @note: this function is unsafe, you should check the surfcare and area is not NULL by yourself
- */
-static inline bool sgl_surf_area_is_overlap(sgl_surf_t *surf, sgl_area_t *area)
-{
-    SGL_ASSERT(surf != NULL && area != NULL);
-    int16_t h_pos = surf->y + surf->h - 1;
-    int16_t w_pos = surf->x + surf->w - 1;
-
-    if (area->y1 > h_pos || area->y2 < surf->y || area->x1 > w_pos || area->x2 < surf->x) {
-        return false;
-    }
-
-    return true;
 }
 
 
@@ -1619,14 +1595,16 @@ static inline bool sgl_area_is_overlap(sgl_area_t *area_a, sgl_area_t *area_b)
 
 
 /**
- * @brief  Get area intersection between surface and area
- * @param surf: surface
- * @param area: area
- * @param clip: intersection area
- * @return true: intersect, otherwise false
- * @note: this function is unsafe, you should check the surf and area is not NULL by yourself
+ * @brief check surf and other area is overlap
+ * @param surf surfcare
+ * @param area area b
+ * @return true or false, true means overlap, false means not overlap
+ * @note: this function is unsafe, you should check the surfcare and area is not NULL by yourself
  */
-bool sgl_surf_clip(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *clip);
+static inline bool sgl_surf_area_is_overlap(sgl_surf_t *surf, sgl_area_t *area)
+{
+    return sgl_area_is_overlap((sgl_area_t*)surf, area);
+}
 
 
 /**
@@ -1638,6 +1616,20 @@ bool sgl_surf_clip(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *clip);
  * @note: this function is unsafe, you should check the area_a and area_b and clip is not NULL by yourself
  */
 bool sgl_area_clip(sgl_area_t *area_a, sgl_area_t *area_b, sgl_area_t *clip);
+
+
+/**
+ * @brief  Get area intersection between surface and area
+ * @param surf: surface
+ * @param area: area
+ * @param clip: intersection area
+ * @return true: intersect, otherwise false
+ * @note: this function is unsafe, you should check the surf and area is not NULL by yourself
+ */
+static inline bool sgl_surf_clip(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *clip)
+{
+    return sgl_area_clip((sgl_area_t*)surf, area, clip);
+}
 
 
 /**
@@ -1821,6 +1813,28 @@ static inline sgl_obj_t* sgl_obj_get_patent(sgl_obj_t* obj)
     SGL_ASSERT(obj != NULL);
     return obj->parent;
 }
+
+
+/**
+ * @brief format a string, a simple version of vsnprintf
+ * @param buf buffer
+ * @param size buffer size
+ * @param fmt format string
+ * @param ap argument list
+ * @return number of characters written
+ */
+int sgl_vsnprintf(char *buf, size_t size, const char *fmt, va_list ap);
+
+
+/**
+ * @brief format a string, a simple version of snprintf
+ * @param buf buffer
+ * @param size buffer size
+ * @param fmt format string
+ * @param ... arguments
+ * @return number of characters written
+ */
+int sgl_snprintf(char *buf, size_t size, const char *fmt, ...);
 
 
 #if (CONFIG_SGL_OBJ_USE_NAME)

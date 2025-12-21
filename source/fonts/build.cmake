@@ -76,3 +76,9 @@ if(CONFIG_SGL_FONT_HARMONY_16)
         ${CMAKE_CURRENT_LIST_DIR}/Harmony_16.c
     )
 endif()
+if(CONFIG_SGL_FONT_CONSOLAS24_COMPRESS)
+    set(SGL_SOURCE
+        ${SGL_SOURCE}
+        ${CMAKE_CURRENT_LIST_DIR}/sgl_ascii_consolas24_compress.c
+    )
+endif()

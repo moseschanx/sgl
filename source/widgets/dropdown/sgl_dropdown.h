@@ -37,7 +37,6 @@
 typedef struct sgl_dropdown_option {
     struct sgl_dropdown_option *next;
     const char *text;
-    const sgl_icon_pixmap_t *icon;
 } sgl_dropdown_option_t;
 
 
@@ -202,10 +201,9 @@ const char *sgl_dropdown_get_selected_text(sgl_obj_t *obj);
  * @brief add an option to the dropdown
  * @param obj pointer to the dropdown object
  * @param text pointer to the text
- * @param icon pointer to the icon
  * @return none
  */
-void sgl_dropdown_add_option(sgl_obj_t *obj, const char *text, const sgl_icon_pixmap_t *icon);
+void sgl_dropdown_add_option(sgl_obj_t *obj, const char *text);
 
 /**
  * @brief delete an option from the dropdown

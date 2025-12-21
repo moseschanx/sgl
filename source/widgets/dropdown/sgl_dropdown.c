@@ -103,12 +103,6 @@ static void sgl_dropdown_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
         if (option != NULL) {
             pos_x = text_area.x1 + dropdown->body_desc.radius;
             pos_y = obj->coords.y1 + (icon_h - dropdown->font->font_height) / 2;
-            if (option->icon != NULL) {
-                icon_y = obj->coords.y1 + (icon_h - option->icon->height) / 2;
-                sgl_draw_icon(surf, &text_area, pos_x, icon_y, dropdown->text_color, dropdown->body_desc.alpha, option->icon);
-                pos_x += option->icon->width + dropdown->body_desc.radius;
-            }
-
             sgl_draw_string(surf, &text_area, pos_x, pos_y, option->text, dropdown->text_color, dropdown->body_desc.alpha, dropdown->font);
         }
 
@@ -121,11 +115,6 @@ static void sgl_dropdown_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
 
             for (int i = 0; option != NULL; i++) {
                 pos_x = text_area.x1 + dropdown->body_desc.radius;
-                if (option->icon != NULL) {
-                    icon_y = pos_y + (dropdown->font->font_height - option->icon->height) / 2;
-                    sgl_draw_icon(surf, &obj->area, pos_x, icon_y, dropdown->text_color, dropdown->body_desc.alpha, option->icon);
-                    pos_x += option->icon->width + 2;
-                }
                 sgl_draw_string(surf, &obj->area, pos_x, pos_y, option->text, dropdown->text_color, dropdown->body_desc.alpha, dropdown->font);
                 option = option->next;
                 pos_y += dropdown->font->font_height;
@@ -232,10 +221,9 @@ const char *sgl_dropdown_get_selected_text(sgl_obj_t *obj)
  * @brief add an option to the dropdown
  * @param obj pointer to the dropdown object
  * @param text pointer to the text
- * @param icon pointer to the icon
  * @return none
  */
-void sgl_dropdown_add_option(sgl_obj_t *obj, const char *text, const sgl_icon_pixmap_t *icon)
+void sgl_dropdown_add_option(sgl_obj_t *obj, const char *text)
 {
     sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
     sgl_dropdown_option_t *tail = dropdown->head;
@@ -261,7 +249,6 @@ void sgl_dropdown_add_option(sgl_obj_t *obj, const char *text, const sgl_icon_pi
 
     dropdown->option_num ++;
     add->text = text;
-    add->icon = icon;
     add->next = NULL;
 
     if (dropdown->selected == -1) {

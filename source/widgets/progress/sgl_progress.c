@@ -56,7 +56,7 @@ static void sgl_progress_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
 
         while (rect.x2 <= knob.x2) {
             rect.x2 = rect.x1 + progress->knob_width;
-            sgl_draw_fill_round_rect(surf, &knob, &rect, progress->knob_radius, progress->color, progress->alpha);
+            sgl_draw_fill_rect(surf, &knob, &rect, progress->knob_radius, progress->color, progress->alpha);
             rect.x1 = rect.x2 + progress->interval;
         }
     }
