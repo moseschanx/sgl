@@ -108,8 +108,9 @@ static inline void append_hex(char *buf, size_t size, size_t *pos, unsigned int 
  * @param size buffer size
  * @param pos current position
  * @param val float to append
+ * @param precision number of decimal places (-1 for default of 6)
  */
-static void append_float(char *buf, size_t size, size_t *pos, double val)
+static void append_float(char *buf, size_t size, size_t *pos, double val, int precision)
 {
     int int_part = (int)val;
     double frac = val - int_part;
@@ -123,7 +124,8 @@ static void append_float(char *buf, size_t size, size_t *pos, double val)
     append_int(buf, size, pos, int_part);
     append_char(buf, size, pos, '.');
 
-    for (int i = 0; i < 6; i++) {
+    int prec = (precision >= 0) ? precision : 6;
+    for (int i = 0; i < prec; i++) {
         frac *= 10;
         int d = (int)frac;
         append_char(buf, size, pos, '0' + d);
@@ -153,6 +155,17 @@ int sgl_vsnprintf(char *buf, size_t size, const char *fmt, va_list ap)
         }
 
         fmt++;
+        int precision = -1;
+
+        // Parse precision (e.g., %.2f)
+        if (*fmt == '.') {
+            fmt++;
+            precision = 0;
+            while (*fmt >= '0' && *fmt <= '9') {
+                precision = precision * 10 + (*fmt - '0');
+                fmt++;
+            }
+        }
 
         char spec = *fmt;
 
@@ -183,7 +196,7 @@ int sgl_vsnprintf(char *buf, size_t size, const char *fmt, va_list ap)
 
         case 'f': {
             double f = va_arg(ap, double);
-            append_float(buf, size, &pos, f);
+            append_float(buf, size, &pos, f, precision);
             break;
         }
 
