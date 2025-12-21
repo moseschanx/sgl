@@ -69,6 +69,8 @@ extern const sgl_font_t OPPOSans_Medium_16;
 
 #if CONFIG_SGL_FONT_HARMONY_16
 extern const sgl_font_t Harmony_16;
+#endif 
+
 #if CONFIG_SGL_FONT_CONSOLAS24_COMPRESS
 extern const sgl_font_t consolas24_compress;
 #endif
