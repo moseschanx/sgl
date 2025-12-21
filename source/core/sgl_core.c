@@ -718,11 +718,11 @@ void sgl_screen_load(sgl_obj_t *obj)
 sgl_color_t sgl_color_mixer(sgl_color_t fg_color, sgl_color_t bg_color, uint8_t factor)
 {
     sgl_color_t ret;
-#if (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_RGB233)
+#if (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_RGB332)
 
     ret.ch.red   = bg_color.ch.red + ((fg_color.ch.red - bg_color.ch.red) * (factor >> 5) >> 3);
     ret.ch.green = bg_color.ch.green + ((fg_color.ch.green - bg_color.ch.green) * (factor >> 5) >> 3);
-    ret.ch.blue  = bg_color.ch.blue + ((fg_color.ch.blue - bg_color.ch.blue) * (factor >>6) >> 2);
+    ret.ch.blue  = bg_color.ch.blue + ((fg_color.ch.blue - bg_color.ch.blue) * (factor >> 6) >> 2);
 
 #elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_RGB565)
 

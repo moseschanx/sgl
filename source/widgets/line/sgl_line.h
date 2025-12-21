@@ -74,6 +74,7 @@ static inline void sgl_line_set_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_line_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 {
+    SGL_ASSERT(obj != NULL);
     sgl_line_t *line = (sgl_line_t*)obj;
     line->desc.alpha = alpha;
     sgl_obj_set_dirty(obj);
@@ -88,11 +89,12 @@ static inline void sgl_line_set_alpha(sgl_obj_t *obj, uint8_t alpha)
  */
 static inline void sgl_line_set_start_pos(sgl_obj_t *obj, int16_t x, int16_t y)
 {
+    SGL_ASSERT(obj != NULL);
     sgl_line_t *line = (sgl_line_t*)obj;
-    line->desc.start.x = x;
-    line->desc.start.y = y;
-    obj->coords.x1 = x;
-    obj->coords.y1 = y;
+    line->desc.start.x = obj->parent->coords.x1 + x;
+    line->desc.start.y = obj->parent->coords.y1 + y;
+    obj->coords.x1 = obj->parent->coords.x1 + x;
+    obj->coords.y1 = obj->parent->coords.y1 + y;
     sgl_obj_set_dirty(obj);
 }
 
@@ -105,11 +107,12 @@ static inline void sgl_line_set_start_pos(sgl_obj_t *obj, int16_t x, int16_t y)
  */
 static inline void sgl_line_set_end_pos(sgl_obj_t *obj, int16_t x, int16_t y)
 {
+    SGL_ASSERT(obj != NULL);
     sgl_line_t *line = (sgl_line_t*)obj;
-    line->desc.end.x = x;
-    line->desc.end.y = y;
-    obj->coords.x2 = x;
-    obj->coords.y2 = y;
+    line->desc.end.x = obj->parent->coords.x1 + x;
+    line->desc.end.y = obj->parent->coords.y1 + y;
+    obj->coords.x2 = obj->parent->coords.x1 + x;
+    obj->coords.y2 = obj->parent->coords.y1 + y;
     sgl_obj_set_dirty(obj);
 }
 
@@ -121,6 +124,7 @@ static inline void sgl_line_set_end_pos(sgl_obj_t *obj, int16_t x, int16_t y)
  */
 static inline void sgl_line_set_width(sgl_obj_t *obj, uint8_t width)
 {
+    SGL_ASSERT(obj != NULL);
     sgl_line_t *line = (sgl_line_t*)obj;
     line->desc.width = width;
     if (line->desc.start.x == line->desc.end.x) {
