@@ -22,6 +22,34 @@
  * SOFTWARE.
  */
 
+/**
+ * @file sgl_mm.c
+ * @brief SGL Memory Management - Default (weak) implementations
+ * 
+ * @warning DO NOT MODIFY THIS FILE!
+ * 
+ * This file provides default weak implementations of the memory management
+ * functions. These functions use the standard C library (malloc/free/realloc).
+ * 
+ * To customize memory management for your platform:
+ * 1. Create your own implementation file in your project
+ * 2. Define the same functions WITHOUT the weak attribute
+ * 3. Your implementation will automatically override these defaults
+ * 
+ * Functions available for override:
+ *   - void* sgl_mm_alloc(size_t size)
+ *   - void  sgl_mm_free(void *ptr)
+ *   - void* sgl_mm_realloc(void *ptr, size_t size)
+ * 
+ * Example (in your application code):
+ * @code
+ *   void* sgl_mm_alloc(size_t size) {
+ *       return my_custom_allocator(size);
+ *   }
+ * @endcode
+ */
+
+
 #include <stdint.h>
 #include <sgl_mm.h>
 #include <sgl_log.h>
@@ -29,7 +57,24 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "FreeRTOS.h"
+/* Portable weak linkage attribute for different compilers */
+#if defined(__GNUC__) || defined(__clang__)
+  /* GCC and Clang */
+  #define SGL_WEAK __attribute__((weak))
+#elif defined(__ARMCC_VERSION)
+  /* ARM Compiler (Keil) */
+  #define SGL_WEAK __weak
+#elif defined(__IAR_SYSTEMS_ICC__)
+  /* IAR Compiler */
+  #define SGL_WEAK __weak
+#elif defined(_MSC_VER)
+  /* Microsoft Visual C++ (weak linkage via pragma) */
+  #define SGL_WEAK __declspec(selectany)
+#else
+  /* Fallback for unknown compilers */
+  #define SGL_WEAK
+  #warning "Weak linkage not supported for this compiler"
+#endif
 
 
 static sgl_mm_monitor_t mem = {
@@ -70,9 +115,9 @@ void sgl_mm_add_pool(void *mem_start, size_t len)
  * 
  * @return point to request memory address
 */
-void* sgl_malloc(size_t size)
+SGL_WEAK void* sgl_malloc(size_t size)
 {
-    void *p = pvPortMalloc(size);
+    void *p = malloc(size);
     memset(p, 0, size);
     return p;
 }
@@ -84,7 +129,7 @@ void* sgl_malloc(size_t size)
  * @param  p      the pointer of request size of memory
  * @param  size   request size of memory
  */
-void* sgl_realloc(void *p, size_t size)
+SGL_WEAK void* sgl_realloc(void *p, size_t size)
 {
     return realloc(p, size);
 }
@@ -97,10 +142,10 @@ void* sgl_realloc(void *p, size_t size)
  * 
  * @return none
 */
-void sgl_free(void *p)
+SGL_WEAK void sgl_free(void *p)
 {
     //mem.used_size -= ;
-    vPortFree(p);
+    free(p);
 }
 
 
