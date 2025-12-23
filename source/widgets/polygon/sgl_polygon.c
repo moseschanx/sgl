@@ -50,12 +50,13 @@ static void sgl_polygon_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
             min_y = sgl_min(min_y, vertex.y);
             max_y = sgl_max(max_y, vertex.y);
         }
-        
+
+        // Adjust coordinates relative to parent object
         sgl_area_t polygon_area = {
-            .x1 = min_x,
-            .x2 = max_x,
-            .y1 = min_y,
-            .y2 = max_y
+            .x1 = min_x + obj->parent->coords.x1,  // Adjust to parent coordinates
+            .x2 = max_x + obj->parent->coords.x1,
+            .y1 = min_y + obj->parent->coords.y1,
+            .y2 = max_y + obj->parent->coords.y1
         };
         
         sgl_area_t clip;
@@ -68,8 +69,11 @@ static void sgl_polygon_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
                 
                 // Calculate intersections of scan line with polygon
                 for (uint16_t i = 0; i < polygon->vertex_count; i++) {
-                    sgl_pos_t p1 = polygon->vertices[i];
-                    sgl_pos_t p2 = polygon->vertices[(i + 1) % polygon->vertex_count];
+                    // Adjust vertex coordinates relative to parent
+                    sgl_pos_t p1 = {polygon->vertices[i].x + obj->parent->coords.x1, 
+                                    polygon->vertices[i].y + obj->parent->coords.y1};
+                    sgl_pos_t p2 = {polygon->vertices[(i + 1) % polygon->vertex_count].x + obj->parent->coords.x1, 
+                                    polygon->vertices[(i + 1) % polygon->vertex_count].y + obj->parent->coords.y1};
                     
                     // Calculate intersection of scan line with edge
                     if ((p1.y > y) != (p2.y > y)) {
@@ -117,8 +121,11 @@ static void sgl_polygon_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
     // Draw border
     if (polygon->border_width > 0 && polygon->border_color.full != 0) {
         for (uint16_t i = 0; i < polygon->vertex_count; i++) {
-            sgl_pos_t start = polygon->vertices[i];
-            sgl_pos_t end = polygon->vertices[(i + 1) % polygon->vertex_count];
+            // Adjust vertex coordinates relative to parent
+            sgl_pos_t start = {polygon->vertices[i].x + obj->parent->coords.x1, 
+                               polygon->vertices[i].y + obj->parent->coords.y1};
+            sgl_pos_t end = {polygon->vertices[(i + 1) % polygon->vertex_count].x + obj->parent->coords.x1, 
+                             polygon->vertices[(i + 1) % polygon->vertex_count].y + obj->parent->coords.y1};
             
             sgl_draw_line_t line = {
                 .start = start,
@@ -138,8 +145,8 @@ static void sgl_polygon_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
         // Calculate center point of polygon
         int32_t center_x = 0, center_y = 0;
         for (uint16_t i = 0; i < polygon->vertex_count; i++) {
-            center_x += polygon->vertices[i].x;
-            center_y += polygon->vertices[i].y;
+            center_x += polygon->vertices[i].x + obj->parent->coords.x1;  // Adjust to parent coordinates
+            center_y += polygon->vertices[i].y + obj->parent->coords.y1;
         }
         center_x /= polygon->vertex_count;
         center_y /= polygon->vertex_count;
@@ -155,7 +162,6 @@ static void sgl_polygon_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
         sgl_draw_string(surf, &obj->area, text_x, text_y, polygon->text, polygon->text_color, polygon->alpha, polygon->font);
     }
 }
-
 // Create polygon object
 sgl_obj_t* sgl_polygon_create(sgl_obj_t* parent)
 {
