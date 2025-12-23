@@ -1612,6 +1612,17 @@ static inline void sgl_draw_task(sgl_area_t *dirty)
 #endif
 }
 
+void sgl_task_handle(void)
+{
+    /* If the system tick time has not been reached, skip directly. */
+    if (sgl_tick_get() < SGL_SYSTEM_TICK_MS) {
+
+        return;
+    }
+
+    /* If the system tick time has been reached, execute the task. */
+    sgl_task_handle_sync();
+}
 
 /**
  * @brief sgl task handle function with sync mode
