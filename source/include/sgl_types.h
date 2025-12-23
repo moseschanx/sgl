@@ -106,12 +106,15 @@ extern "C" {
 
 /* the pixmap format */
 #define  SGL_PIXMAP_FMT_NONE                    (0)
-#define  SGL_PIXMAP_FMT_RLE_RGB332              (1)
-#define  SGL_PIXMAP_FMT_RLE_RGB565              (2)
-#define  SGL_PIXMAP_FMT_RLE_RGB888              (3)
-#define  SGL_PIXMAP_FMT_RLE_RGBA8888            (4)
-#define  SGL_PIXMAP_FMT_RLE_1                   (4)
-#define  SGL_PIXMAP_FMT_MAX                     (7)
+#define  SGL_PIXMAP_FMT_RGB332                  (1)
+#define  SGL_PIXMAP_FMT_RGB565                  (2)
+#define  SGL_PIXMAP_FMT_RGB888                  (3)
+#define  SGL_PIXMAP_FMT_RLE_RGB332              (4)
+#define  SGL_PIXMAP_FMT_RLE_RGB565              (5)
+#define  SGL_PIXMAP_FMT_RLE_RGB888              (6)
+#define  SGL_PIXMAP_FMT_RLE_RGBA8888            (7)
+#define  SGL_PIXMAP_FMT_RLE_1                   (8)
+#define  SGL_PIXMAP_FMT_MAX                     (9)
 
 
 #ifdef __GNUC__            /* gcc compiler   */

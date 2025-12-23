@@ -61,8 +61,8 @@ static void sgl_unzip_img_dec_init(sgl_unzip_img_dec_t *dec, const sgl_unzip_img
     dec->x = 0;
     dec->y = 0;
     dec->rep_cnt = 0;
-    dec->out.full = 0;
-    dec->unzip.full = 0;
+    dec->out = sgl_int2color(0);
+    dec->unzip = sgl_int2color(0);
     dec->p = unzip_img->map;
 }
 
@@ -76,20 +76,20 @@ static void sgl_unzip_img_incremental(sgl_unzip_img_dec_t *dec)
         dec->rep_cnt = 1;
         if (dec->p[dec->n] & 0x20) {
             sgl_color_t dat16;
-            dat16.full = dec->p[dec->n] | (dec->p[dec->n + 1] << 8);
-            if (dec->unzip.full == dat16.full) {
+            dat16 = sgl_int2color(dec->p[dec->n] | (dec->p[dec->n + 1] << 8));
+            if (sgl_color2int(dec->unzip) == sgl_color2int(dat16)) {
                 dec->n += 2;
                 dec->rep_cnt = (dec->p[dec->n] << 8) | dec->p[dec->n + 1];
             } else {
-                dec->unzip.full = dat16.full;
-                dec->out.full = dat16.full;
+                dec->unzip = dat16;
+                dec->out = dat16;
             }
             dec->n += 2;
         } else {
             uint8_t b = dec->p[dec->n];
             uint16_t r = (b << 5) & 0x1800;
             uint16_t g = (b << 3) & 0x00e3;
-            dec->out.full = dec->unzip.full ^ (r + g + (b & 0x03));
+            dec->out =  sgl_int2color((sgl_color2int(dec->unzip) ^ (r + g + (b & 0x03))));
             dec->n++;
         }
     }
