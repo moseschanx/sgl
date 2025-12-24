@@ -13,6 +13,7 @@
 | [![build status](https://github.com/sgl-org/sgl/actions/workflows/ubuntu-aarch64-gcc.yml/badge.svg?branch=main)](https://github.com/sgl-org/sgl/actions/workflows/ubuntu-aarch64-gcc.yml?query=branch%3Amain) | [![build status](https://github.com/sgl-org/sgl/actions/workflows/ubuntu-aarch64-gcc.yml/badge.svg?branch=devel)](https://github.com/sgl-org/sgl/actions/workflows/ubuntu-aarch64-gcc.yml?query=branch%3Adevel) | Cross build AArch64 default on Ubuntu GCC |
 | [![build status](https://github.com/sgl-org/sgl/actions/workflows/ubuntu-mips-gcc.yml/badge.svg?branch=main)](https://github.com/sgl-org/sgl/actions/workflows/ubuntu-mips-gcc.yml?query=branch%3Amain) | [![build status](https://github.com/sgl-org/sgl/actions/workflows/ubuntu-mips-gcc.yml/badge.svg?branch=devel)](https://github.com/sgl-org/sgl/actions/workflows/ubuntu-mips-gcc.yml?query=branch%3Adevel) | Cross build MIPS default on Ubuntu GCC |
 | [![build status](https://github.com/sgl-org/sgl/actions/workflows/ubuntu-mips64-gcc.yml/badge.svg?branch=main)](https://github.com/sgl-org/sgl/actions/workflows/ubuntu-mips64-gcc.yml?query=branch%3Amain) | [![build status](https://github.com/sgl-org/sgl/actions/workflows/ubuntu-mips64-gcc.yml/badge.svg?branch=devel)](https://github.com/sgl-org/sgl/actions/workflows/ubuntu-mips64-gcc.yml?query=branch%3Adevel) | Cross build MIPS64 default on Ubuntu GCC |
+| [![build status](https://github.com/sgl-org/sgl/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/sgl-org/sgl/actions/workflows/codeql.yml?query=branch%3Amain) | [![build status](https://github.com/sgl-org/sgl/actions/workflows/codeql.yml/badge.svg?branch=devel)](https://github.com/sgl-org/sgl/actions/workflows/codeql.yml?query=branch%3Adevel) | Code analyse on codeql |
 
 ## shotcut
 <table>
@@ -68,12 +69,12 @@ Then extract to any directory and add to environment variables
 git clone https://github.com/sgl-org/sgl-port-windows.git
 
 ## 3. Configure Project
-cd sgl-port-windows && git submodule init   
-git submodule update --remote    
-cd demo && make -j8  
+cd sgl-port-windows && git submodule init
+git submodule update --remote
+cd demo && make -j8
 
 ## 4. Run
-Execute `make run` command to run     
-      
+Execute `make run` command to run
+
 QQ Group: 544602724
 or if you have any questions, please contact me: 1477153217@qq.com
