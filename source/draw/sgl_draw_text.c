@@ -55,7 +55,14 @@ typedef struct {
     sgl_font_rle_state_t state;
 } sgl_font_rle_t;
 
-static sgl_font_rle_t font_rle;
+static sgl_font_rle_t font_rle = {
+    .rdp = 0,
+    .in = NULL,
+    .bpp = 0,
+    .prev_v = 0,
+    .count = 0,
+    .state = RLE_STATE_SINGLE,
+};
 
 /**
  * @brief Get bits from a byte array
@@ -105,16 +112,14 @@ static inline uint8_t get_bits(const uint8_t * in, uint32_t bit_pos, uint8_t len
  * @param w the width of the decompressed data
  * @return none
  */
-static inline void decompress_line(uint8_t * out, int32_t w)
+static inline void decompress_line(uint8_t *out, int32_t w)
 {
     int32_t i;
     uint8_t v = 0;
     uint8_t ret = 0;
-    sgl_font_rle_t *rle = NULL;
+    sgl_font_rle_t *rle = &font_rle;
 
     for(i = 0; i < w; i++) {
-        rle = &font_rle;
-
         if(rle->state == RLE_STATE_SINGLE) {
             ret = get_bits(rle->in, rle->rdp, rle->bpp);
             if(rle->rdp != 0 && rle->prev_v == ret) {
@@ -151,7 +156,6 @@ static inline void decompress_line(uint8_t * out, int32_t w)
                 rle->rdp += rle->bpp;
                 rle->state = RLE_STATE_SINGLE;
             }
-
         }
         else if(rle->state == RLE_STATE_COUNTER) {
             ret = rle->prev_v;
@@ -264,11 +268,12 @@ void sgl_draw_character(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y
 
             for (int x = clip.x1; x <= clip.x2; x++) {
                 if (font->bpp == 4) {
-                    *buf = sgl_color_mixer(color, *buf, opa4_table[line_buf[x - clip.x1]]);
+                    color_mix = sgl_color_mixer(color, *buf, opa4_table[line_buf[x - clip.x1]]);
                 }
                 else if (font->bpp == 2) {
-                    *buf = sgl_color_mixer(color, *buf, opa2_table[line_buf[x - clip.x1]]);
+                    color_mix = sgl_color_mixer(color, *buf, opa2_table[line_buf[x - clip.x1]]);
                 }
+                *buf = sgl_color_mixer(color_mix, *buf, alpha);
                 buf++;
             }
         }

@@ -101,21 +101,6 @@ int sgl_device_fb_register(sgl_device_fb_t *fb_dev)
 
 
 /**
- * @brief initialize dirty area
- * @param none
- * @return none
- */
-static inline void sgl_dirty_area_init(void)
-{
-#if CONFIG_SGL_DIRTY_AREA_THRESHOLD
-    sgl_ctx.dirty_num = 0;
-#else
-    sgl_area_init(&sgl_ctx.dirty);
-#endif
-}
-
-
-/**
  * @brief get pixmap format bits
  * @param pixmap pointer to pixmap
  * @return pixmap bits of per pixel
@@ -276,6 +261,41 @@ void sgl_obj_size_zoom(sgl_obj_t *obj, int16_t zoom)
     obj->coords.x2 += zoom;
     obj->coords.y1 -= zoom;
     obj->coords.y2 += zoom;
+}
+
+
+/**
+ * @brief merge two area, the merge is result of the two area clip
+ * @param area_a [in] area1
+ * @param area_b [in] area2
+ * @param merge  [out] merge result
+ * @return none
+ * @note: this function is unsafe, you should check the area_a and area_b and merge is not NULL by yourself
+ */
+void sgl_area_merge(sgl_area_t *area_a, sgl_area_t *area_b, sgl_area_t *merge)
+{
+    SGL_ASSERT(area_a != NULL && area_b != NULL && merge != NULL);
+    merge->x1 = sgl_min(area_a->x1, area_b->x1);
+    merge->x2 = sgl_max(area_a->x2, area_b->x2);
+    merge->y1 = sgl_min(area_a->y1, area_b->y1);
+    merge->y2 = sgl_max(area_a->y2, area_b->y2);
+}
+
+
+/**
+ * @brief merge two area, the merge is a new area
+ * @param merge [in][out] merge area
+ * @param area [in] area
+ * @return none
+ * @note: this function is unsafe, you should check the merge and area is not NULL by yourself
+ */
+void sgl_area_selfmerge(sgl_area_t *merge, sgl_area_t *area)
+{
+    SGL_ASSERT(merge != NULL && area != NULL);
+    merge->x1 = sgl_min(merge->x1, area->x1);
+    merge->x2 = sgl_max(merge->x2, area->x2);
+    merge->y1 = sgl_min(merge->y1, area->y1);
+    merge->y2 = sgl_max(merge->y2, area->y2);
 }
 
 
@@ -655,6 +675,17 @@ sgl_obj_t* sgl_obj_create(sgl_obj_t *parent)
 
 
 /**
+ * @brief initialize global dirty area
+ * @param none
+ * @return none
+ */
+static inline void sgl_dirty_area_init(void)
+{
+    sgl_ctx.dirty_num = 0;
+}
+
+
+/**
  * @brief sgl global initialization
  * @param none
  * @return none
@@ -668,18 +699,13 @@ void sgl_init(void)
     /* initialize current context */
     sgl_ctx.page = NULL;
 
-#if (CONFIG_SGL_DIRTY_AREA_THRESHOLD)
     /* alloc memory for dirty area */
-    sgl_ctx.dirty_num = ((sgl_panel_resolution_height() + SGL_DIRTY_AREA_THRESHOLD - 1) / SGL_DIRTY_AREA_THRESHOLD) *
-                        ((sgl_panel_resolution_width()  + SGL_DIRTY_AREA_THRESHOLD - 1) / SGL_DIRTY_AREA_THRESHOLD);
-
-    sgl_ctx.dirty = sgl_malloc(sgl_ctx.dirty_num * sizeof(sgl_area_t));
+    sgl_ctx.dirty = sgl_malloc(SGL_DIRTY_AREA_NUM_MAX * sizeof(sgl_area_t));
     if (sgl_ctx.dirty == NULL) {
         SGL_LOG_ERROR("sgl dirty area memory alloc failed");
         SGL_ASSERT(0);
         return;
     }
-#endif // !CONFIG_SGL_DIRTY_AREA_THRESHOLD
 
     /* initialize dirty area */
     sgl_dirty_area_init();
@@ -754,6 +780,70 @@ sgl_color_t sgl_color_mixer(sgl_color_t fg_color, sgl_color_t bg_color, uint8_t 
 
 
 /**
+ * @brief Blends foreground and background colors using a specified alpha blending factor, applied to multiple pixels.
+ *
+ * This function performs per-pixel linear interpolation between foreground and background colors over a buffer of `len` pixels:
+ *     result = (fg_color * factor + bg_color * (255 - factor)) / 255
+ * The blending factor `factor` ranges from 0 to 255:
+ *   - 0 means fully transparent (output = background),
+ *   - 255 means fully opaque (output = foreground).
+ *
+ * The blended result is written back in-place to the `bg_color` buffer.
+ * The `fg_color` argument may point to:
+ *   - a single color value (reused for all `len` pixels), or
+ *   - an array of `len` foreground colors (caller must ensure correct memory layout).
+ *
+ * @param[in,out] fg_color   Pointer to the foreground color(s) (input); receives blended output (in-place update)
+ * @param[in]     bg_color   Pointer to the background color buffer.
+ * @param[in]     factor     Blending factor: 0 = fully transparent, 255 = fully opaque
+ * @param[in]     len        Number of color elements (pixels) to process
+ *
+ * @note
+ * - Assumes `sgl_color_t` a packed format (e.g., RGBA or RGB), with each channel blended independently.
+ * - If `factor == 0`, `bg_color` remains unchanged; if `factor == 255`, `bg_color` is overwritten by `fg_color`.
+ * - For performance-critical use, ensure `len` is aligned and consider SIMD optimizations (e.g., NEON, SSE) if available.
+ */
+void sgl_color_blend(sgl_color_t *fg_color, sgl_color_t *bg_color, uint8_t factor, uint32_t len)
+{
+    sgl_color_t ret;
+    for (uint32_t i = 0; i < len; i++) {
+#if (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_RGB332)
+
+        ret.ch.red   = bg_color->ch.red + ((fg_color->ch.red - bg_color->ch.red) * (factor >> 5) >> 3);
+        ret.ch.green = bg_color->ch.green + ((fg_color->ch.green - bg_color->ch.green) * (factor >> 5) >> 3);
+        ret.ch.blue  = bg_color->ch.blue + ((fg_color->ch.blue - bg_color->ch.blue) * (factor >> 6) >> 2);
+        *fg_color++ = ret;
+
+#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_RGB565)
+
+        factor = (uint32_t)((uint32_t)factor + 4) >> 3;
+        uint32_t bg = (uint32_t)((uint32_t)bg_color->full | ((uint32_t)bg_color->full << 16)) & 0x07E0F81F; 
+        uint32_t fg = (uint32_t)((uint32_t)fg_color->full | ((uint32_t)fg_color->full << 16)) & 0x07E0F81F;
+        uint32_t result = ((((fg - bg) * factor) >> 5) + bg) & 0x7E0F81F;
+        ret.full = (uint16_t)((result >> 16) | result);
+        *fg_color++ = ret;
+
+#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_RGB888)
+
+        ret.ch.red   = bg_color->ch.red + ((fg_color->ch.red - bg_color->ch.red) * factor >> 8);
+        ret.ch.green = bg_color->ch.green + ((fg_color->ch.green - bg_color->ch.green) * factor >> 8);
+        ret.ch.blue  = bg_color->ch.blue + ((fg_color->ch.blue - bg_color->ch.blue) * factor >> 8);
+        *fg_color++ = ret;
+
+#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_ARGB8888)
+
+        ret.ch.alpha = bg_color->ch.alpha + ((fg_color->ch.alpha - bg_color->ch.alpha) * factor >> 8);
+        ret.ch.red   = bg_color->ch.red + ((fg_color->ch.red - bg_color->ch.red) * factor >> 8);
+        ret.ch.green = bg_color->ch.green + ((fg_color->ch.green - bg_color->ch.green) * factor >> 8);
+        ret.ch.blue  = bg_color->ch.blue + ((fg_color->ch.blue - bg_color->ch.blue) * factor >> 8);
+        *fg_color++ = ret;
+
+#endif
+    }
+}
+
+
+/**
  * @brief  Get area intersection between two areas
  * @param area_a: area a
  * @param area_b: area b
@@ -801,103 +891,96 @@ bool sgl_area_selfclip(sgl_area_t *clip, sgl_area_t *area)
 
 
 /**
- * @brief merge two area, the merge is result of the two area clip
- * @param area_a [in] area1
- * @param area_b [in] area2
- * @param merge  [out] merge result
- * @return none
- * @note: this function is unsafe, you should check the area_a and area_b and merge is not NULL by yourself
+ * @brief Computes the total boundary expansion (in Manhattan distance) required to merge rectangle b into rectangle a.
+ *
+ * This function calculates how much rectangle 'a' would need to grow in each direction (left, right, top, bottom)
+ * to fully enclose both 'a' and 'b'. The result is the sum of the expansions along all four sides.
+ * Note: This is not the increase in area, th is a lightweight heuristic for merge cost in bounding-box algorithms.
+ *
+ * @param a[in]    Pointer to the b rectangle
+ * @param b[in]    Pointer to the a rectangle
+ * @return int32_t Total expansion amount (always non-negative)
  */
-void sgl_area_merge(sgl_area_t *area_a, sgl_area_t *area_b, sgl_area_t *merge)
+static inline int32_t sgl_area_growth(sgl_area_t *a, sgl_area_t *b)
 {
-    SGL_ASSERT(area_a != NULL && area_b != NULL && merge != NULL);
-    merge->x1 = sgl_min(area_a->x1, area_b->x1);
-    merge->x2 = sgl_max(area_a->x2, area_b->x2);
-    merge->y1 = sgl_min(area_a->y1, area_b->y1);
-    merge->y2 = sgl_max(area_a->y2, area_b->y2);
+    return (a->x1 - sgl_min(a->x1, b->x1)) + (sgl_max(a->x2, b->x2) - a->x2)
+           + (a->y1 - sgl_min(a->y1, b->y1)) + (sgl_max(a->y2, b->y2) - a->y2);
 }
 
 
 /**
- * @brief merge two area, the merge is a new area
- * @param merge [in][out] merge area
- * @param area [in] area
- * @return none
- * @note: this function is unsafe, you should check the merge and area is not NULL by yourself
+ * @brief Quickly determines if two rectangles are close enough to be merged.
+ *
+ * Computes the gap between rectangles 'a' and 'b' along both X and Y axes.
+ * A dynamic threshold is used: 1/4 of the smallest dimension (width or height) among the two rectangles.
+ * The rectangles are considered mergeable only if both horizontal and vertical gaps are within this threshold.
+ *
+ * This fast heuristic is useful in performance-critical contexts (e.g., real-time segmentation or region merging)
+ * to avoid excessive fragmentation while preventing merges between distant regions.
+ *
+ * @param a[in] Pointer to the first rectangle
+ * @param b[in] Pointer to the second rectangle
+ * @return bool true if the rectangles are sufficiently close for merging; false otherwise
  */
-void sgl_area_selfmerge(sgl_area_t *merge, sgl_area_t *area)
+static inline bool sgl_merge_determines(sgl_area_t* a, sgl_area_t* b)
 {
-    SGL_ASSERT(merge != NULL && area != NULL);
-    merge->x1 = sgl_min(merge->x1, area->x1);
-    merge->x2 = sgl_max(merge->x2, area->x2);
-    merge->y1 = sgl_min(merge->y1, area->y1);
-    merge->y2 = sgl_max(merge->y2, area->y2);
+    int16_t gap_x = (a->x1 > b->x2) ? (a->x1 - b->x2) : (b->x1 > a->x2) ? (b->x1 - a->x2) : 0;
+    int16_t gap_y = (a->y1 > b->y2) ? (a->y1 - b->y2) : (b->y1 > a->y2) ? (b->y1 - a->y2) : 0;    
+    int16_t threshold = (sgl_min4(a->x2 - a->x1 + 1, a->y2 - a->y1 + 1, b->x2 - b->x1 + 1, b->y2 - b->y1 + 1) >> 2);
+
+    return (gap_x <= threshold) && (gap_y <= threshold);
 }
 
 
 /**
- * @brief merge area with current dirty area
- * @param merge [in] merge area
+ * @brief merge object area into global dirty area
+ * @param obj [in] Pointer to the object
  * @return none
  */
 void sgl_obj_dirty_merge(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-#if CONFIG_SGL_DIRTY_AREA_THRESHOLD
-    int interval_x, interval_y;
-
+    int32_t best_idx = -1, min_growth = INT32_MAX, growth = INT32_MAX;
     /* skip invalid area */
     if (obj->area.x1 > obj->area.x2 || obj->area.y1 > obj->area.y2) {
         return;
     }
 
-    for (int i = 0; i < sgl_ctx.dirty_num; i++) {
-        if (obj->area.x2 < sgl_ctx.dirty[i].x1) {
-            interval_x = sgl_ctx.dirty[i].x1 - obj->area.x2;
-        }
-        else if (obj->area.x1 > sgl_ctx.dirty[i].x2) {
-            interval_x = obj->area.x1 - sgl_ctx.dirty[i].x2;
-        }
-        else {
-            interval_x = 0;
-        }
-
-        if (obj->area.y2 < sgl_ctx.dirty[i].y1) {
-            interval_y = sgl_ctx.dirty[i].y1 - obj->area.y2;
-        }
-        else if (obj->area.y1 > sgl_ctx.dirty[i].y2) {
-            interval_y = obj->area.y1 - sgl_ctx.dirty[i].y2;
-        }
-        else {
-            interval_y = 0;
-        }
-
-        /* If the object's area is near the dirty rectangle, merge it.*/
-        if (interval_x <= SGL_DIRTY_AREA_THRESHOLD && interval_y <= SGL_DIRTY_AREA_THRESHOLD) {
-            /* merge object area with dirty area */
-            sgl_ctx.dirty[i].x1 = sgl_min(sgl_ctx.dirty[i].x1, obj->area.x1);
-            sgl_ctx.dirty[i].x2 = sgl_max(sgl_ctx.dirty[i].x2, obj->area.x2);
-            sgl_ctx.dirty[i].y1 = sgl_min(sgl_ctx.dirty[i].y1, obj->area.y1);
-            sgl_ctx.dirty[i].y2 = sgl_max(sgl_ctx.dirty[i].y2, obj->area.y2);
-
-            return;
-        }
-    }
-
-    sgl_ctx.dirty[sgl_ctx.dirty_num] = obj->area;
-    sgl_ctx.dirty_num ++;
-#else
-    /* skip invalid area */
-    if (obj->area.x1 > obj->area.x2 || obj->area.y1 > obj->area.y2) {
+    if (sgl_ctx.dirty_num == 0) {
+        sgl_ctx.dirty[0] = obj->area;
+        sgl_ctx.dirty_num = 1;
         return;
     }
 
-    /* direct to merge object area with dirty area  */
-    sgl_ctx.dirty.x1 = sgl_min(sgl_ctx.dirty.x1, obj->area.x1);
-    sgl_ctx.dirty.x2 = sgl_max(sgl_ctx.dirty.x2, obj->area.x2);
-    sgl_ctx.dirty.y1 = sgl_min(sgl_ctx.dirty.y1, obj->area.y1);
-    sgl_ctx.dirty.y2 = sgl_max(sgl_ctx.dirty.y2, obj->area.y2);
-#endif
+    for (uint8_t i = 0; i < sgl_ctx.dirty_num; i++) {
+        if (sgl_merge_determines(&sgl_ctx.dirty[i], &obj->area)) {
+            growth = sgl_area_growth(&sgl_ctx.dirty[i], &obj->area);
+            if (growth < min_growth) {
+                min_growth = growth;
+                best_idx = i;
+            }
+        }
+    }
+
+    if (best_idx >= 0) {
+        /* merge object area into best_idx dirty area */
+        sgl_ctx.dirty[best_idx].x1 = sgl_min(sgl_ctx.dirty[best_idx].x1, obj->area.x1);
+        sgl_ctx.dirty[best_idx].x2 = sgl_max(sgl_ctx.dirty[best_idx].x2, obj->area.x2);
+        sgl_ctx.dirty[best_idx].y1 = sgl_min(sgl_ctx.dirty[best_idx].y1, obj->area.y1);
+        sgl_ctx.dirty[best_idx].y2 = sgl_max(sgl_ctx.dirty[best_idx].y2, obj->area.y2);
+        return;
+    }
+
+    if (sgl_ctx.dirty_num < SGL_DIRTY_AREA_NUM_MAX) {
+        /* add new dirty area */
+        sgl_ctx.dirty[sgl_ctx.dirty_num++] = obj->area;
+    } else {
+        /* merge object area into last dirty area */
+        sgl_ctx.dirty[SGL_DIRTY_AREA_NUM_MAX - 1].x1 = sgl_min(sgl_ctx.dirty[best_idx].x1, obj->area.x1);
+        sgl_ctx.dirty[SGL_DIRTY_AREA_NUM_MAX - 1].x2 = sgl_max(sgl_ctx.dirty[best_idx].x2, obj->area.x2);
+        sgl_ctx.dirty[SGL_DIRTY_AREA_NUM_MAX - 1].y1 = sgl_min(sgl_ctx.dirty[best_idx].y1, obj->area.y1);
+        sgl_ctx.dirty[SGL_DIRTY_AREA_NUM_MAX - 1].y2 = sgl_max(sgl_ctx.dirty[best_idx].y2, obj->area.y2);
+    }
 }
 
 
@@ -1633,12 +1716,9 @@ void sgl_task_handle_sync(void)
     sgl_dirty_area_calculate(&sgl_ctx.page->obj);
 
     /* draw task  */
-#if (CONFIG_SGL_DIRTY_AREA_THRESHOLD)
     for (int i = 0; i < sgl_ctx.dirty_num; i++) {
         sgl_draw_task(&sgl_ctx.dirty[i]);
     }
-#else
-    sgl_draw_task(&sgl_ctx.dirty);
-#endif
+
     sgl_dirty_area_init();
 }

@@ -205,6 +205,7 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
             .radius = 0,
             .border = scope->border_width,
         };
+
         sgl_draw_rect(surf, &obj->area, &obj->coords, &bg_rect);
 
         // Compute waveform display parameters
@@ -345,7 +346,7 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
                 end.y = obj->coords.y2 - ((int32_t)(current_value - display_min) * height) / (display_max - display_min);
 
                 custom_draw_line(surf, &obj->area, start, end, scope->waveform_color, scope->line_width);
-                
+
                 start = end;
             }
         }

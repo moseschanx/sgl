@@ -46,8 +46,8 @@ extern "C" {
 #define  SGL_SYSTEM_TICK_MS                CONFIG_SGL_SYSTICK_MS
 
 
-#if (CONFIG_SGL_DIRTY_AREA_THRESHOLD)
-#define  SGL_DIRTY_AREA_THRESHOLD          CONFIG_SGL_DIRTY_AREA_THRESHOLD
+#if (CONFIG_SGL_DIRTY_AREA_NUM_MAX)
+#define  SGL_DIRTY_AREA_NUM_MAX            CONFIG_SGL_DIRTY_AREA_NUM_MAX
 #endif
 
 /* the ASCII offset of fonts */
@@ -469,13 +469,9 @@ typedef struct sgl_context {
     sgl_device_fb_t      fb_dev;
     sgl_device_log_t     log_dev;
     uint8_t              fb_swap;
-    uint8_t              tick_ms;
-#if (CONFIG_SGL_DIRTY_AREA_THRESHOLD)
+    volatile uint8_t     tick_ms;
     uint16_t             dirty_num;
     sgl_area_t           *dirty;
-#else
-    sgl_area_t           dirty;
-#endif
 } sgl_context_t;
 
 
@@ -1549,6 +1545,33 @@ static inline void sgl_obj_delete_sync(sgl_obj_t *obj)
  * @return sgl_color_t: mixed color
  */
 sgl_color_t sgl_color_mixer(sgl_color_t fg_color, sgl_color_t bg_color, uint8_t factor);
+
+
+/**
+ * @brief Blends foreground and background colors using a specified alpha blending factor, applied to multiple pixels.
+ *
+ * This function performs per-pixel linear interpolation between foreground and background colors over a buffer of `len` pixels:
+ *     result = (fg_color * factor + bg_color * (255 - factor)) / 255
+ * The blending factor `factor` ranges from 0 to 255:
+ *   - 0 means fully transparent (output = background),
+ *   - 255 means fully opaque (output = foreground).
+ *
+ * The blended result is written back in-place to the `bg_color` buffer.
+ * The `fg_color` argument may point to:
+ *   - a single color value (reused for all `len` pixels), or
+ *   - an array of `len` foreground colors (caller must ensure correct memory layout).
+ *
+ * @param[in,out] fg_color   Pointer to the foreground color(s) (input); receives blended output (in-place update)
+ * @param[in]     bg_color   Pointer to the background color buffer.
+ * @param[in]     factor     Blending factor: 0 = fully transparent, 255 = fully opaque
+ * @param[in]     len        Number of color elements (pixels) to process
+ *
+ * @note
+ * - Assumes `sgl_color_t` a packed format (e.g., RGBA or RGB), with each channel blended independently.
+ * - If `factor == 0`, `bg_color` remains unchanged; if `factor == 255`, `bg_color` is overwritten by `fg_color`.
+ * - For performance-critical use, ensure `len` is aligned and consider SIMD optimizations (e.g., NEON, SSE) if available.
+ */
+void sgl_color_blend(sgl_color_t *fg_color, sgl_color_t *bg_color, uint8_t factor, uint32_t len);
 
 
 /**

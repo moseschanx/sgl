@@ -106,8 +106,8 @@ extern "C" {
 #define CONFIG_SGL_EVENT_QUEUE_SIZE                                (32)
 #endif
 
-#ifndef CONFIG_SGL_DIRTY_AREA_THRESHOLD
-#define CONFIG_SGL_DIRTY_AREA_THRESHOLD                            (64)
+#ifndef CONFIG_SGL_DIRTY_AREA_NUM_MAX
+#define CONFIG_SGL_DIRTY_AREA_NUM_MAX                              (64)
 #endif
 
 #ifndef CONFIG_SGL_ANIMATION
