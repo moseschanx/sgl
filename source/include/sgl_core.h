@@ -472,6 +472,7 @@ typedef struct sgl_context {
     volatile uint8_t     tick_ms;
     uint16_t             dirty_num;
     sgl_area_t           *dirty;
+    sgl_color_t          *blend;
 } sgl_context_t;
 
 
@@ -1555,23 +1556,29 @@ sgl_color_t sgl_color_mixer(sgl_color_t fg_color, sgl_color_t bg_color, uint8_t 
  * The blending factor `factor` ranges from 0 to 255:
  *   - 0 means fully transparent (output = background),
  *   - 255 means fully opaque (output = foreground).
- *
- * The blended result is written back in-place to the `bg_color` buffer.
- * The `fg_color` argument may point to:
- *   - a single color value (reused for all `len` pixels), or
- *   - an array of `len` foreground colors (caller must ensure correct memory layout).
- *
+ * 
  * @param[in,out] fg_color   Pointer to the foreground color(s) (input); receives blended output (in-place update)
  * @param[in]     bg_color   Pointer to the background color buffer.
  * @param[in]     factor     Blending factor: 0 = fully transparent, 255 = fully opaque
  * @param[in]     len        Number of color elements (pixels) to process
- *
- * @note
- * - Assumes `sgl_color_t` a packed format (e.g., RGBA or RGB), with each channel blended independently.
- * - If `factor == 0`, `bg_color` remains unchanged; if `factor == 255`, `bg_color` is overwritten by `fg_color`.
- * - For performance-critical use, ensure `len` is aligned and consider SIMD optimizations (e.g., NEON, SSE) if available.
  */
 void sgl_color_blend(sgl_color_t *fg_color, sgl_color_t *bg_color, uint8_t factor, uint32_t len);
+
+
+/**
+ * @brief Fills a block of memory with a solid color.
+ *
+ * Writes the specified `color` value to `len` consecutive elements starting at `dest`.
+ * This is equivalent to a memset-like operation but for color values (typically 32-bit RGBA).
+ *
+ * @param dest[out]  Pointer to the start of the destination color buffer.
+ * @param color[in]  The color value to fill with.
+ * @param len[]in    Number of color elements to write (not bytes).
+ */
+static inline void sgl_color_set(sgl_color_t *dest, sgl_color_t color, uint32_t len)
+{
+    while (len--) {*dest++ = color; }
+}
 
 
 /**

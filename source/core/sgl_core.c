@@ -672,6 +672,13 @@ void sgl_init(void)
         return;
     }
 
+    sgl_ctx.blend = sgl_malloc(SGL_SCREEN_WIDTH * sizeof(sgl_surf_t));
+    if (sgl_ctx.blend == NULL) {
+        SGL_LOG_ERROR("sgl blend memory alloc failed");
+        SGL_ASSERT(0);
+        return;
+    }
+
     /* initialize dirty area */
     sgl_dirty_area_init();
 
@@ -752,21 +759,11 @@ sgl_color_t sgl_color_mixer(sgl_color_t fg_color, sgl_color_t bg_color, uint8_t 
  * The blending factor `factor` ranges from 0 to 255:
  *   - 0 means fully transparent (output = background),
  *   - 255 means fully opaque (output = foreground).
- *
- * The blended result is written back in-place to the `bg_color` buffer.
- * The `fg_color` argument may point to:
- *   - a single color value (reused for all `len` pixels), or
- *   - an array of `len` foreground colors (caller must ensure correct memory layout).
- *
+ * 
  * @param[in,out] fg_color   Pointer to the foreground color(s) (input); receives blended output (in-place update)
  * @param[in]     bg_color   Pointer to the background color buffer.
  * @param[in]     factor     Blending factor: 0 = fully transparent, 255 = fully opaque
  * @param[in]     len        Number of color elements (pixels) to process
- *
- * @note
- * - Assumes `sgl_color_t` a packed format (e.g., RGBA or RGB), with each channel blended independently.
- * - If `factor == 0`, `bg_color` remains unchanged; if `factor == 255`, `bg_color` is overwritten by `fg_color`.
- * - For performance-critical use, ensure `len` is aligned and consider SIMD optimizations (e.g., NEON, SSE) if available.
  */
 void sgl_color_blend(sgl_color_t *fg_color, sgl_color_t *bg_color, uint8_t factor, uint32_t len)
 {
