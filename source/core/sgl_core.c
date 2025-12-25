@@ -265,41 +265,6 @@ void sgl_obj_size_zoom(sgl_obj_t *obj, int16_t zoom)
 
 
 /**
- * @brief merge two area, the merge is result of the two area clip
- * @param area_a [in] area1
- * @param area_b [in] area2
- * @param merge  [out] merge result
- * @return none
- * @note: this function is unsafe, you should check the area_a and area_b and merge is not NULL by yourself
- */
-void sgl_area_merge(sgl_area_t *area_a, sgl_area_t *area_b, sgl_area_t *merge)
-{
-    SGL_ASSERT(area_a != NULL && area_b != NULL && merge != NULL);
-    merge->x1 = sgl_min(area_a->x1, area_b->x1);
-    merge->x2 = sgl_max(area_a->x2, area_b->x2);
-    merge->y1 = sgl_min(area_a->y1, area_b->y1);
-    merge->y2 = sgl_max(area_a->y2, area_b->y2);
-}
-
-
-/**
- * @brief merge two area, the merge is a new area
- * @param merge [in][out] merge area
- * @param area [in] area
- * @return none
- * @note: this function is unsafe, you should check the merge and area is not NULL by yourself
- */
-void sgl_area_selfmerge(sgl_area_t *merge, sgl_area_t *area)
-{
-    SGL_ASSERT(merge != NULL && area != NULL);
-    merge->x1 = sgl_min(merge->x1, area->x1);
-    merge->x2 = sgl_max(merge->x2, area->x2);
-    merge->y1 = sgl_min(merge->y1, area->y1);
-    merge->y2 = sgl_max(merge->y2, area->y2);
-}
-
-
-/**
  * @brief move object up a level layout
  * @param obj point to object
  * @return none
@@ -893,10 +858,6 @@ bool sgl_area_selfclip(sgl_area_t *clip, sgl_area_t *area)
 /**
  * @brief Computes the total boundary expansion (in Manhattan distance) required to merge rectangle b into rectangle a.
  *
- * This function calculates how much rectangle 'a' would need to grow in each direction (left, right, top, bottom)
- * to fully enclose both 'a' and 'b'. The result is the sum of the expansions along all four sides.
- * Note: This is not the increase in area, th is a lightweight heuristic for merge cost in bounding-box algorithms.
- *
  * @param a[in]    Pointer to the b rectangle
  * @param b[in]    Pointer to the a rectangle
  * @return int32_t Total expansion amount (always non-negative)
@@ -910,10 +871,6 @@ static inline int32_t sgl_area_growth(sgl_area_t *a, sgl_area_t *b)
 
 /**
  * @brief Quickly determines if two rectangles are close enough to be merged.
- *
- * Computes the gap between rectangles 'a' and 'b' along both X and Y axes.
- * A dynamic threshold is used: 1/4 of the smallest dimension (width or height) among the two rectangles.
- * The rectangles are considered mergeable only if both horizontal and vertical gaps are within this threshold.
  *
  * This fast heuristic is useful in performance-critical contexts (e.g., real-time segmentation or region merging)
  * to avoid excessive fragmentation while preventing merges between distant regions.
@@ -934,6 +891,11 @@ static inline bool sgl_merge_determines(sgl_area_t* a, sgl_area_t* b)
 
 /**
  * @brief merge object area into global dirty area
+ * 
+ * This function calculates how much rectangle 'a' would need to grow in each direction (left, right, top, bottom)
+ * to fully enclose both 'a' and 'b'. The result is the sum of the expansions along all four sides.
+ * Note: This is not the increase in area, th is a lightweight heuristic for merge cost in bounding-box algorithms.
+ * 
  * @param obj [in] Pointer to the object
  * @return none
  */
@@ -964,10 +926,7 @@ void sgl_obj_dirty_merge(sgl_obj_t *obj)
 
     if (best_idx >= 0) {
         /* merge object area into best_idx dirty area */
-        sgl_ctx.dirty[best_idx].x1 = sgl_min(sgl_ctx.dirty[best_idx].x1, obj->area.x1);
-        sgl_ctx.dirty[best_idx].x2 = sgl_max(sgl_ctx.dirty[best_idx].x2, obj->area.x2);
-        sgl_ctx.dirty[best_idx].y1 = sgl_min(sgl_ctx.dirty[best_idx].y1, obj->area.y1);
-        sgl_ctx.dirty[best_idx].y2 = sgl_max(sgl_ctx.dirty[best_idx].y2, obj->area.y2);
+        sgl_area_selfmerge(&sgl_ctx.dirty[best_idx], &obj->area);
         return;
     }
 
@@ -976,10 +935,7 @@ void sgl_obj_dirty_merge(sgl_obj_t *obj)
         sgl_ctx.dirty[sgl_ctx.dirty_num++] = obj->area;
     } else {
         /* merge object area into last dirty area */
-        sgl_ctx.dirty[SGL_DIRTY_AREA_NUM_MAX - 1].x1 = sgl_min(sgl_ctx.dirty[best_idx].x1, obj->area.x1);
-        sgl_ctx.dirty[SGL_DIRTY_AREA_NUM_MAX - 1].x2 = sgl_max(sgl_ctx.dirty[best_idx].x2, obj->area.x2);
-        sgl_ctx.dirty[SGL_DIRTY_AREA_NUM_MAX - 1].y1 = sgl_min(sgl_ctx.dirty[best_idx].y1, obj->area.y1);
-        sgl_ctx.dirty[SGL_DIRTY_AREA_NUM_MAX - 1].y2 = sgl_max(sgl_ctx.dirty[best_idx].y2, obj->area.y2);
+        sgl_area_selfmerge(&sgl_ctx.dirty[SGL_DIRTY_AREA_NUM_MAX - 1], &obj->area);
     }
 }
 

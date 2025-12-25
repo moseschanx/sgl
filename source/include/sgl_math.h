@@ -26,7 +26,8 @@
 #define __SGL_MATH_H__
 
 
-#include <sgl_core.h>
+#include <sgl_types.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {

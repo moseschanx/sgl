@@ -25,9 +25,9 @@
 #ifndef __SGL_CORE_H__
 #define __SGL_CORE_H__
 
-#include <sgl_cfgfix.h>
-#include <stddef.h>
 #include <stdarg.h>
+#include <sgl_cfgfix.h>
+#include <sgl_math.h>
 #include <sgl_log.h>
 #include <sgl_list.h>
 #include <sgl_event.h>
@@ -1689,7 +1689,14 @@ bool sgl_area_selfclip(sgl_area_t *clip, sgl_area_t *area);
  * @return none
  * @note: this function is unsafe, you should check the area_a and area_b and merge is not NULL by yourself
  */
-void sgl_area_merge(sgl_area_t *area_a, sgl_area_t *area_b, sgl_area_t *merge);
+static inline void sgl_area_merge(sgl_area_t *area_a, sgl_area_t *area_b, sgl_area_t *merge)
+{
+    SGL_ASSERT(area_a != NULL && area_b != NULL && merge != NULL);
+    merge->x1 = sgl_min(area_a->x1, area_b->x1);
+    merge->x2 = sgl_max(area_a->x2, area_b->x2);
+    merge->y1 = sgl_min(area_a->y1, area_b->y1);
+    merge->y2 = sgl_max(area_a->y2, area_b->y2);
+}
 
 
 /**
@@ -1699,7 +1706,14 @@ void sgl_area_merge(sgl_area_t *area_a, sgl_area_t *area_b, sgl_area_t *merge);
  * @return none
  * @note: this function is unsafe, you should check the merge and area is not NULL by yourself
  */
-void sgl_area_selfmerge(sgl_area_t *merge, sgl_area_t *area);
+static inline void sgl_area_selfmerge(sgl_area_t *merge, sgl_area_t *area)
+{
+    SGL_ASSERT(merge != NULL && area != NULL);
+    merge->x1 = sgl_min(merge->x1, area->x1);
+    merge->x2 = sgl_max(merge->x2, area->x2);
+    merge->y1 = sgl_min(merge->y1, area->y1);
+    merge->y2 = sgl_max(merge->y2, area->y2);
+}
 
 
 /**
