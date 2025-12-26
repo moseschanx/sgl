@@ -189,6 +189,7 @@ sgl_obj_t* sgl_msgbox_create(sgl_obj_t* parent)
     sgl_obj_t *obj = &msgbox->obj;
     sgl_obj_init(&msgbox->obj, parent);
     obj->construct_fn = sgl_msgbox_construct_cb;
+    sgl_obj_set_border_width(obj, SGL_THEME_BORDER_WIDTH);
 
     msgbox->body_desc.alpha = SGL_THEME_ALPHA;
     msgbox->body_desc.color = SGL_THEME_COLOR;

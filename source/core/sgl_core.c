@@ -575,6 +575,7 @@ static sgl_page_t* sgl_page_create(void)
     obj->construct_fn = sgl_page_construct_cb;
     obj->dirty = 1;
     obj->page = 1;
+    obj->border = 0;
     obj->coords = (sgl_area_t) {
         .x1 = 0,
         .y1 = 0,
@@ -938,62 +939,6 @@ void sgl_obj_dirty_merge(sgl_obj_t *obj)
 
 
 /**
- * @brief sgl set object layout type
- * @param obj [in] object
- * @param type [in] layout type, SGL_LAYOUT_NONE, SGL_LAYOUT_HORIZONTAL, SGL_LAYOUT_VERTICAL, SGL_LAYOUT_GRID
- * @return none
- */
-void sgl_obj_set_layout(sgl_obj_t *obj, sgl_layout_type_t type)
-{
-    SGL_ASSERT(obj != NULL);
-    obj->layout = (((uint8_t)type) & 0x03);
-
-    if ((!sgl_obj_has_child(obj)) || (type == SGL_LAYOUT_NONE)) {
-        return;
-    }
-
-    sgl_obj_t *child = NULL;
-    size_t child_num = sgl_obj_get_child_count(obj);
-    int16_t child_span[128] = {0}, i = 0, child_pos = 0;
-
-    /* set object to dirty flag for layout change */
-    sgl_obj_set_dirty(obj);
-
-    switch (obj->layout) {
-    case SGL_LAYOUT_HORIZONTAL:
-        sgl_split_len_avg((obj->coords.x2 - obj->coords.x1 + 1), child_num, obj->margin, child_span);
-        child_pos = obj->coords.x1 + obj->margin;
-
-        sgl_obj_for_each_child(child, obj) {
-            child->coords.x1 = child_pos;
-            child->coords.x2 = child_pos + child_span[i] - 1;
-            child->coords.y1 = obj->coords.y1 + obj->margin;
-            child->coords.y2 = obj->coords.y2 - obj->margin;
-            child_pos += (child_span[i++] + obj->margin);
-        }
-        break;
-
-    case SGL_LAYOUT_VERTICAL:
-        sgl_split_len_avg((obj->coords.y2 - obj->coords.y1 + 1), child_num, obj->margin, child_span);
-        child_pos = obj->coords.x1 + obj->margin;
-
-        sgl_obj_for_each_child(child, obj) {
-            child->coords.x1 = obj->coords.x1 + obj->margin;
-            child->coords.x2 = obj->coords.x2 - obj->margin;
-            child->coords.y1 = child_pos;
-            child->coords.y2 = child_pos + child_span[i] - 1;
-            child_pos += (child_span[i++] + obj->margin);
-        }
-        break;
-
-    case SGL_LAYOUT_GRID:
-        // TODO: set grid layout
-        break;
-    }
-}
-
-
-/**
  * @brief initialize object
  * @param obj object
  * @param parent parent object
@@ -1025,9 +970,6 @@ int sgl_obj_init(sgl_obj_t *obj, sgl_obj_t *parent)
 
     /* add the child into parent's child list */
     sgl_obj_add_child(parent, obj);
-
-    /* set layout to parent layout flag */
-    sgl_obj_set_layout(parent, (sgl_layout_type_t)parent->layout);
 
     return 0;
 }
@@ -1548,9 +1490,6 @@ static inline void sgl_dirty_area_calculate(sgl_obj_t *obj)
             /* merge destroy area */
             sgl_obj_dirty_merge(obj);
 
-            /* update parent layout */
-            sgl_obj_set_layout(obj->parent, (sgl_layout_type_t)obj->parent->layout);
-
             /* remove obj from parent */
             sgl_obj_remove(obj);
 
@@ -1579,8 +1518,9 @@ static inline void sgl_dirty_area_calculate(sgl_obj_t *obj)
             /* merge dirty area */
             sgl_obj_dirty_merge(obj);
 
+            sgl_area_t fill_area = sgl_obj_get_fill_rect(obj->parent);
             /* update obj area */
-            if (unlikely(!sgl_area_clip(&obj->parent->area, &obj->coords, &obj->area))) {
+            if (unlikely(!sgl_area_clip(&fill_area, &obj->coords, &obj->area))) {
                 sgl_area_init(&obj->area);
                 continue;
             }

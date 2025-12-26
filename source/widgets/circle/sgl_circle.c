@@ -82,6 +82,7 @@ sgl_obj_t* sgl_circle_create(sgl_obj_t* parent)
     sgl_obj_t *obj = &circle->obj;
     sgl_obj_init(&circle->obj, parent);
     obj->construct_fn = sgl_circle_construct_cb;
+    sgl_obj_set_border_width(obj, SGL_THEME_BORDER_WIDTH);
 
     obj->needinit = 1;
 

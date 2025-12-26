@@ -99,6 +99,7 @@ static inline void sgl_scroll_set_border_width(sgl_obj_t *obj, uint8_t width)
     SGL_ASSERT(obj != NULL);
     sgl_scroll_t *scroll = (sgl_scroll_t*)obj;
     scroll->desc.border = width;
+    sgl_obj_set_border_width(obj, width);
     sgl_obj_set_dirty(obj);
 }
 

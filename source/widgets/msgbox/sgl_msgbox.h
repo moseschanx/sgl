@@ -120,6 +120,7 @@ static inline void sgl_msgbox_set_border_width(sgl_obj_t *obj, uint8_t width)
 {
     sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
     msgbox->body_desc.border = width;
+    sgl_obj_set_border_width(obj, width);
     sgl_obj_set_dirty(obj);
 }
 

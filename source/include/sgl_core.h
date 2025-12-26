@@ -341,15 +341,6 @@ typedef struct sgl_font {
  * @brief Represents a fundamental UI object in the SGL (Simple Graphics Library) framework.
  *
  * This structure defines a generic GUI element that can be part of a hierarchical display tree.
- * It supports event handling, styling, layout management, and rendering state control.
- *
- * Key features:
- * - Hierarchical organization via parent-child-sibling links.
- * - Event callback mechanism for user interaction (including press, leave, etc.).
- * - Bit-packed flags for efficient state tracking (visible, dirty, clickable, pressed, etc.).
- * - Layout control: horizontal/vertical stacking, margin, flexible sizing, and corner radius.
- * - Optional object name for debugging or identification (enabled via CONFIG_SGL_OBJ_USE_NAME).
- *
  * Members:
  * @area: The logical size (width, height) of the object, used for layout and measurement.
  * @coords: The current screen position (x, y) and dimensions after layout calculation.
@@ -370,7 +361,7 @@ typedef struct sgl_font {
  *          - 3: Reserved
  * @clickable: (1 bit) Set to 1 if the object can receive click/touch events.
  * @movable: (1 bit) Set to 1 if the object can be dragged by the user.
- * @margin: Signed pixel value for outer spacing around the object in layout calculations.
+ * @border: border width of object
  * @flexible: (1 bit, in uint16_t field) Indicates the object can expand to fill available space.
  * @evt_leave: (1 bit) Set to 1 if the object should receive "pointer leave" events.
  * @pressed: (1 bit) Tracks whether the object is currently being pressed.
@@ -395,7 +386,7 @@ typedef struct sgl_obj {
     uint8_t            layout : 2;
     uint8_t            clickable : 1;
     uint8_t            movable : 1;
-    uint8_t            margin;
+    uint8_t            border;
     uint16_t           flexible : 1;
     uint16_t           focus : 1;
     uint16_t           pressed : 1;
@@ -1348,27 +1339,45 @@ static inline int16_t sgl_obj_get_height(sgl_obj_t *obj)
 
 
 /**
- * @brief Set object margin
+ * @brief Set object border width
  * @param obj point to object
- * @param margin: margin that you want to set
+ * @param border: border width that you want to set
  * @return none
  */
-static inline void sgl_obj_set_margin(sgl_obj_t *obj, int16_t margin)
+static inline void sgl_obj_set_border_width(sgl_obj_t *obj, uint8_t border)
 {
     SGL_ASSERT(obj != NULL);
-    obj->margin = margin;
+    obj->border = border;
 }
 
 
 /**
- * @brief Get object margin
+ * @brief Get object border width
  * @param obj point to object
- * @return object margin
+ * @return object border width
  */
-static inline int16_t sgl_obj_get_margin(sgl_obj_t *obj)
+static inline int16_t sgl_obj_get_border_width(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-    return obj->margin;
+    return obj->border;
+}
+
+
+/**
+ * @brief Get object fill rectangle
+ * @param obj point to object
+ * @return object fill rectangle
+ */
+static inline sgl_area_t sgl_obj_get_fill_rect(sgl_obj_t *obj)
+{
+    SGL_ASSERT(obj != NULL);
+    sgl_area_t fill = {
+        obj->coords.x1 + obj->border,
+        obj->coords.y1 + obj->border,
+        obj->coords.x2 - obj->border,
+        obj->coords.y2 - obj->border
+    };
+    return fill;
 }
 
 
@@ -1395,48 +1404,6 @@ static inline void sgl_obj_set_event_cb(sgl_obj_t *obj, void (*event_fn)(sgl_eve
  * @note if radius is larger than object's width or height, fix radius will be returned
  */
 int16_t sgl_obj_fix_radius(sgl_obj_t *obj, size_t radius);
-
-
-/**
- * @brief sgl set object layout type
- * @param obj [in] object
- * @param type [in] layout type, SGL_LAYOUT_NONE, SGL_LAYOUT_HORIZONTAL, SGL_LAYOUT_VERTICAL, SGL_LAYOUT_GRID
- * @return none
- */
-void sgl_obj_set_layout(sgl_obj_t *obj, sgl_layout_type_t type);
-
-
-/**
- * @brief Set object horizontal layout
- * @param obj point to object
- * @return none
- */
-static inline void sgl_obj_set_horizontal_layout(sgl_obj_t *obj)
-{
-    sgl_obj_set_layout(obj, SGL_LAYOUT_HORIZONTAL);
-}
-
-
-/**
- * @brief Set object vertical layout
- * @param obj point to object
- * @return none
- */
-static inline void sgl_obj_set_vertical_layout(sgl_obj_t *obj)
-{
-    sgl_obj_set_layout(obj, SGL_LAYOUT_VERTICAL);
-}
-
-
-/**
- * @brief Set object grid layout
- * @param obj point to object
- * @return none
- */
-static inline void sgl_obj_set_grid_layout(sgl_obj_t *obj)
-{
-    sgl_obj_set_layout(obj, SGL_LAYOUT_GRID);
-}
 
 
 /**

@@ -23,6 +23,7 @@
  */
 
 #include <stdio.h>
+#include <sgl_theme.h>
 #include "sgl_scope.h"
 
 
@@ -396,6 +397,7 @@ sgl_obj_t* sgl_scope_create(sgl_obj_t* parent)
     sgl_obj_t *obj = &scope->obj;
     sgl_obj_init(obj, parent);
     obj->construct_fn = scope_construct_cb;
+    sgl_obj_set_border_width(obj, SGL_THEME_BORDER_WIDTH);
     
     // Initialize default parameters
     scope->waveform_color = sgl_rgb(0, 255, 0);   // Green waveform

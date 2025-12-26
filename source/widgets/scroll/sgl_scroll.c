@@ -146,6 +146,7 @@ sgl_obj_t* sgl_scroll_create(sgl_obj_t* parent)
     sgl_obj_t *obj = &scroll->obj;
     sgl_obj_init(&scroll->obj, parent);
     obj->construct_fn = sgl_scroll_construct_cb;
+    sgl_obj_set_border_width(obj, SGL_THEME_BORDER_WIDTH);
     obj->movable = 1;
     obj->clickable = 1;
 

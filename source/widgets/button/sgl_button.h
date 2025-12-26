@@ -96,6 +96,7 @@ static inline void sgl_button_set_border_width(sgl_obj_t *obj, uint8_t width)
 {
     sgl_button_t *button = (sgl_button_t*)obj;
     button->rect.border = width;
+    sgl_obj_set_border_width(obj, width);
     sgl_obj_set_dirty(obj);
 }
 
