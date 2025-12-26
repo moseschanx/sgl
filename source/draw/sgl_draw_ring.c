@@ -47,18 +47,19 @@ void sgl_draw_fill_ring(sgl_surf_t *surf, sgl_area_t *area, int16_t cx, int16_t 
     
     int in_r2_max = sgl_pow2(radius_in - 1);
     int out_r2_max = sgl_pow2(radius_out + 1);
-    sgl_color_t *buf = NULL;
+    sgl_color_t *buf = NULL, *blend = NULL;
     sgl_area_t clip;
 
     if (!sgl_surf_clip(surf, area, &clip)) {
         return;
     }
 
+    buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, clip.y1 - surf->y1);
     for (int y = clip.y1; y <= clip.y2; y++) {
+        blend = buf;
         y2 = sgl_pow2(y - cy);
-        buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, y - surf->y1);
-
-        for (int x = clip.x1; x <= clip.x2; x++, buf++) {
+        
+        for (int x = clip.x1; x <= clip.x2; x++, blend++) {
             real_r2 = sgl_pow2(x - cx) + y2;
 
             if (real_r2 >= out_r2_max) {
@@ -67,7 +68,7 @@ void sgl_draw_fill_ring(sgl_surf_t *surf, sgl_area_t *area, int16_t cx, int16_t 
             }
             if (real_r2 < in_r2_max) {
                 if (x < cx) {
-                    buf += ((cx - x) * 2);
+                    blend += ((cx - x) * 2);
                     x = cx*2 - x;
                 }
                 continue;
@@ -75,30 +76,31 @@ void sgl_draw_fill_ring(sgl_surf_t *surf, sgl_area_t *area, int16_t cx, int16_t 
 
             if (alpha == SGL_ALPHA_MAX) {
                 if (real_r2 < in_r2 ) {
-                    *buf = sgl_color_mixer(color, *buf, sgl_sqrt_error(real_r2));
+                    *blend = sgl_color_mixer(color, *blend, sgl_sqrt_error(real_r2));
                 }
                 else if (real_r2 > out_r2) {
-                    *buf = sgl_color_mixer(color, *buf, SGL_ALPHA_MAX - sgl_sqrt_error(real_r2));
+                    *blend = sgl_color_mixer(color, *blend, SGL_ALPHA_MAX - sgl_sqrt_error(real_r2));
                 }
                 else {
-                    *buf = color;
+                    *blend = color;
                 }
             }
             else {
                 if (real_r2 < in_r2 ) {
                     edge_alpha = sgl_sqrt_error(real_r2);
-                    sgl_color_t color_mix = sgl_color_mixer(color, *buf, edge_alpha);
-                    *buf = sgl_color_mixer(color_mix, *buf, alpha);
+                    sgl_color_t color_mix = sgl_color_mixer(color, *blend, edge_alpha);
+                    *blend = sgl_color_mixer(color_mix, *blend, alpha);
                 }
                 else if (real_r2 > out_r2) {
                     edge_alpha = SGL_ALPHA_MAX - sgl_sqrt_error(real_r2);
-                    sgl_color_t color_mix = sgl_color_mixer(color, *buf, edge_alpha);
-                    *buf = sgl_color_mixer(color_mix, *buf, alpha);
+                    sgl_color_t color_mix = sgl_color_mixer(color, *blend, edge_alpha);
+                    *blend = sgl_color_mixer(color_mix, *blend, alpha);
                 }
                 else {
-                    *buf = sgl_color_mixer(color, *buf, alpha);
+                    *blend = sgl_color_mixer(color, *blend, alpha);
                 }
             }
         }
+        buf += surf->pitch;
     }
 }

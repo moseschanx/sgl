@@ -26,7 +26,6 @@
 #include <sgl_log.h>
 #include <sgl_draw.h>
 #include <sgl_math.h>
-#include <math.h>
 
 /**
  * @brief draw a horizontal line with alpha
@@ -42,7 +41,7 @@
 void sgl_draw_fill_hline(sgl_surf_t *surf, int16_t y, int16_t x1, int16_t x2, int16_t width, sgl_color_t color, uint8_t alpha)
 {
     sgl_area_t clip;
-    sgl_color_t *buf = NULL;
+    sgl_color_t *buf = NULL, *blend = NULL;
     sgl_area_t coords = {
         .x1 = x1,
         .y1 = y,
@@ -54,11 +53,13 @@ void sgl_draw_fill_hline(sgl_surf_t *surf, int16_t y, int16_t x1, int16_t x2, in
         return;
     }
 
+    buf = sgl_surf_get_buf(surf,  clip.x1 - surf->x1, clip.y1 - surf->y1);
     for (int y = clip.y1; y <= clip.y2; y++) {
-        buf = sgl_surf_get_buf(surf,  clip.x1 - surf->x1, y - surf->y1);
-        for (int x = clip.x1; x <= clip.x2; x++, buf++) {
-            *buf = alpha == SGL_ALPHA_MAX ? color : sgl_color_mixer(color, *buf, alpha);
+		blend = buf;
+        for (int x = clip.x1; x <= clip.x2; x++, blend++) {
+            *blend = alpha == SGL_ALPHA_MAX ? color : sgl_color_mixer(color, *blend, alpha);
         }
+		buf += surf->pitch;
     }
 }
 
@@ -77,7 +78,7 @@ void sgl_draw_fill_hline(sgl_surf_t *surf, int16_t y, int16_t x1, int16_t x2, in
 void sgl_draw_fill_vline(sgl_surf_t *surf, int16_t x, int16_t y1, int16_t y2, int16_t width, sgl_color_t color, uint8_t alpha)
 {
     sgl_area_t clip;
-    sgl_color_t *buf = NULL;
+    sgl_color_t *buf = NULL, *blend = NULL;
     sgl_area_t coords = {
         .x1 = x,
         .y1 = y1,
@@ -89,10 +90,11 @@ void sgl_draw_fill_vline(sgl_surf_t *surf, int16_t x, int16_t y1, int16_t y2, in
         return;
     }
 
+    buf = sgl_surf_get_buf(surf,  clip.x1 - surf->x1, clip.y1 - surf->y1);
     for (int y = clip.y1; y <= clip.y2; y++) {
-        buf = sgl_surf_get_buf(surf,  clip.x1 - surf->x1, y - surf->y1);
-        for (int x = clip.x1; x <= clip.x2; x++, buf++) {
-            *buf = (alpha == SGL_ALPHA_MAX ? color : sgl_color_mixer(color, *buf, alpha));
+		blend = buf;
+        for (int x = clip.x1; x <= clip.x2; x++, blend++) {
+            *blend = (alpha == SGL_ALPHA_MAX ? color : sgl_color_mixer(color, *blend, alpha));
         }
         buf += surf->pitch;
     }
@@ -110,7 +112,7 @@ static int32_t sgl_capsule_sdf_optimized(int16_t px, int16_t py, int16_t ax, int
 	int64_t dx = (pax << 8) - bax * h / b_sqd;
 	int64_t dy = (pay << 8) - bay * h / b_sqd;
 
-	return sqrt(dx * dx + dy * dy);
+	return sgl_sqrt(dx * dx + dy * dy);
 }
 
 void draw_line_sdf(sgl_surf_t *surf, sgl_area_t *area, int16_t x1, int16_t y1, int16_t x2, int16_t y2,
@@ -119,7 +121,7 @@ void draw_line_sdf(sgl_surf_t *surf, sgl_area_t *area, int16_t x1, int16_t y1, i
 	uint8_t c;
 	int64_t len;
 	sgl_area_t clip = SGL_AREA_MAX;
-	sgl_color_t *buf = NULL;
+	sgl_color_t *buf = NULL, *blend = NULL;
 	int16_t thick_half = (thickness >> 1);
 	sgl_area_t c_rect = {.x1 = x1 - thick_half, .x2 = x2 + thick_half, .y1 = y1 - thick_half,.y2 = y2 + thick_half};
 
@@ -128,14 +130,15 @@ void draw_line_sdf(sgl_surf_t *surf, sgl_area_t *area, int16_t x1, int16_t y1, i
 		return;
 	}
 
+	buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, clip.y1 - surf->y1);
 	for (int y = clip.y1; y <= clip.y2; y++) {
-		buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, y - surf->y1);
+		blend = buf;
 
-		for (int x = clip.x1; x <= clip.x2; x++, buf++) {
+		for (int x = clip.x1; x <= clip.x2; x++, blend++) {
 			len = sgl_capsule_sdf_optimized(x, y, x1, y1, x2, y2);
 
 			if (len <= (thick_half - 1) << 8) {
-				*buf = (alpha == SGL_ALPHA_MAX ? color : sgl_color_mixer(color, *buf, alpha));
+				*blend = (alpha == SGL_ALPHA_MAX ? color : sgl_color_mixer(color, *blend, alpha));
 				continue;
 			}
 
@@ -143,11 +146,12 @@ void draw_line_sdf(sgl_surf_t *surf, sgl_area_t *area, int16_t x1, int16_t y1, i
 				c = len - ((thick_half - 1) << 8);
 
 				if (alpha == SGL_ALPHA_MAX)
-					*buf = sgl_color_mixer(*buf, color, c);
+					*blend = sgl_color_mixer(*blend, color, c);
 				else
-					*buf = sgl_color_mixer(sgl_color_mixer(*buf, color, c), *buf, alpha);
+					*blend = sgl_color_mixer(sgl_color_mixer(*blend, color, c), *blend, alpha);
 			}
 		}
+		buf += surf->pitch;
 	}
 }
 

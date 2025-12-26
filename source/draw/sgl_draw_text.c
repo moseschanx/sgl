@@ -212,7 +212,7 @@ void sgl_draw_character(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y
     uint8_t shift = 0;
     uint32_t pixel_index, rel_x, rel_y;
     uint16_t byte_index, alpha_dot = 0;
-    sgl_color_t color_mix, *buf = NULL;
+    sgl_color_t color_mix, *buf = NULL, *blend = NULL;
     sgl_area_t clip;
 
     sgl_area_t text_rect = {
@@ -230,11 +230,12 @@ void sgl_draw_character(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y
         return;
     }
 
+    buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, clip.y1 - surf->y1);
 #if (CONFIG_SGL_FONT_COMPRESSED)
     if (font->compress == 0) {
 #endif // (!CONFIG_SGL_FONT_COMPRESSED == 0)
         for (int y = clip.y1; y <= clip.y2; y++) {
-            buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, y - surf->y1);
+            blend = buf;
             rel_y = y - text_rect.y1;
 
             for (int x = clip.x1; x <= clip.x2; x++) {
@@ -251,10 +252,11 @@ void sgl_draw_character(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y
                     alpha_dot = opa2_table[(dot[byte_index] >> shift) & 0x03];
                 }
 
-                color_mix = sgl_color_mixer(color, *buf, alpha_dot);
-                *buf = sgl_color_mixer(color_mix, *buf, alpha);
-                buf++;
+                color_mix = sgl_color_mixer(color, *blend, alpha_dot);
+                *blend = sgl_color_mixer(color_mix, *blend, alpha);
+                blend++;
             }
+            buf += surf->pitch;
         }
 #if (CONFIG_SGL_FONT_COMPRESSED)
     }  /* support compressed font */
@@ -263,19 +265,20 @@ void sgl_draw_character(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y
         font_rle_init(dot, font->bpp);
 
         for (int y = clip.y1; y <= clip.y2; y++) {
-            buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, y - surf->y1);
+            blend = buf;
             decompress_line(line_buf, font_w);
 
             for (int x = clip.x1; x <= clip.x2; x++) {
                 if (font->bpp == 4) {
-                    color_mix = sgl_color_mixer(color, *buf, opa4_table[line_buf[x - clip.x1]]);
+                    color_mix = sgl_color_mixer(color, *blend, opa4_table[line_buf[x - clip.x1]]);
                 }
                 else if (font->bpp == 2) {
-                    color_mix = sgl_color_mixer(color, *buf, opa2_table[line_buf[x - clip.x1]]);
+                    color_mix = sgl_color_mixer(color, *blend, opa2_table[line_buf[x - clip.x1]]);
                 }
-                *buf = sgl_color_mixer(color_mix, *buf, alpha);
-                buf++;
+                *blend = sgl_color_mixer(color_mix, *buf, alpha);
+                blend++;
             }
+            buf += surf->pitch;
         }
     }
 #endif
