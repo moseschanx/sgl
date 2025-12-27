@@ -1451,7 +1451,7 @@ static inline void sgl_draw_task(sgl_area_t *dirty)
     /* check dirty area, ensure it is valid */
     SGL_ASSERT(dirty != NULL && dirty->x1 >= 0 && dirty->y1 >= 0 && dirty->x2 < SGL_SCREEN_WIDTH && dirty->y2 < SGL_SCREEN_HEIGHT);
 
-#if (!CONFIG_SGL_USE_FB_CTL)
+#if (!CONFIG_SGL_USE_FB_VRAM)
     uint16_t dirty_h = 0, draw_h = 0;
     dirty_h = dirty->y2 - dirty->y1 + 1;
 
