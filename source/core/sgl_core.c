@@ -234,16 +234,16 @@ void sgl_obj_move_child_pos(sgl_obj_t *obj, int16_t ofs_x, int16_t ofs_y)
 void sgl_obj_set_pos(sgl_obj_t *obj, int16_t x, int16_t y)
 {
     SGL_ASSERT(obj != NULL);
-    int16_t x_inc = x - obj->coords.x1;
-    int16_t y_inc = y - obj->coords.y1;
+    int16_t w = obj->coords.x2 - obj->coords.x1;
+    int16_t h = obj->coords.y2 - obj->coords.y1;
 
     obj->dirty = 1;
     obj->coords.x1 = x + obj->parent->coords.x1;
-    obj->coords.x2 += x_inc;
+    obj->coords.x2 = obj->coords.x1 + w;
     obj->coords.y1 = y + obj->parent->coords.y1;
-    obj->coords.y2 += y_inc;
+    obj->coords.y2 = obj->coords.y1 + h;
 
-    sgl_obj_move_child_pos(obj, x_inc, y_inc);
+    sgl_obj_move_child_pos(obj, x - obj->coords.x1, y - obj->coords.y2);
 }
 
 
