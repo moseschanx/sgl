@@ -153,10 +153,11 @@ extern "C" {
 #define sgl_weak_fn                             __declspec(selectany)
 #elif defined(__MINGW32__) /* MinGW compiler  */
 #ifndef likely
-#define likely(x)                               __builtin_expect(!!(x), 1)
-#define unlikely(x)                             __builtin_expect(!!(x), 0)
+#  define likely(x)                             __builtin_expect(!!(x), 1)
+#  define unlikely(x)                           __builtin_expect(!!(x), 0)
 #endif
 #define sgl_weak_fn                             __attribute__((weak))
+#define sgl_section(sec)                        __attribute__((section(#sec)))
 #else                      /* others compiler */
 #ifndef likely
 #  define likely(x)                             (x)
