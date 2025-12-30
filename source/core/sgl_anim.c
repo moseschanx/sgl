@@ -97,6 +97,7 @@ void sgl_anim_add(sgl_anim_t *anim)
         anim_ctx.anim_list_tail = anim;
     }
 
+    anim->next = NULL;
     anim_ctx.anim_cnt++;
 }
 
