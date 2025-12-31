@@ -147,6 +147,7 @@ static inline void sgl_switch_set_border_width(sgl_obj_t *obj, int16_t width)
 {
     sgl_switch_t *switch_obj = (sgl_switch_t *)obj;
     switch_obj->bg_desc.border = width;
+    sgl_obj_set_border_width(obj, width);
     sgl_obj_set_dirty(obj);
 }
 

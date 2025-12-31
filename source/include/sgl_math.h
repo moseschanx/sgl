@@ -26,7 +26,8 @@
 #define __SGL_MATH_H__
 
 
-#include <sgl_core.h>
+#include <sgl_types.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,6 +54,9 @@ extern "C" {
 #define sgl_is_pow2(x)                    (((x) & ((x) - 1)) == 0)
 #define sgl_is_even(x)                    (((x) & 1) == 0)
 #define sgl_is_odd(x)                     ((x) & 1)
+
+#define sgl_swap(a, b)                    do { (*a) ^= (*b); (*b) ^= (*a); (*a) ^= (*b); } while (0)
+
 
 /**
  * @brief Calculate the sine of an angle

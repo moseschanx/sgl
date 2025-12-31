@@ -32,79 +32,57 @@
 #include <string.h>
 #include "sgl_ext_img.h"
 
-typedef struct rlecontext {
-    const uint8_t *bitmap;
-    void (*read)(const uint8_t *addr, uint8_t *out, uint32_t len_bytes);
-    uint32_t index;
-    sgl_color_t color;
-    uint8_t remainder;
-    uint8_t format;
-    uint8_t alpha;
-} rlecontext_t;
-
-rlecontext_t rlectx = {
-    .bitmap = NULL,
-    .index = 0,
-    .remainder = 0,
-    .alpha = 0,
-    .format = 0,
-    .read = NULL
-};
-
-static inline void rle_init(const uint8_t *bitmap, uint8_t format, uint8_t alpha, void (*read)(const uint8_t*, uint8_t*, uint32_t))
+static inline void ext_img_rle_init(sgl_ext_img_t *img)
 {
-    if (rlectx.bitmap == NULL) {
-        rlectx.bitmap = bitmap;
-        rlectx.index = 0;
-        rlectx.format = format;
-        rlectx.alpha = alpha;
-        rlectx.read = read;
+    SGL_ASSERT(img != NULL);
+    if (img->started == 0) {
+        img->started = 1;
+        img->index = 0;
+        img->remainder = 0;
     }
 }
 
-static inline void rle_decompress_line(sgl_area_t *coords, sgl_area_t *area, sgl_color_t *out)
+static inline void rle_decompress_line(sgl_ext_img_t *img, sgl_area_t *coords, sgl_area_t *area, sgl_color_t *out)
 {
     uint8_t tmp_buf[8] = {0};
+    const uint8_t *bitmap = img->pixmap->bitmap;
+    uint8_t format = img->pixmap->format;
 
     for (int i = coords->x1; i <= coords->x2; i++) {
-        if (rlectx.remainder == 0) {
-            if (rlectx.read != NULL) {
-                rlectx.read(&rlectx.bitmap[rlectx.index], tmp_buf, sizeof(tmp_buf));
+        if (img->remainder == 0) {
+            if (img->read != NULL) {
+                img->read(bitmap + img->index, tmp_buf, sizeof(tmp_buf));
             }
             else {
-                tmp_buf[0] = rlectx.bitmap[rlectx.index];
-                tmp_buf[1] = rlectx.bitmap[rlectx.index + 1];
-                tmp_buf[2] = rlectx.bitmap[rlectx.index + 2];
-                tmp_buf[3] = rlectx.bitmap[rlectx.index + 3];
-                tmp_buf[4] = rlectx.bitmap[rlectx.index + 4];
-            }
-            rlectx.index ++;
-            rlectx.remainder = tmp_buf[0];
-
-            if (rlectx.remainder == 0) {
-                rlectx.bitmap = NULL;
-                return;
+                tmp_buf[0] = bitmap[img->index];
+                tmp_buf[1] = bitmap[img->index + 1];
+                tmp_buf[2] = bitmap[img->index + 2];
+                tmp_buf[3] = bitmap[img->index + 3];
+                tmp_buf[4] = bitmap[img->index + 4];
             }
 
-            if (rlectx.format == SGL_PIXMAP_FMT_RLE_RGB332) {
-                rlectx.color = sgl_rgb332_to_color(tmp_buf[1]);
-                rlectx.index++;
+            img->index ++;
+            img->remainder = tmp_buf[0];
+
+            if (format == SGL_PIXMAP_FMT_RLE_RGB332) {
+                img->color = sgl_rgb332_to_color(tmp_buf[1]);
+                img->index ++;
             }
-            else if (rlectx.format == SGL_PIXMAP_FMT_RLE_RGB565) {
-                rlectx.color = sgl_rgb565_to_color(tmp_buf[1] | (tmp_buf[2] << 8));
-                rlectx.index += 2;
+            else if (format == SGL_PIXMAP_FMT_RLE_RGB565) {
+                img->color = sgl_rgb565_to_color(tmp_buf[1] | (tmp_buf[2] << 8));
+                img->index += 2;
             }
-            else if (rlectx.format == SGL_PIXMAP_FMT_RLE_RGB888) {
-                rlectx.color = sgl_rgb888_to_color(tmp_buf[1] | (tmp_buf[2] << 8) | (tmp_buf[3] << 16));
-                rlectx.index += 3;
+            else if (format == SGL_PIXMAP_FMT_RLE_RGB888) {
+                img->color = sgl_rgb888_to_color(tmp_buf[1] | (tmp_buf[2] << 8) | (tmp_buf[3] << 16));
+                img->index += 3;
             }
         }
 
-        if (i >= area->x1 && i <= area->x2) {
-            *out = (rlectx.alpha == SGL_ALPHA_MAX ? rlectx.color : sgl_color_mixer(rlectx.color, *out, rlectx.alpha));
+        if (out != NULL && i >= area->x1 && i <= area->x2) {
+            *out = (img->alpha == SGL_ALPHA_MAX ? img->color : sgl_color_mixer(img->color, *out, img->alpha));
             out ++;
         }
-        rlectx.remainder --;
+        img->remainder --;
     };
 }
 
@@ -124,25 +102,26 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
     };
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
-        sgl_color_t *buf = NULL;
+        sgl_color_t *buf = NULL, *blend = NULL;
 
-        if (!sgl_surf_clip(surf, &area, &clip)) {
+        if (!sgl_surf_clip(surf, &obj->area, &clip)) {
             return;
         }
-
+    
         if (ext_img->pixmap->format < SGL_PIXMAP_FMT_RLE_RGB332) {
 
+            buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, clip.y1 - surf->y1);
             if (ext_img->read != NULL) {
                 uint8_t *pixmap_buf = (uint8_t*)sgl_malloc(pix_byte * (clip.x2 - clip.x1 + 1));
                 sgl_color_t tmp_color;
                 uint32_t offset = 0, line_ofs = 0;
 
                 for (int y = clip.y1; y <= clip.y2; y++) {
-                    buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, y - surf->y1);
+                    blend = buf;
                     offset = ((((y - area.y1) * ext_img->pixmap->width) + (clip.x1 - area.x1)) * pix_byte);
 
                     ext_img->read(bitmap + offset, pixmap_buf, pix_byte * (clip.x2 - clip.x1 + 1));
-                    line_ofs = (clip.x1 - area.x1);
+                    line_ofs = 0;
 
                     for (int x = clip.x1; x <= clip.x2; x++) {
                         if (ext_img->pixmap->format == SGL_PIXMAP_FMT_RGB332) {
@@ -156,9 +135,10 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
                         }
 
                         line_ofs += pix_byte;
-                        *buf = ext_img->alpha == SGL_ALPHA_MAX ? tmp_color : sgl_color_mixer(tmp_color, *buf, ext_img->alpha);
-                        buf ++;
-                    };
+                        *blend = ext_img->alpha == SGL_ALPHA_MAX ? tmp_color : sgl_color_mixer(tmp_color, *blend, ext_img->alpha);
+                        blend ++;
+                    }
+                    buf += surf->pitch;
                 }
                 sgl_free(pixmap_buf);
             }
@@ -167,7 +147,7 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
                 uint32_t offset = 0;
 
                 for (int y = clip.y1; y <= clip.y2; y++) {
-                    buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, y - surf->y1);
+                    blend = buf;
                     offset = ((((y - area.y1) * ext_img->pixmap->width) + (clip.x1 - area.x1)) * pix_byte);
 
                     for (int x = clip.x1; x <= clip.x2; x++) {
@@ -182,18 +162,24 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
                         }
 
                         offset += pix_byte;
-                        *buf = ext_img->alpha == SGL_ALPHA_MAX ? tmp_color : sgl_color_mixer(tmp_color, *buf, ext_img->alpha);
-                        buf ++;
+                        *blend = ext_img->alpha == SGL_ALPHA_MAX ? tmp_color : sgl_color_mixer(tmp_color, *blend, ext_img->alpha);
+                        blend ++;
                     };
+                    buf += surf->pitch;
                 }
             }
         }
         else {
             /* RLE pixmap support */
-            rle_init(bitmap, ext_img->pixmap->format, ext_img->alpha, ext_img->read);
+            buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, (clip.y1 - surf->y1));
+            clip.y2 = sgl_min(clip.y2, area.y2);
+            ext_img_rle_init(ext_img);
             for (int y = clip.y1; y <= clip.y2; y++) {
-                buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, y - surf->y1);
-                rle_decompress_line(&area, &obj->area, buf);
+                rle_decompress_line(ext_img, &area, &clip, buf);
+                buf += surf->pitch;
+            }
+            if (surf->y2 >= area.y2) {
+                ext_img->started = 0;
             }
         }
     }
@@ -221,6 +207,7 @@ sgl_obj_t* sgl_ext_img_create(sgl_obj_t* parent)
     obj->construct_fn = sgl_ext_img_construct_cb;
 
     ext_img->alpha = SGL_ALPHA_MAX;
+    ext_img->started = 0;
 
     return obj;
 }

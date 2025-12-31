@@ -138,6 +138,7 @@ static inline void sgl_keyboard_set_border_width(sgl_obj_t *obj, uint8_t width)
 {
     sgl_keyboard_t *keyboard = (sgl_keyboard_t*)obj;
     keyboard->btn_desc.border = width;
+    sgl_obj_set_border_width(obj, width);
     sgl_obj_set_dirty(obj);
 }
 

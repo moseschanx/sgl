@@ -80,8 +80,12 @@ typedef struct sgl_ext_img {
     const sgl_pixmap_t *pixmap;
     void            (*read)(const uint8_t *addr, uint8_t *out, uint32_t len_bytes);
     uint8_t         alpha;
+    /* RLE compress context */
+    uint8_t         started;
+    sgl_color_t     color;
+    uint16_t        remainder;
+    uint32_t        index;
 }sgl_ext_img_t;
-
 
 /**
  * @brief create an ext_img object

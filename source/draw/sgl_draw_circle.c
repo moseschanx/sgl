@@ -41,7 +41,7 @@
 void sgl_draw_fill_circle(sgl_surf_t *surf, sgl_area_t *area, int16_t cx, int16_t cy, int16_t radius, sgl_color_t color, uint8_t alpha)
 {
     sgl_area_t clip = SGL_AREA_MAX;
-    sgl_color_t *buf = NULL;
+    sgl_color_t *buf = NULL, *blend = NULL;
 
     sgl_surf_clip_area_return(surf, area, &clip);
 
@@ -59,11 +59,11 @@ void sgl_draw_fill_circle(sgl_surf_t *surf, sgl_area_t *area, int16_t cx, int16_
     int r2 = sgl_pow2(radius);
     int r2_edge = sgl_pow2(radius + 1);
 
+    buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, clip.y1 - surf->y1);
     for (int y = clip.y1; y <= clip.y2; y++) {
+        blend = buf;
         y2 = sgl_pow2(y - cy);
-        buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, y - surf->y1);
-
-        for (int x = clip.x1; x <= clip.x2; x++, buf++) {
+        for (int x = clip.x1; x <= clip.x2; x++, blend++) {
             real_r2 = sgl_pow2(x - cx) + y2;
 
             if (real_r2 >= r2_edge) {
@@ -73,12 +73,13 @@ void sgl_draw_fill_circle(sgl_surf_t *surf, sgl_area_t *area, int16_t cx, int16_
             }
             else if (real_r2 >= r2) {
                 edge_alpha = SGL_ALPHA_MAX - sgl_sqrt_error(real_r2);
-                *buf = (alpha == SGL_ALPHA_MAX ? sgl_color_mixer(color, *buf, edge_alpha) : sgl_color_mixer(sgl_color_mixer(color, *buf, edge_alpha), *buf, alpha));
+                *blend = (alpha == SGL_ALPHA_MAX ? sgl_color_mixer(color, *blend, edge_alpha) : sgl_color_mixer(sgl_color_mixer(color, *blend, edge_alpha), *blend, alpha));
             }
             else {
-                *buf = (alpha == SGL_ALPHA_MAX ? color : sgl_color_mixer(color, *buf, alpha));
+                *blend = (alpha == SGL_ALPHA_MAX ? color : sgl_color_mixer(color, *blend, alpha));
             }
         }
+        buf += surf->pitch;
     }
 }
 
@@ -99,7 +100,7 @@ void sgl_draw_fill_circle_pixmap(sgl_surf_t *surf, sgl_area_t *area, int16_t cx,
     int y2 = 0, real_r2 = 0, s_x = cx - radius, s_y = cy - radius;
     int r2 = radius * radius;
     int r2_max = (radius + 1) * (radius + 1);
-    sgl_color_t *buf = NULL, *pbuf = NULL;
+    sgl_color_t *buf = NULL, *pbuf = NULL, *blend = NULL;
     sgl_area_t clip = SGL_AREA_MAX;
     uint8_t edge_alpha = 0;
 
@@ -119,12 +120,13 @@ void sgl_draw_fill_circle_pixmap(sgl_surf_t *surf, sgl_area_t *area, int16_t cx,
     uint32_t scale_y = (pixmap->height << 10) / (radius * 2);
     uint32_t step_x = 0, step_y = 0;
 
+    buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, clip.y1 - surf->y1);
     for (int y = clip.y1; y <= clip.y2; y++) {
+        blend = buf;
         y2 = sgl_pow2(y - cy);
-        buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, y - surf->y1);
         step_y = (scale_y * (y - s_y)) >> 10;
 
-        for (int x = clip.x1; x <= clip.x2; x++, buf++) {
+        for (int x = clip.x1; x <= clip.x2; x++, blend++) {
             real_r2 = sgl_pow2(x - cx) + y2;
 
             step_x = (scale_x * (x - s_x)) >> 10;
@@ -137,12 +139,13 @@ void sgl_draw_fill_circle_pixmap(sgl_surf_t *surf, sgl_area_t *area, int16_t cx,
             }
             else if (real_r2 >= r2) {
                 edge_alpha = SGL_ALPHA_MAX - sgl_sqrt_error(real_r2);
-                *buf = (alpha == SGL_ALPHA_MAX ? sgl_color_mixer(*pbuf, *buf, edge_alpha) : sgl_color_mixer(sgl_color_mixer(*pbuf, *buf, edge_alpha), *buf, alpha));
+                *blend = (alpha == SGL_ALPHA_MAX ? sgl_color_mixer(*pbuf, *blend, edge_alpha) : sgl_color_mixer(sgl_color_mixer(*pbuf, *blend, edge_alpha), *blend, alpha));
             }
             else {
-                *buf = (alpha == SGL_ALPHA_MAX ? *pbuf : sgl_color_mixer(*pbuf, *buf, alpha));
+                *blend = (alpha == SGL_ALPHA_MAX ? *pbuf : sgl_color_mixer(*pbuf, *blend, alpha));
             }
         }
+        buf += surf->pitch;
     }
 }
 
@@ -166,7 +169,7 @@ void sgl_draw_fill_circle_with_border(sgl_surf_t *surf, sgl_area_t *area, int16_
     int y2 = 0, real_r2 = 0;
     int in_r2 = sgl_pow2(radius_in);
     int out_r2 = sgl_pow2(radius);
-    sgl_color_t *buf = NULL;
+    sgl_color_t *buf = NULL, *blend = NULL;
 
     int in_r2_max = sgl_pow2(radius_in - 1);
     int out_r2_max = sgl_pow2(radius + 1);
@@ -175,11 +178,12 @@ void sgl_draw_fill_circle_with_border(sgl_surf_t *surf, sgl_area_t *area, int16_
 
     sgl_surf_clip_area_return(surf, area, &clip);
 
+    buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, clip.y1 - surf->y1);
     for (int y = clip.y1; y <= clip.y2; y++) {
+        blend = buf;
         y2 = sgl_pow2(y - cy);
-        buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, y - surf->y1);
 
-        for (int x = clip.x1; x <= clip.x2; x++, buf++) {
+        for (int x = clip.x1; x <= clip.x2; x++, blend++) {
             real_r2 = sgl_pow2(x - cx) + y2;
 
             if (real_r2 >= out_r2_max) {
@@ -188,21 +192,22 @@ void sgl_draw_fill_circle_with_border(sgl_surf_t *surf, sgl_area_t *area, int16_
                 continue;
             }
             if (real_r2 < in_r2_max) {
-                *buf = (alpha == SGL_ALPHA_MAX ? color : sgl_color_mixer(color, *buf, alpha));
+                *blend = (alpha == SGL_ALPHA_MAX ? color : sgl_color_mixer(color, *blend, alpha));
                 continue;
             }
             if (real_r2 < in_r2 ) {
                 edge_alpha = sgl_sqrt_error(real_r2);
-                *buf = (alpha == SGL_ALPHA_MAX ? sgl_color_mixer(border_color, color, sgl_sqrt_error(real_r2)) : sgl_color_mixer(sgl_color_mixer(border_color, color, edge_alpha), *buf, alpha));
+                *blend = (alpha == SGL_ALPHA_MAX ? sgl_color_mixer(border_color, color, sgl_sqrt_error(real_r2)) : sgl_color_mixer(sgl_color_mixer(border_color, color, edge_alpha), *blend, alpha));
             }
             else if (real_r2 > out_r2) {
                 edge_alpha = SGL_ALPHA_MAX - sgl_sqrt_error(real_r2);
-                *buf = (alpha == SGL_ALPHA_MAX ? sgl_color_mixer(border_color, *buf, edge_alpha) : sgl_color_mixer(sgl_color_mixer(border_color, *buf, edge_alpha), *buf, alpha));
+                *blend = (alpha == SGL_ALPHA_MAX ? sgl_color_mixer(border_color, *blend, edge_alpha) : sgl_color_mixer(sgl_color_mixer(border_color, *blend, edge_alpha), *blend, alpha));
             }
             else {
-                *buf = (alpha == SGL_ALPHA_MAX ? border_color : sgl_color_mixer(border_color, *buf, alpha));
+                *blend = (alpha == SGL_ALPHA_MAX ? border_color : sgl_color_mixer(border_color, *blend, alpha));
             }
         }
+        buf += surf->pitch;
     }
 }
 

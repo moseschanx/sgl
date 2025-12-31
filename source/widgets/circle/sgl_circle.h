@@ -129,6 +129,7 @@ static inline void sgl_circle_set_border_width(sgl_obj_t *obj, uint8_t width)
 {
     sgl_circle_t *circle = (sgl_circle_t *)obj;
     circle->desc.border = width;
+    sgl_obj_set_border_width(obj, width);
     sgl_obj_set_dirty(obj);
 }
 

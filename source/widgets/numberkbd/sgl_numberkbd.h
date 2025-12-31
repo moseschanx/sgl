@@ -109,6 +109,7 @@ static inline void sgl_numberkbd_set_border_width(sgl_obj_t *obj, uint8_t width)
 {
     sgl_numberkbd_t *numberkbd = (sgl_numberkbd_t *)obj;
     numberkbd->body_desc.border = width;
+    sgl_obj_set_border_width(obj, width);
     sgl_obj_set_dirty(obj);
 }
 

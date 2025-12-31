@@ -41,7 +41,7 @@ extern "C" {
  * CONFIG_SGL_PANEL_PIXEL_DEPTH:
  *      The pixel depth of panel, it will be used to define the color type
  *
- * CONFIG_SGL_USE_FULL_FB:
+ * CONFIG_SGL_USE_FB_VRAM:
  *      If you want to use full framebuffer, please define this macro to 1
  *
  * CONFIG_SGL_SYSTICK_MS:
@@ -90,8 +90,8 @@ extern "C" {
 #define CONFIG_SGL_PANEL_PIXEL_DEPTH                               (16)
 #endif
 
-#ifndef CONFIG_SGL_USE_FULL_FB
-#define CONFIG_SGL_USE_FULL_FB                                     (0)
+#ifndef CONFIG_SGL_USE_FB_VRAM
+#define CONFIG_SGL_USE_FB_VRAM                                     (0)
 #endif
 
 #ifndef CONFIG_SGL_SYSTICK_MS
@@ -106,8 +106,8 @@ extern "C" {
 #define CONFIG_SGL_EVENT_QUEUE_SIZE                                (32)
 #endif
 
-#ifndef CONFIG_SGL_DIRTY_AREA_THRESHOLD
-#define CONFIG_SGL_DIRTY_AREA_THRESHOLD                            (64)
+#ifndef CONFIG_SGL_DIRTY_AREA_NUM_MAX
+#define CONFIG_SGL_DIRTY_AREA_NUM_MAX                              (64)
 #endif
 
 #ifndef CONFIG_SGL_ANIMATION

@@ -170,6 +170,7 @@ static inline void sgl_slider_set_border_width(sgl_obj_t *obj, uint8_t width)
 {
     sgl_slider_t *slider = (sgl_slider_t *)obj;
     slider->body.border = width;
+    sgl_obj_set_border_width(obj, width);
     sgl_obj_set_dirty(obj);
 }
 

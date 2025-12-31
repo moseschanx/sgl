@@ -535,6 +535,7 @@ sgl_obj_t* sgl_keyboard_create(sgl_obj_t* parent)
     sgl_obj_t *obj = &keyboard->obj;
     sgl_obj_init(&keyboard->obj, parent);
     obj->construct_fn = sgl_keyboard_construct_cb;
+    sgl_obj_set_border_width(obj, SGL_THEME_BORDER_WIDTH);
 
     obj->clickable = 1;
     obj->needinit  = 1;

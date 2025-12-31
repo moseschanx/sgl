@@ -90,6 +90,7 @@ sgl_obj_t* sgl_switch_create(sgl_obj_t* parent)
     sgl_obj_t *obj = &p_switch->obj;
     sgl_obj_init(&p_switch->obj, parent);
     obj->construct_fn = sgl_switch_construct_cb;
+    sgl_obj_set_border_width(obj, SGL_THEME_BORDER_WIDTH);
 
     p_switch->bg_desc.alpha = SGL_THEME_ALPHA;
     p_switch->bg_desc.color = SGL_THEME_COLOR;

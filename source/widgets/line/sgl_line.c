@@ -38,7 +38,7 @@ static void sgl_line_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t 
     sgl_line_t *line = (sgl_line_t*)obj;
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
-        sgl_draw_line(surf, &line->desc);
+        sgl_draw_line(surf, &obj->area, &line->desc);
     }
 }
 
@@ -68,4 +68,45 @@ sgl_obj_t* sgl_line_create(sgl_obj_t* parent)
     line->desc.width = 1;
 
     return obj;
+}
+
+
+/**
+ * @brief set line start position
+ * @param obj line object
+ * @param x start x position
+ * @param y start y position
+ * @return none
+ */
+void sgl_line_set_pos(sgl_obj_t *obj, int16_t x1, int16_t y1, int16_t x2, int16_t y2)
+{
+	SGL_ASSERT(obj != NULL);
+    int16_t _x1, _y1, _x2, _y2;
+	sgl_line_t *line = (sgl_line_t*)obj;
+
+	line->desc.start.x = obj->parent->coords.x1 + x1;
+	line->desc.start.y = obj->parent->coords.y1 + y1;
+	line->desc.end.x = obj->parent->coords.x1 + x2;
+	line->desc.end.y = obj->parent->coords.y1 + y2;
+
+    _x1 = line->desc.start.x;
+    _x2 = line->desc.end.x;
+    _y1 = line->desc.start.y;
+    _y2 = line->desc.end.y;
+
+	if (_x1 > _x2) {
+		sgl_swap(&_x1, &_x2);
+	}
+	if (_y1 > _y2) {
+		sgl_swap(&_y1, &_y2);
+	}
+
+	/* default thinckness is 1 */
+	obj->coords.x1 = _x1 - 1;
+	obj->coords.y1 = _y1 - 1;
+	obj->coords.x2 = _x2 + 1;
+	obj->coords.y2 = _y2 + 1;
+	line->desc.width = 2;
+
+	sgl_obj_set_dirty(obj);
 }

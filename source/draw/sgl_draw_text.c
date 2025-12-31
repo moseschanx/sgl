@@ -55,7 +55,14 @@ typedef struct {
     sgl_font_rle_state_t state;
 } sgl_font_rle_t;
 
-static sgl_font_rle_t font_rle;
+static sgl_font_rle_t font_rle = {
+    .rdp = 0,
+    .in = NULL,
+    .bpp = 0,
+    .prev_v = 0,
+    .count = 0,
+    .state = RLE_STATE_SINGLE,
+};
 
 /**
  * @brief Get bits from a byte array
@@ -105,16 +112,14 @@ static inline uint8_t get_bits(const uint8_t * in, uint32_t bit_pos, uint8_t len
  * @param w the width of the decompressed data
  * @return none
  */
-static inline void decompress_line(uint8_t * out, int32_t w)
+static inline void decompress_line(uint8_t *out, int32_t w)
 {
     int32_t i;
     uint8_t v = 0;
     uint8_t ret = 0;
-    sgl_font_rle_t *rle = NULL;
+    sgl_font_rle_t *rle = &font_rle;
 
     for(i = 0; i < w; i++) {
-        rle = &font_rle;
-
         if(rle->state == RLE_STATE_SINGLE) {
             ret = get_bits(rle->in, rle->rdp, rle->bpp);
             if(rle->rdp != 0 && rle->prev_v == ret) {
@@ -151,7 +156,6 @@ static inline void decompress_line(uint8_t * out, int32_t w)
                 rle->rdp += rle->bpp;
                 rle->state = RLE_STATE_SINGLE;
             }
-
         }
         else if(rle->state == RLE_STATE_COUNTER) {
             ret = rle->prev_v;
@@ -163,7 +167,9 @@ static inline void decompress_line(uint8_t * out, int32_t w)
                 rle->state = RLE_STATE_SINGLE;
             }
         }
-        out[i] = ret;
+        if (out != NULL) {
+            out[i] = ret;
+        }
     }
 }
 
@@ -208,7 +214,7 @@ void sgl_draw_character(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y
     uint8_t shift = 0;
     uint32_t pixel_index, rel_x, rel_y;
     uint16_t byte_index, alpha_dot = 0;
-    sgl_color_t color_mix, *buf = NULL;
+    sgl_color_t color_mix, *buf = NULL, *blend = NULL;
     sgl_area_t clip;
 
     sgl_area_t text_rect = {
@@ -226,11 +232,12 @@ void sgl_draw_character(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y
         return;
     }
 
+    buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, clip.y1 - surf->y1);
 #if (CONFIG_SGL_FONT_COMPRESSED)
     if (font->compress == 0) {
 #endif // (!CONFIG_SGL_FONT_COMPRESSED == 0)
         for (int y = clip.y1; y <= clip.y2; y++) {
-            buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, y - surf->y1);
+            blend = buf;
             rel_y = y - text_rect.y1;
 
             for (int x = clip.x1; x <= clip.x2; x++) {
@@ -247,10 +254,11 @@ void sgl_draw_character(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y
                     alpha_dot = opa2_table[(dot[byte_index] >> shift) & 0x03];
                 }
 
-                color_mix = sgl_color_mixer(color, *buf, alpha_dot);
-                *buf = sgl_color_mixer(color_mix, *buf, alpha);
-                buf++;
+                color_mix = sgl_color_mixer(color, *blend, alpha_dot);
+                *blend = sgl_color_mixer(color_mix, *blend, alpha);
+                blend++;
             }
+            buf += surf->pitch;
         }
 #if (CONFIG_SGL_FONT_COMPRESSED)
     }  /* support compressed font */
@@ -258,19 +266,25 @@ void sgl_draw_character(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t y
         uint8_t line_buf[128] = {0};
         font_rle_init(dot, font->bpp);
 
+        for (int y = text_rect.y1; y < clip.y1; y++) {
+            decompress_line(NULL, font_w);
+        }
+
         for (int y = clip.y1; y <= clip.y2; y++) {
-            buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, y - surf->y1);
+            blend = buf;
             decompress_line(line_buf, font_w);
 
             for (int x = clip.x1; x <= clip.x2; x++) {
                 if (font->bpp == 4) {
-                    *buf = sgl_color_mixer(color, *buf, opa4_table[line_buf[x - clip.x1]]);
+                    color_mix = sgl_color_mixer(color, *blend, opa4_table[line_buf[x - text_rect.x1]]);
                 }
                 else if (font->bpp == 2) {
-                    *buf = sgl_color_mixer(color, *buf, opa2_table[line_buf[x - clip.x1]]);
+                    color_mix = sgl_color_mixer(color, *blend, opa2_table[line_buf[x - text_rect.x1]]);
                 }
-                buf++;
+                *blend = sgl_color_mixer(color_mix, *blend, alpha);
+                blend++;
             }
+            buf += surf->pitch;
         }
     }
 #endif

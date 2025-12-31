@@ -91,7 +91,8 @@ sgl_obj_t* sgl_rect_create(sgl_obj_t* parent)
     sgl_obj_t *obj = &rect->obj;
     sgl_obj_init(&rect->obj, parent);
     sgl_obj_set_unflexible(obj);
-    
+    sgl_obj_set_border_width(obj, SGL_THEME_BORDER_WIDTH);
+
     obj->construct_fn = sgl_rectangle_construct_cb;
 
     rect->desc.alpha = SGL_THEME_ALPHA;

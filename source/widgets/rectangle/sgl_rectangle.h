@@ -103,6 +103,7 @@ static inline void sgl_rect_set_border_width(sgl_obj_t *obj, uint8_t width)
 {
     sgl_rectangle_t *rect = (sgl_rectangle_t *)obj;
     rect->desc.border = width;
+    sgl_obj_set_border_width(obj, width);
     sgl_obj_set_dirty(obj);
 }
 

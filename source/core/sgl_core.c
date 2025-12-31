@@ -49,6 +49,8 @@ sgl_context_t sgl_ctx = {
     },
     .page = NULL,
     .tick_ms = 0,
+    .fb_swap = 0,
+    .fb_ready = 1,
 };
 
 
@@ -97,21 +99,6 @@ int sgl_device_fb_register(sgl_device_fb_t *fb_dev)
     sgl_ctx.fb_dev.flush_area       = fb_dev->flush_area;
 
     return 0;
-}
-
-
-/**
- * @brief initialize dirty area
- * @param none
- * @return none
- */
-static inline void sgl_dirty_area_init(void)
-{
-#if CONFIG_SGL_DIRTY_AREA_THRESHOLD
-    sgl_ctx.dirty_num = 0;
-#else
-    sgl_area_init(&sgl_ctx.dirty);
-#endif
 }
 
 
@@ -240,25 +227,25 @@ void sgl_obj_move_child_pos(sgl_obj_t *obj, int16_t ofs_x, int16_t ofs_y)
 
 
 /**
- * @brief Set object position
+ * @brief Set object absolute position
  * @param obj point to object
- * @param x: x position
- * @param y: y position
+ * @param abs_x: x absolute position
+ * @param abs_y: y absolute position
  * @return none
  */
-void sgl_obj_set_pos(sgl_obj_t *obj, int16_t x, int16_t y)
+void sgl_obj_set_abs_pos(sgl_obj_t *obj, int16_t abs_x, int16_t abs_y)
 {
     SGL_ASSERT(obj != NULL);
-    int16_t x_inc = x - obj->coords.x1;
-    int16_t y_inc = y - obj->coords.y1;
+    int16_t x_diff = abs_x - obj->coords.x1;
+    int16_t y_diff = abs_y - obj->coords.y1;
 
     obj->dirty = 1;
-    obj->coords.x1 = x + obj->parent->coords.x1;
-    obj->coords.x2 += x_inc;
-    obj->coords.y1 = y + obj->parent->coords.y1;
-    obj->coords.y2 += y_inc;
+    obj->coords.x1 += x_diff;
+    obj->coords.x2 += x_diff;
+    obj->coords.y1 += y_diff;
+    obj->coords.y2 += y_diff;
 
-    sgl_obj_move_child_pos(obj, x_inc, y_inc);
+    sgl_obj_move_child_pos(obj, x_diff, y_diff);
 }
 
 
@@ -583,6 +570,7 @@ static sgl_page_t* sgl_page_create(void)
     page->surf.x2 = sgl_ctx.fb_dev.xres - 1;
     page->surf.y2 = sgl_ctx.fb_dev.yres - 1;
     page->surf.size = sgl_ctx.fb_dev.buffer_size;
+    page->surf.pitch = sgl_ctx.fb_dev.xres;
     page->color = SGL_THEME_DESKTOP;
 
     obj->parent = obj;
@@ -590,6 +578,7 @@ static sgl_page_t* sgl_page_create(void)
     obj->construct_fn = sgl_page_construct_cb;
     obj->dirty = 1;
     obj->page = 1;
+    obj->border = 0;
     obj->coords = (sgl_area_t) {
         .x1 = 0,
         .y1 = 0,
@@ -655,6 +644,17 @@ sgl_obj_t* sgl_obj_create(sgl_obj_t *parent)
 
 
 /**
+ * @brief initialize global dirty area
+ * @param none
+ * @return none
+ */
+static inline void sgl_dirty_area_init(void)
+{
+    sgl_ctx.dirty_num = 0;
+}
+
+
+/**
  * @brief sgl global initialization
  * @param none
  * @return none
@@ -668,18 +668,13 @@ void sgl_init(void)
     /* initialize current context */
     sgl_ctx.page = NULL;
 
-#if (CONFIG_SGL_DIRTY_AREA_THRESHOLD)
     /* alloc memory for dirty area */
-    sgl_ctx.dirty_num = ((sgl_panel_resolution_height() + SGL_DIRTY_AREA_THRESHOLD - 1) / SGL_DIRTY_AREA_THRESHOLD) *
-                        ((sgl_panel_resolution_width()  + SGL_DIRTY_AREA_THRESHOLD - 1) / SGL_DIRTY_AREA_THRESHOLD);
-
-    sgl_ctx.dirty = sgl_malloc(sgl_ctx.dirty_num * sizeof(sgl_area_t));
+    sgl_ctx.dirty = sgl_malloc(SGL_DIRTY_AREA_NUM_MAX * sizeof(sgl_area_t));
     if (sgl_ctx.dirty == NULL) {
         SGL_LOG_ERROR("sgl dirty area memory alloc failed");
         SGL_ASSERT(0);
         return;
     }
-#endif // !CONFIG_SGL_DIRTY_AREA_THRESHOLD
 
     /* initialize dirty area */
     sgl_dirty_area_init();
@@ -708,48 +703,6 @@ void sgl_screen_load(sgl_obj_t *obj)
     /* initialize dirty area */
     sgl_dirty_area_init();
     sgl_obj_set_dirty(obj);
-}
-
-
-/**
- * @brief color mixer
- * @param fg_color : foreground color
- * @param bg_color : background color
- * @param factor   : color mixer factor
- * @return sgl_color_t: mixed color
- */
-sgl_color_t sgl_color_mixer(sgl_color_t fg_color, sgl_color_t bg_color, uint8_t factor)
-{
-    sgl_color_t ret;
-#if (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_RGB332)
-
-    ret.ch.red   = bg_color.ch.red + ((fg_color.ch.red - bg_color.ch.red) * (factor >> 5) >> 3);
-    ret.ch.green = bg_color.ch.green + ((fg_color.ch.green - bg_color.ch.green) * (factor >> 5) >> 3);
-    ret.ch.blue  = bg_color.ch.blue + ((fg_color.ch.blue - bg_color.ch.blue) * (factor >> 6) >> 2);
-
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_RGB565)
-
-    factor = (uint32_t)((uint32_t)factor + 4) >> 3;
-    uint32_t bg = (uint32_t)((uint32_t)bg_color.full | ((uint32_t)bg_color.full << 16)) & 0x07E0F81F; 
-    uint32_t fg = (uint32_t)((uint32_t)fg_color.full | ((uint32_t)fg_color.full << 16)) & 0x07E0F81F;
-    uint32_t result = ((((fg - bg) * factor) >> 5) + bg) & 0x7E0F81F;
-    ret.full = (uint16_t)((result >> 16) | result);
-
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_RGB888)
-
-    ret.ch.red   = bg_color.ch.red + ((fg_color.ch.red - bg_color.ch.red) * factor >> 8);
-    ret.ch.green = bg_color.ch.green + ((fg_color.ch.green - bg_color.ch.green) * factor >> 8);
-    ret.ch.blue  = bg_color.ch.blue + ((fg_color.ch.blue - bg_color.ch.blue) * factor >> 8);
-
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_ARGB8888)
-
-    ret.ch.alpha = bg_color.ch.alpha + ((fg_color.ch.alpha - bg_color.ch.alpha) * factor >> 8);
-    ret.ch.red   = bg_color.ch.red + ((fg_color.ch.red - bg_color.ch.red) * factor >> 8);
-    ret.ch.green = bg_color.ch.green + ((fg_color.ch.green - bg_color.ch.green) * factor >> 8);
-    ret.ch.blue  = bg_color.ch.blue + ((fg_color.ch.blue - bg_color.ch.blue) * factor >> 8);
-
-#endif
-    return ret;
 }
 
 
@@ -801,158 +754,86 @@ bool sgl_area_selfclip(sgl_area_t *clip, sgl_area_t *area)
 
 
 /**
- * @brief merge two area, the merge is result of the two area clip
- * @param area_a [in] area1
- * @param area_b [in] area2
- * @param merge  [out] merge result
- * @return none
- * @note: this function is unsafe, you should check the area_a and area_b and merge is not NULL by yourself
+ * @brief Computes the total boundary expansion (in Manhattan distance) required to merge rectangle b into rectangle a.
+ *
+ * @param a[in]    Pointer to the b rectangle
+ * @param b[in]    Pointer to the a rectangle
+ * @return int32_t Total expansion amount (always non-negative)
  */
-void sgl_area_merge(sgl_area_t *area_a, sgl_area_t *area_b, sgl_area_t *merge)
+static inline int32_t sgl_area_growth(sgl_area_t *a, sgl_area_t *b)
 {
-    SGL_ASSERT(area_a != NULL && area_b != NULL && merge != NULL);
-    merge->x1 = sgl_min(area_a->x1, area_b->x1);
-    merge->x2 = sgl_max(area_a->x2, area_b->x2);
-    merge->y1 = sgl_min(area_a->y1, area_b->y1);
-    merge->y2 = sgl_max(area_a->y2, area_b->y2);
+    return (a->x1 - sgl_min(a->x1, b->x1)) + (sgl_max(a->x2, b->x2) - a->x2)
+           + (a->y1 - sgl_min(a->y1, b->y1)) + (sgl_max(a->y2, b->y2) - a->y2);
 }
 
 
 /**
- * @brief merge two area, the merge is a new area
- * @param merge [in][out] merge area
- * @param area [in] area
- * @return none
- * @note: this function is unsafe, you should check the merge and area is not NULL by yourself
+ * @brief Quickly determines if two rectangles are close enough to be merged.
+ *
+ * This fast heuristic is useful in performance-critical contexts (e.g., real-time segmentation or region merging)
+ * to avoid excessive fragmentation while preventing merges between distant regions.
+ *
+ * @param a[in] Pointer to the first rectangle
+ * @param b[in] Pointer to the second rectangle
+ * @return bool true if the rectangles are sufficiently close for merging; false otherwise
  */
-void sgl_area_selfmerge(sgl_area_t *merge, sgl_area_t *area)
+static inline bool sgl_merge_determines(sgl_area_t* a, sgl_area_t* b)
 {
-    SGL_ASSERT(merge != NULL && area != NULL);
-    merge->x1 = sgl_min(merge->x1, area->x1);
-    merge->x2 = sgl_max(merge->x2, area->x2);
-    merge->y1 = sgl_min(merge->y1, area->y1);
-    merge->y2 = sgl_max(merge->y2, area->y2);
+    int16_t gap_x = (a->x1 > b->x2) ? (a->x1 - b->x2) : (b->x1 > a->x2) ? (b->x1 - a->x2) : 0;
+    int16_t gap_y = (a->y1 > b->y2) ? (a->y1 - b->y2) : (b->y1 > a->y2) ? (b->y1 - a->y2) : 0;    
+    int16_t threshold = (sgl_min4(a->x2 - a->x1 + 1, a->y2 - a->y1 + 1, b->x2 - b->x1 + 1, b->y2 - b->y1 + 1) >> 2);
+
+    return (gap_x <= threshold) && (gap_y <= threshold);
 }
 
 
 /**
- * @brief merge area with current dirty area
- * @param merge [in] merge area
+ * @brief merge object area into global dirty area
+ * 
+ * This function calculates how much rectangle 'a' would need to grow in each direction (left, right, top, bottom)
+ * to fully enclose both 'a' and 'b'. The result is the sum of the expansions along all four sides.
+ * Note: This is not the increase in area, th is a lightweight heuristic for merge cost in bounding-box algorithms.
+ * 
+ * @param obj [in] Pointer to the object
  * @return none
  */
 void sgl_obj_dirty_merge(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-#if CONFIG_SGL_DIRTY_AREA_THRESHOLD
-    int interval_x, interval_y;
-
+    int32_t best_idx = -1, min_growth = INT32_MAX, growth = INT32_MAX;
     /* skip invalid area */
     if (obj->area.x1 > obj->area.x2 || obj->area.y1 > obj->area.y2) {
         return;
     }
 
-    for (int i = 0; i < sgl_ctx.dirty_num; i++) {
-        if (obj->area.x2 < sgl_ctx.dirty[i].x1) {
-            interval_x = sgl_ctx.dirty[i].x1 - obj->area.x2;
-        }
-        else if (obj->area.x1 > sgl_ctx.dirty[i].x2) {
-            interval_x = obj->area.x1 - sgl_ctx.dirty[i].x2;
-        }
-        else {
-            interval_x = 0;
-        }
-
-        if (obj->area.y2 < sgl_ctx.dirty[i].y1) {
-            interval_y = sgl_ctx.dirty[i].y1 - obj->area.y2;
-        }
-        else if (obj->area.y1 > sgl_ctx.dirty[i].y2) {
-            interval_y = obj->area.y1 - sgl_ctx.dirty[i].y2;
-        }
-        else {
-            interval_y = 0;
-        }
-
-        /* If the object's area is near the dirty rectangle, merge it.*/
-        if (interval_x <= SGL_DIRTY_AREA_THRESHOLD && interval_y <= SGL_DIRTY_AREA_THRESHOLD) {
-            /* merge object area with dirty area */
-            sgl_ctx.dirty[i].x1 = sgl_min(sgl_ctx.dirty[i].x1, obj->area.x1);
-            sgl_ctx.dirty[i].x2 = sgl_max(sgl_ctx.dirty[i].x2, obj->area.x2);
-            sgl_ctx.dirty[i].y1 = sgl_min(sgl_ctx.dirty[i].y1, obj->area.y1);
-            sgl_ctx.dirty[i].y2 = sgl_max(sgl_ctx.dirty[i].y2, obj->area.y2);
-
-            return;
-        }
-    }
-
-    sgl_ctx.dirty[sgl_ctx.dirty_num] = obj->area;
-    sgl_ctx.dirty_num ++;
-#else
-    /* skip invalid area */
-    if (obj->area.x1 > obj->area.x2 || obj->area.y1 > obj->area.y2) {
+    if (sgl_ctx.dirty_num == 0) {
+        sgl_ctx.dirty[0] = obj->area;
+        sgl_ctx.dirty_num = 1;
         return;
     }
 
-    /* direct to merge object area with dirty area  */
-    sgl_ctx.dirty.x1 = sgl_min(sgl_ctx.dirty.x1, obj->area.x1);
-    sgl_ctx.dirty.x2 = sgl_max(sgl_ctx.dirty.x2, obj->area.x2);
-    sgl_ctx.dirty.y1 = sgl_min(sgl_ctx.dirty.y1, obj->area.y1);
-    sgl_ctx.dirty.y2 = sgl_max(sgl_ctx.dirty.y2, obj->area.y2);
-#endif
-}
+    for (uint8_t i = 0; i < sgl_ctx.dirty_num; i++) {
+        if (sgl_merge_determines(&sgl_ctx.dirty[i], &obj->area)) {
+            growth = sgl_area_growth(&sgl_ctx.dirty[i], &obj->area);
+            if (growth < min_growth) {
+                min_growth = growth;
+                best_idx = i;
+            }
+        }
+    }
 
-
-/**
- * @brief sgl set object layout type
- * @param obj [in] object
- * @param type [in] layout type, SGL_LAYOUT_NONE, SGL_LAYOUT_HORIZONTAL, SGL_LAYOUT_VERTICAL, SGL_LAYOUT_GRID
- * @return none
- */
-void sgl_obj_set_layout(sgl_obj_t *obj, sgl_layout_type_t type)
-{
-    SGL_ASSERT(obj != NULL);
-    obj->layout = (((uint8_t)type) & 0x03);
-
-    if ((!sgl_obj_has_child(obj)) || (type == SGL_LAYOUT_NONE)) {
+    if (best_idx >= 0) {
+        /* merge object area into best_idx dirty area */
+        sgl_area_selfmerge(&sgl_ctx.dirty[best_idx], &obj->area);
         return;
     }
 
-    sgl_obj_t *child = NULL;
-    size_t child_num = sgl_obj_get_child_count(obj);
-    int16_t child_span[128] = {0}, i = 0, child_pos = 0;
-
-    /* set object to dirty flag for layout change */
-    sgl_obj_set_dirty(obj);
-
-    switch (obj->layout) {
-    case SGL_LAYOUT_HORIZONTAL:
-        sgl_split_len_avg((obj->coords.x2 - obj->coords.x1 + 1), child_num, obj->margin, child_span);
-        child_pos = obj->coords.x1 + obj->margin;
-
-        sgl_obj_for_each_child(child, obj) {
-            child->coords.x1 = child_pos;
-            child->coords.x2 = child_pos + child_span[i] - 1;
-            child->coords.y1 = obj->coords.y1 + obj->margin;
-            child->coords.y2 = obj->coords.y2 - obj->margin;
-            child_pos += (child_span[i++] + obj->margin);
-        }
-        break;
-
-    case SGL_LAYOUT_VERTICAL:
-        sgl_split_len_avg((obj->coords.y2 - obj->coords.y1 + 1), child_num, obj->margin, child_span);
-        child_pos = obj->coords.x1 + obj->margin;
-
-        sgl_obj_for_each_child(child, obj) {
-            child->coords.x1 = obj->coords.x1 + obj->margin;
-            child->coords.x2 = obj->coords.x2 - obj->margin;
-            child->coords.y1 = child_pos;
-            child->coords.y2 = child_pos + child_span[i] - 1;
-            child_pos += (child_span[i++] + obj->margin);
-        }
-        break;
-
-    case SGL_LAYOUT_GRID:
-        // TODO: set grid layout
-        break;
+    if (sgl_ctx.dirty_num < SGL_DIRTY_AREA_NUM_MAX) {
+        /* add new dirty area */
+        sgl_ctx.dirty[sgl_ctx.dirty_num++] = obj->area;
+    } else {
+        /* merge object area into last dirty area */
+        sgl_area_selfmerge(&sgl_ctx.dirty[SGL_DIRTY_AREA_NUM_MAX - 1], &obj->area);
     }
 }
 
@@ -989,9 +870,6 @@ int sgl_obj_init(sgl_obj_t *obj, sgl_obj_t *parent)
 
     /* add the child into parent's child list */
     sgl_obj_add_child(parent, obj);
-
-    /* set layout to parent layout flag */
-    sgl_obj_set_layout(parent, (sgl_layout_type_t)parent->layout);
 
     return 0;
 }
@@ -1364,9 +1242,7 @@ void sgl_obj_set_pos_align(sgl_obj_t *obj, sgl_align_type_t type)
 
     obj_pos = sgl_get_align_pos(&p_size, &obj_size, type);
 
-    sgl_obj_set_pos(obj, p_pos.x + obj_pos.x,
-                         p_pos.y + obj_pos.y
-                    );
+    sgl_obj_set_abs_pos(obj, p_pos.x + obj_pos.x, p_pos.y + obj_pos.y);
 }
 
 
@@ -1446,6 +1322,7 @@ void sgl_obj_set_pos_align_ref(sgl_obj_t *ref, sgl_obj_t *obj, sgl_align_type_t 
 static inline void draw_obj_slice(sgl_obj_t *obj, sgl_surf_t *surf)
 {
     int top = 0;
+    bool flush_flag = false;
 	sgl_event_t evt;
 	sgl_obj_t *stack[SGL_OBJ_DEPTH_MAX];
 
@@ -1476,7 +1353,8 @@ static inline void draw_obj_slice(sgl_obj_t *obj, sgl_surf_t *surf)
 	}
 
     /* flush dirty area into screen */
-    sgl_panel_flush_area(surf->x1, surf->y1, surf->x2, surf->y2, surf->buffer);
+    flush_flag = sgl_panel_flush_area(surf->x1, surf->y1, surf->x2, surf->y2, surf->buffer);
+    sgl_ctx.fb_ready = (sgl_ctx.fb_ready & (1 << sgl_ctx.fb_swap)) | (((uint8_t)flush_flag) << (sgl_ctx.fb_swap ^ 1));
 }
 
 
@@ -1512,9 +1390,6 @@ static inline void sgl_dirty_area_calculate(sgl_obj_t *obj)
             /* merge destroy area */
             sgl_obj_dirty_merge(obj);
 
-            /* update parent layout */
-            sgl_obj_set_layout(obj->parent, (sgl_layout_type_t)obj->parent->layout);
-
             /* remove obj from parent */
             sgl_obj_remove(obj);
 
@@ -1543,8 +1418,9 @@ static inline void sgl_dirty_area_calculate(sgl_obj_t *obj)
             /* merge dirty area */
             sgl_obj_dirty_merge(obj);
 
+            sgl_area_t fill_area = sgl_obj_get_fill_rect(obj->parent);
             /* update obj area */
-            if (unlikely(!sgl_area_clip(&obj->parent->area, &obj->coords, &obj->area))) {
+            if (unlikely(!sgl_area_clip(&fill_area, &obj->coords, &obj->area))) {
                 sgl_area_init(&obj->area);
                 continue;
             }
@@ -1577,7 +1453,7 @@ static inline void sgl_draw_task(sgl_area_t *dirty)
     /* check dirty area, ensure it is valid */
     SGL_ASSERT(dirty != NULL && dirty->x1 >= 0 && dirty->y1 >= 0 && dirty->x2 < SGL_SCREEN_WIDTH && dirty->y2 < SGL_SCREEN_HEIGHT);
 
-#if (!CONFIG_SGL_USE_FULL_FB)
+#if (!CONFIG_SGL_USE_FB_VRAM)
     uint16_t dirty_h = 0, draw_h = 0;
     dirty_h = dirty->y2 - dirty->y1 + 1;
 
@@ -1587,7 +1463,7 @@ static inline void sgl_draw_task(sgl_area_t *dirty)
     surf->pitch = surf->x2 - surf->x1 + 1;
     dirty_h = sgl_min(surf->size / surf->pitch, (uint32_t)(dirty->y2 - dirty->y1 + 1));
 
-    SGL_LOG_TRACE("sgl_draw_task: dirty area  x1:%d y1:%d x2:%d y2:%d", dirty->x1, dirty->y1, dirty->x2, dirty->y2);
+    SGL_LOG_TRACE("[fb:%d]sgl_draw_task: dirty area  x1:%d y1:%d x2:%d y2:%d", sgl_ctx.fb_swap, dirty->x1, dirty->y1, dirty->x2, dirty->y2);
 
     while (surf->y1 <= dirty->y2) {
         draw_h = sgl_min(dirty->y2 - surf->y1 + 1, dirty_h);
@@ -1600,13 +1476,7 @@ static inline void sgl_draw_task(sgl_area_t *dirty)
         sgl_surf_buffer_swap(surf);
     }
 #else
-    surf->x1 = dirty->x1;
-    surf->y1 = dirty->y1;
-    surf->x2 = dirty->x2;
-    surf->y2 = dirty->y2;
-
-    SGL_LOG_TRACE("sgl_draw_task: dirty area  x1:%d y1:%d x2:%d y2:%d", dirty->x1, dirty->y1, dirty->x2, dirty->y2);
-
+    SGL_LOG_TRACE("[fb:%d]sgl_draw_task: dirty area  x1:%d y1:%d x2:%d y2:%d", sgl_ctx.fb_swap, dirty->x1, dirty->y1, dirty->x2, dirty->y2);
     draw_obj_slice(head, surf);
     sgl_surf_buffer_swap(surf);
 #endif
@@ -1621,6 +1491,12 @@ static inline void sgl_draw_task(sgl_area_t *dirty)
  */
 void sgl_task_handle_sync(void)
 {
+    /* if framebufffer is not ready, return directly */
+    const uint8_t fb_ready_mask = 1 << sgl_ctx.fb_swap;
+    if (unlikely((sgl_ctx.fb_ready & fb_ready_mask) == 0)) {
+        return;
+    }
+
     /* event task */
     sgl_event_task();
 
@@ -1632,13 +1508,13 @@ void sgl_task_handle_sync(void)
     /* calculate dirty area, if no dirty area, return directly */
     sgl_dirty_area_calculate(&sgl_ctx.page->obj);
 
-    /* draw task  */
-#if (CONFIG_SGL_DIRTY_AREA_THRESHOLD)
-    for (int i = 0; i < sgl_ctx.dirty_num; i++) {
+    /**
+     * draw task for complete frame
+     * dirty area number must less than SGL_DIRTY_AREA_MAX
+     */
+    for (uint8_t i = 0; i < sgl_ctx.dirty_num; i++) {
         sgl_draw_task(&sgl_ctx.dirty[i]);
     }
-#else
-    sgl_draw_task(&sgl_ctx.dirty);
-#endif
+
     sgl_dirty_area_init();
 }

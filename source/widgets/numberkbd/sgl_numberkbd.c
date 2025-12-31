@@ -254,6 +254,7 @@ sgl_obj_t* sgl_numberkbd_create(sgl_obj_t* parent)
     sgl_obj_t *obj = &numberkbd->obj;
     sgl_obj_init(&numberkbd->obj, parent);
     obj->construct_fn = sgl_numberkbd_construct_cb;
+    sgl_obj_set_border_width(obj, SGL_THEME_BORDER_WIDTH);
 
     obj->clickable = 1;
     obj->needinit  = 1;

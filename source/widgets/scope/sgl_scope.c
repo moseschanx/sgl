@@ -23,6 +23,7 @@
  */
 
 #include <stdio.h>
+#include <sgl_theme.h>
 #include "sgl_scope.h"
 
 
@@ -205,6 +206,7 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
             .radius = 0,
             .border = scope->border_width,
         };
+
         sgl_draw_rect(surf, &obj->area, &obj->coords, &bg_rect);
 
         // Compute waveform display parameters
@@ -251,15 +253,15 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
         grid_line.start.y = y_center;
         grid_line.end.x = obj->coords.x2;
         grid_line.end.y = y_center;
-        
+
         if (scope->grid_style == 1) {
             // Draw dashed line
             draw_dashed_line(surf, &obj->area, &grid_line);
         } else {
             // Draw solid line
-            sgl_draw_line(surf, &grid_line);
+            sgl_draw_line(surf, &obj->area, &grid_line);
         }
-        
+
         // Draw vertical center line
         grid_line.start.x = x_center;
         grid_line.start.y = obj->coords.y1;
@@ -271,7 +273,7 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
             draw_dashed_line(surf, &obj->area, &grid_line);
         } else {
             // Draw solid line
-            sgl_draw_line(surf, &grid_line);
+            sgl_draw_line(surf, &obj->area, &grid_line);
         }
         
         // Draw vertical grid lines (10 divisions)
@@ -288,7 +290,7 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
                 draw_dashed_line(surf, &obj->area, &grid_line);
             } else {
                 // Draw solid line
-                sgl_draw_line(surf, &grid_line);
+                sgl_draw_line(surf, &obj->area, &grid_line);
             }
         }
         
@@ -305,7 +307,7 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
                 draw_dashed_line(surf, &obj->area, &grid_line);
             } else {
                 // Draw solid line
-                sgl_draw_line(surf, &grid_line);
+                sgl_draw_line(surf, &obj->area, &grid_line);
             }
         }
 
@@ -345,7 +347,7 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
                 end.y = obj->coords.y2 - ((int32_t)(current_value - display_min) * height) / (display_max - display_min);
 
                 custom_draw_line(surf, &obj->area, start, end, scope->waveform_color, scope->line_width);
-                
+
                 start = end;
             }
         }
@@ -395,6 +397,7 @@ sgl_obj_t* sgl_scope_create(sgl_obj_t* parent)
     sgl_obj_t *obj = &scope->obj;
     sgl_obj_init(obj, parent);
     obj->construct_fn = scope_construct_cb;
+    sgl_obj_set_border_width(obj, SGL_THEME_BORDER_WIDTH);
     
     // Initialize default parameters
     scope->waveform_color = sgl_rgb(0, 255, 0);   // Green waveform
