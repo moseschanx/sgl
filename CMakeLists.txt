@@ -40,7 +40,7 @@ set(CONFIG_SGL_BOOT_ANIMATION   1)
 
 set(CONFIG_SGL_COLOR16_SWAP     1)
 set(CONFIG_SGL_DEBUG            1)
-set(SGL_LOG_LEVEL               3)
+set(SGL_LOG_LEVEL               2)
 set(CONFIG_SGL_LOG_COLOR        1)
 set(CONFIG_SGL_ANIMATION        1)
 set(SGL_PANEL_PIXEL_DEPTH    "16")
