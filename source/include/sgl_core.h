@@ -432,7 +432,7 @@ typedef struct sgl_page {
  * @yres: y resolution
  * @xres_virtual: x virtual resolution
  * @yres_virtual: y virtual resolution
- * @flush_area: flush area callback function pointer
+ * @flush_area: flush area callback function pointer, return the finished flag
  */
 typedef struct sgl_device_fb {
     void      *buffer[SGL_DRAW_BUFFER_MAX];
@@ -441,7 +441,7 @@ typedef struct sgl_device_fb {
     int16_t    yres;
     int16_t    xres_virtual;
     int16_t    yres_virtual;
-    void       (*flush_area)(int16_t x1, int16_t y1, int16_t x2, int16_t y2, sgl_color_t *src);
+    bool       (*flush_area)(int16_t x1, int16_t y1, int16_t x2, int16_t y2, sgl_color_t *src);
 } sgl_device_fb_t;
 
 
@@ -454,12 +454,17 @@ typedef struct sgl_device_log {
 } sgl_device_log_t;
 
 
-/* current context, page pointer, and dirty area */
+/**
+ * current context, page pointer, and dirty area
+ * fb_swap: 0 for fb_dev.buffer[0], 1 for fb_dev.buffer[1]
+ * fb_ready: bit 0: fb_dev.buffer[0] is ready, bit 1: fb_dev.buffer[1] is ready
+ */
 typedef struct sgl_context {
     sgl_page_t           *page;
     sgl_device_fb_t      fb_dev;
     sgl_device_log_t     log_dev;
-    uint8_t              fb_swap;
+    uint8_t              fb_swap : 4;
+    uint8_t              fb_ready : 2;
     volatile uint8_t     tick_ms;
     uint16_t             dirty_num;
     sgl_area_t           *dirty;
@@ -493,9 +498,9 @@ int sgl_device_fb_register(sgl_device_fb_t *fb_dev);
  * @param w [in] width
  * @param h [in] height
  * @param src [in] source color
- * @return none
+ * @return bool, true if flush is finished, false if is not finished
  */
-static inline void sgl_panel_flush_area(int16_t x1, int16_t y1, int16_t x2, int16_t y2, sgl_color_t *src)
+static inline bool sgl_panel_flush_area(int16_t x1, int16_t y1, int16_t x2, int16_t y2, sgl_color_t *src)
 {
 #if CONFIG_SGL_COLOR16_SWAP
     uint16_t w = x2 - x1 + 1;
@@ -505,7 +510,7 @@ static inline void sgl_panel_flush_area(int16_t x1, int16_t y1, int16_t x2, int1
         dst[i] = (dst[i] << 8) | (dst[i] >> 8);
     }
 #endif
-    sgl_ctx.fb_dev.flush_area(x1, y1, x2, y2, src);
+    return sgl_ctx.fb_dev.flush_area(x1, y1, x2, y2, src);
 }
 
 
