@@ -107,7 +107,7 @@ extern "C" {
 #endif
 
 #ifndef CONFIG_SGL_DIRTY_AREA_NUM_MAX
-#define CONFIG_SGL_DIRTY_AREA_NUM_MAX                              (64)
+#define CONFIG_SGL_DIRTY_AREA_NUM_MAX                              (32)
 #endif
 
 #ifndef CONFIG_SGL_ANIMATION

@@ -75,20 +75,11 @@ static inline uint8_t get_bits(const uint8_t * in, uint32_t bit_pos, uint8_t len
 {
     uint8_t bit_mask;
     switch(len) {
-        case 1:
-            bit_mask = 0x1;
-            break;
         case 2:
             bit_mask = 0x3;
             break;
-        case 3:
-            bit_mask = 0x7;
-            break;
         case 4:
             bit_mask = 0xF;
-            break;
-        case 8:
-            bit_mask = 0xFF;
             break;
         default:
             bit_mask = (uint16_t)((uint16_t) 1 << len) - 1;
