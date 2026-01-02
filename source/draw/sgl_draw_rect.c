@@ -81,14 +81,14 @@ void sgl_draw_fill_rect(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *rect, in
                 }
             }
             else {
-                cy_tmp = y > cy1 ? cy2 : cy1;
-                y2 = sgl_pow2(y - cy_tmp);
-
                 for (int x = clip.x1; x <= clip.x2; x++, blend++) {
                     if (x > cx1 && x < cx2) {
                         *blend = (alpha == SGL_ALPHA_MAX ? color : sgl_color_mixer(color, *blend, alpha));
                     }
                     else {
+                        cy_tmp = y > cy1 ? cy2 : cy1;
+                        y2 = sgl_pow2(y - cy_tmp);
+
                         cx_tmp = x > cx1 ? cx2 : cx1;
                         real_r2 = sgl_pow2(x - cx_tmp) + y2;
                         if (real_r2 >= r2_edge) {
@@ -185,9 +185,6 @@ void sgl_draw_fill_rect_with_border(sgl_surf_t *surf, sgl_area_t *area, sgl_area
                 }
             }
             else {
-                cy_tmp = y > cy1 ? cy2 : cy1;
-                y2 = sgl_pow2(y - cy_tmp);
-
                 for (int x = clip.x1; x <= clip.x2; x++, blend++) {
                     if (x >= cx1 && x <= cx2) {
                         if (y < cyi1 || y > cyi2) {
@@ -198,6 +195,9 @@ void sgl_draw_fill_rect_with_border(sgl_surf_t *surf, sgl_area_t *area, sgl_area
                         }
                     }
                     else {
+                        cy_tmp = y > cy1 ? cy2 : cy1;
+                        y2 = sgl_pow2(y - cy_tmp);
+
                         cx_tmp = x > cx1 ? cx2 : cx1;
                         real_r2 = sgl_pow2(x - cx_tmp) + y2;
 
@@ -291,9 +291,6 @@ void sgl_draw_fill_rect_pixmap(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *r
                 }
             }
             else {
-                cy_tmp = y > cy1 ? cy2 : cy1;
-                y2 = sgl_pow2(y - cy_tmp);
-
                 for (int x = clip.x1; x <= clip.x2; x++, blend++) {
                     step_x = (scale_x * (x - rect->x1)) >> 10;
                     pbuf = sgl_pixmap_get_buf(pixmap, step_x, step_y);
@@ -302,6 +299,9 @@ void sgl_draw_fill_rect_pixmap(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *r
                         *blend = (alpha == SGL_ALPHA_MAX ? *pbuf : sgl_color_mixer(*pbuf, *blend, alpha));
                     }
                     else {
+                        cy_tmp = y > cy1 ? cy2 : cy1;
+                        y2 = sgl_pow2(y - cy_tmp);
+
                         cx_tmp = x > cx1 ? cx2 : cx1;
                         real_r2 = sgl_pow2(x - cx_tmp) + y2;
                         if (real_r2 >= r2_edge) {
