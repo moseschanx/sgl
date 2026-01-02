@@ -799,7 +799,7 @@ static inline bool sgl_merge_determines(sgl_area_t* a, sgl_area_t* b)
  */
 void sgl_dirty_area_push(sgl_area_t *area)
 {
-    SGL_ASSERT(obj != NULL);
+    SGL_ASSERT(area != NULL);
     int32_t best_idx = -1, min_growth = INT32_MAX, growth = INT32_MAX;
     /* skip invalid area */
     if (area->x1 > area->x2 || area->y1 > area->y2) {
