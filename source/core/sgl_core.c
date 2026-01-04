@@ -815,7 +815,11 @@ void sgl_dirty_area_push(sgl_area_t *area)
     for (uint8_t i = 0; i < sgl_ctx.dirty_num; i++) {
         if (sgl_merge_determines(&sgl_ctx.dirty[i], area)) {
             growth = sgl_area_growth(&sgl_ctx.dirty[i], area);
-            if (growth < min_growth) {
+            if (growth == 0) {
+                /* already contains the area */
+                return;
+            }
+            else if (growth < min_growth) {
                 min_growth = growth;
                 best_idx = i;
             }
