@@ -1091,53 +1091,54 @@ sgl_pos_t sgl_get_align_pos(sgl_size_t *parent_size, sgl_size_t *size, sgl_align
 {
     SGL_ASSERT(parent_size != NULL && size != NULL);
     sgl_pos_t ret = {.x = 0, .y = 0};
+
     switch (type) {
-        case SGL_ALIGN_CENTER:
-            ret.x = (parent_size->w - size->w) / 2;
-            ret.y = (parent_size->h - size->h) / 2;
-        break;
+    case SGL_ALIGN_CENTER:
+        ret.x = (parent_size->w - size->w) / 2;
+        ret.y = (parent_size->h - size->h) / 2;
+    break;
 
-        case SGL_ALIGN_TOP_MID:
-            ret.x = (parent_size->w - size->w) / 2;
-            ret.y = 0;
-        break;
+    case SGL_ALIGN_TOP_MID:
+        ret.x = (parent_size->w - size->w) / 2;
+        ret.y = 0;
+    break;
 
-        case SGL_ALIGN_TOP_LEFT:
-            ret.x = 0;
-            ret.y = 0;
-        break;
+    case SGL_ALIGN_TOP_LEFT:
+        ret.x = 0;
+        ret.y = 0;
+    break;
 
-        case SGL_ALIGN_TOP_RIGHT:
-            ret.x = parent_size->w - size->w;
-            ret.y = 0;
-        break;
+    case SGL_ALIGN_TOP_RIGHT:
+        ret.x = parent_size->w - size->w;
+        ret.y = 0;
+    break;
 
-        case SGL_ALIGN_BOT_MID:
-            ret.x = (parent_size->w - size->w) / 2;
-            ret.y = parent_size->h - size->h;
-        break;
+    case SGL_ALIGN_BOT_MID:
+        ret.x = (parent_size->w - size->w) / 2;
+        ret.y = parent_size->h - size->h;
+    break;
 
-        case SGL_ALIGN_BOT_LEFT:
-            ret.x = 0;
-            ret.y = parent_size->h - size->h;
-        break;
+    case SGL_ALIGN_BOT_LEFT:
+        ret.x = 0;
+        ret.y = parent_size->h - size->h;
+    break;
 
-        case SGL_ALIGN_BOT_RIGHT:
-            ret.x = parent_size->w - size->w;
-            ret.y = parent_size->h - size->h;
-        break;
+    case SGL_ALIGN_BOT_RIGHT:
+        ret.x = parent_size->w - size->w;
+        ret.y = parent_size->h - size->h;
+    break;
 
-        case SGL_ALIGN_LEFT_MID:
-            ret.x = 0;
-            ret.y = (parent_size->h - size->h) / 2;
-        break;
+    case SGL_ALIGN_LEFT_MID:
+        ret.x = 0;
+        ret.y = (parent_size->h - size->h) / 2;
+    break;
 
-        case SGL_ALIGN_RIGHT_MID:
-            ret.x = parent_size->w - size->w;
-            ret.y = (parent_size->h - size->h) / 2;
-        break;
+    case SGL_ALIGN_RIGHT_MID:
+        ret.x = parent_size->w - size->w;
+        ret.y = (parent_size->h - size->h) / 2;
+    break;
 
-        default: break;
+    default: break;
     }
     return ret;
 }
@@ -1510,12 +1511,10 @@ void sgl_task_handle_sync(void)
 #endif // !CONFIG_SGL_ANIMATION
     sgl_tick_reset();
 
-    /* calculate dirty area, if no dirty area, return directly */
+    /* foreach all object tree and calculate dirty area */
     sgl_dirty_area_calculate(&sgl_ctx.page->obj);
 
-    /**
-     * draw task for complete frame
-     */
+    /* draw all object into screen */
     sgl_draw_task(&sgl_ctx);
 
     /* clear dirty area */

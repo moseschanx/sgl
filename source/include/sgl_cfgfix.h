@@ -103,11 +103,11 @@ extern "C" {
 #endif
 
 #ifndef CONFIG_SGL_EVENT_QUEUE_SIZE
-#define CONFIG_SGL_EVENT_QUEUE_SIZE                                (32)
+#define CONFIG_SGL_EVENT_QUEUE_SIZE                                (16)
 #endif
 
 #ifndef CONFIG_SGL_DIRTY_AREA_NUM_MAX
-#define CONFIG_SGL_DIRTY_AREA_NUM_MAX                              (32)
+#define CONFIG_SGL_DIRTY_AREA_NUM_MAX                              (16)
 #endif
 
 #ifndef CONFIG_SGL_ANIMATION
