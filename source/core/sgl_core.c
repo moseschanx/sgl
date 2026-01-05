@@ -38,8 +38,6 @@ sgl_context_t sgl_ctx = {
     .fb_dev = {
         .xres = 0,
         .yres = 0,
-        .xres_virtual = 0,
-        .yres_virtual = 0,
         .buffer[0] = NULL,
         .buffer[1] = NULL,
         .buffer_size = 0,
@@ -92,11 +90,9 @@ int sgl_device_fb_register(sgl_device_fb_t *fb_dev)
     sgl_ctx.fb_dev.buffer[1]   = fb_dev->buffer[1];
     sgl_ctx.fb_dev.buffer_size = fb_dev->buffer_size;
 
-    sgl_ctx.fb_dev.xres             = fb_dev->xres;
-    sgl_ctx.fb_dev.yres             = fb_dev->yres;
-    sgl_ctx.fb_dev.xres_virtual     = fb_dev->xres_virtual;
-    sgl_ctx.fb_dev.yres_virtual     = fb_dev->yres_virtual;
-    sgl_ctx.fb_dev.flush_area       = fb_dev->flush_area;
+    sgl_ctx.fb_dev.xres        = fb_dev->xres;
+    sgl_ctx.fb_dev.yres        = fb_dev->yres;
+    sgl_ctx.fb_dev.flush_area  = fb_dev->flush_area;
 
     return 0;
 }

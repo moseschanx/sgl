@@ -431,8 +431,6 @@ typedef struct sgl_page {
  * @framebuffer_size: framebuffer size
  * @xres: x resolution
  * @yres: y resolution
- * @xres_virtual: x virtual resolution
- * @yres_virtual: y virtual resolution
  * @flush_area: flush area callback function pointer, return the finished flag
  */
 typedef struct sgl_device_fb {
@@ -440,8 +438,6 @@ typedef struct sgl_device_fb {
     uint32_t   buffer_size;
     int16_t    xres;
     int16_t    yres;
-    int16_t    xres_virtual;
-    int16_t    yres_virtual;
     void       (*flush_area)(int16_t x1, int16_t y1, int16_t x2, int16_t y2, sgl_color_t *src);
 } sgl_device_fb_t;
 
