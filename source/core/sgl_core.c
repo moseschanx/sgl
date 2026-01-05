@@ -1496,8 +1496,7 @@ static inline void sgl_draw_task(sgl_area_t *dirty)
 void sgl_task_handle_sync(void)
 {
     /* if framebufffer is not ready, return directly */
-    const uint8_t fb_ready_mask = 1 << sgl_ctx.fb_swap;
-    if (unlikely((sgl_ctx.fb_ready & fb_ready_mask) == 0)) {
+    if (unlikely(sgl_ctx.fb_ready == 0)) {
         return;
     }
 
