@@ -442,7 +442,7 @@ typedef struct sgl_device_fb {
     int16_t    yres;
     int16_t    xres_virtual;
     int16_t    yres_virtual;
-    bool       (*flush_area)(int16_t x1, int16_t y1, int16_t x2, int16_t y2, sgl_color_t *src);
+    void       (*flush_area)(int16_t x1, int16_t y1, int16_t x2, int16_t y2, sgl_color_t *src);
 } sgl_device_fb_t;
 
 
@@ -464,10 +464,10 @@ typedef struct sgl_context {
     sgl_page_t           *page;
     sgl_device_fb_t      fb_dev;
     sgl_device_log_t     log_dev;
-    uint8_t              fb_swap : 4;
-    uint8_t              fb_ready : 2;
+    uint8_t              fb_swap;
+    uint8_t              fb_ready;
     volatile uint8_t     tick_ms;
-    uint16_t             dirty_num;
+    uint8_t              dirty_num;
     sgl_area_t           *dirty;
 } sgl_context_t;
 
@@ -499,9 +499,8 @@ int sgl_device_fb_register(sgl_device_fb_t *fb_dev);
  * @param w [in] width
  * @param h [in] height
  * @param src [in] source color
- * @return bool, true if flush is finished, false if is not finished
  */
-static inline bool sgl_panel_flush_area(int16_t x1, int16_t y1, int16_t x2, int16_t y2, sgl_color_t *src)
+static inline void sgl_panel_flush_area(int16_t x1, int16_t y1, int16_t x2, int16_t y2, sgl_color_t *src)
 {
 #if CONFIG_SGL_COLOR16_SWAP
     uint16_t w = x2 - x1 + 1;
@@ -511,7 +510,33 @@ static inline bool sgl_panel_flush_area(int16_t x1, int16_t y1, int16_t x2, int1
         dst[i] = (dst[i] << 8) | (dst[i] >> 8);
     }
 #endif
-    return sgl_ctx.fb_dev.flush_area(x1, y1, x2, y2, src);
+    sgl_ctx.fb_dev.flush_area(x1, y1, x2, y2, src);
+}
+
+
+/**
+ * @brief set panel flush ready
+ * @param none
+ * @return none
+ * @note this function must be called in DMA callback function after panel flush
+ */
+static inline void sgl_panel_flush_ready(void)
+{
+    sgl_ctx.fb_ready = (sgl_ctx.fb_ready & (1 << sgl_ctx.fb_swap)) | ((1 << (sgl_ctx.fb_swap ^ 1)));
+}
+
+
+/**
+ * @brief swap the surface buffer
+ * @param none
+ * @return none
+ * @note if you use double buffer, you must call this function after panel flush
+ */
+static inline void sgl_surf_buffer_swap(sgl_surf_t *surf)
+{
+    if (sgl_ctx.fb_dev.buffer[1] != NULL) {
+        surf->buffer = sgl_ctx.fb_dev.buffer[sgl_ctx.fb_swap ^= 1];
+    }
 }
 
 
@@ -1759,19 +1784,6 @@ static inline void sgl_area_selfmerge(sgl_area_t *merge, sgl_area_t *area)
     merge->x2 = sgl_max(merge->x2, area->x2);
     merge->y1 = sgl_min(merge->y1, area->y1);
     merge->y2 = sgl_max(merge->y2, area->y2);
-}
-
-
-/**
- * @brief swap the framebuffer buffer
- * @param surf [in] surface
- * @return none
- */
-static inline void sgl_surf_buffer_swap(sgl_surf_t *surf)
-{
-    if (sgl_ctx.fb_dev.buffer[1] != NULL) {
-        surf->buffer = sgl_ctx.fb_dev.buffer[sgl_ctx.fb_swap ^= 1];
-    }
 }
 
 

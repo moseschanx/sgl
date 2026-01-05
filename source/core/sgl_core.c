@@ -1326,7 +1326,6 @@ void sgl_obj_set_pos_align_ref(sgl_obj_t *ref, sgl_obj_t *obj, sgl_align_type_t 
 static inline void draw_obj_slice(sgl_obj_t *obj, sgl_surf_t *surf)
 {
     int top = 0;
-    bool flush_flag = false;
 	sgl_event_t evt;
 	sgl_obj_t *stack[SGL_OBJ_DEPTH_MAX];
 
@@ -1357,8 +1356,7 @@ static inline void draw_obj_slice(sgl_obj_t *obj, sgl_surf_t *surf)
 	}
 
     /* flush dirty area into screen */
-    flush_flag = sgl_panel_flush_area(surf->x1, surf->y1, surf->x2, surf->y2, surf->buffer);
-    sgl_ctx.fb_ready = (sgl_ctx.fb_ready & (1 << sgl_ctx.fb_swap)) | (((uint8_t)flush_flag) << (sgl_ctx.fb_swap ^ 1));
+    sgl_panel_flush_area(surf->x1, surf->y1, surf->x2, surf->y2, surf->buffer);
 }
 
 
@@ -1449,41 +1447,49 @@ static inline void sgl_dirty_area_calculate(sgl_obj_t *obj)
  * @return none
  * @note this function should be called in deamon thread or cyclic thread
  */
-static inline void sgl_draw_task(sgl_area_t *dirty)
+static inline void sgl_draw_task(sgl_context_t *ctx)
 {
-    sgl_surf_t *surf = &sgl_ctx.page->surf;
-    sgl_obj_t  *head = &sgl_ctx.page->obj;
+    sgl_surf_t *surf = &ctx->page->surf;
+    sgl_obj_t  *head = &ctx->page->obj;
+    sgl_area_t *dirty = NULL;
 
-    /* check dirty area, ensure it is valid */
-    SGL_ASSERT(dirty != NULL && dirty->x1 >= 0 && dirty->y1 >= 0 && dirty->x2 < SGL_SCREEN_WIDTH && dirty->y2 < SGL_SCREEN_HEIGHT);
+    /* dirty area number must less than SGL_DIRTY_AREA_MAX */
+    for (uint8_t i = 0; i < ctx->dirty_num; i++) {
+        dirty = &ctx->dirty[i];
+
+        /* check dirty area, ensure it is valid */
+        SGL_ASSERT(dirty != NULL && dirty->x1 >= 0 && dirty->y1 >= 0 && dirty->x2 < SGL_SCREEN_WIDTH && dirty->y2 < SGL_SCREEN_HEIGHT);
 
 #if (!CONFIG_SGL_USE_FB_VRAM)
-    uint16_t draw_h = 0;
-    surf->h = dirty->y2 - dirty->y1 + 1;
+        uint16_t draw_h = 0;
+        surf->h = dirty->y2 - dirty->y1 + 1;
 
-    surf->x1 = dirty->x1;
-    surf->y1 = dirty->y1;
-    surf->x2 = dirty->x2;
-    surf->w = surf->x2 - surf->x1 + 1;
-    surf->h = sgl_min(surf->size / surf->w, (uint32_t)(dirty->y2 - dirty->y1 + 1));
+        surf->x1 = dirty->x1;
+        surf->y1 = dirty->y1;
+        surf->x2 = dirty->x2;
+        surf->w  = surf->x2 - surf->x1 + 1;
+        surf->h  = sgl_min(surf->size / surf->w, (uint32_t)(dirty->y2 - dirty->y1 + 1));
 
-    SGL_LOG_TRACE("[fb:%d]sgl_draw_task: dirty area  x1:%d y1:%d x2:%d y2:%d", sgl_ctx.fb_swap, dirty->x1, dirty->y1, dirty->x2, dirty->y2);
+        SGL_LOG_TRACE("[fb:%d]sgl_draw_task: dirty area  x1:%d y1:%d x2:%d y2:%d", sgl_ctx.fb_swap, dirty->x1, dirty->y1, dirty->x2, dirty->y2);
 
-    while (surf->y1 <= dirty->y2) {
-        draw_h = sgl_min(dirty->y2 - surf->y1 + 1, surf->h);
+        while (surf->y1 <= dirty->y2) {
+            draw_h = sgl_min(dirty->y2 - surf->y1 + 1, surf->h);
 
-        surf->y2 = surf->y1 + draw_h - 1;
-        draw_obj_slice(head, surf);
-        surf->y1 += draw_h;
+            surf->y2 = surf->y1 + draw_h - 1;
+            ctx->fb_ready = (ctx->fb_ready & (1 << ctx->fb_swap));
 
-        /* swap the double buffer */
-        sgl_surf_buffer_swap(surf);
-    }
+            draw_obj_slice(head, surf);
+            surf->y1 += draw_h;
+
+            /* swap the double buffer */
+            sgl_surf_buffer_swap(surf);
+        }
 #else
-    SGL_LOG_TRACE("[fb:%d]sgl_draw_task: dirty area  x1:%d y1:%d x2:%d y2:%d", sgl_ctx.fb_swap, dirty->x1, dirty->y1, dirty->x2, dirty->y2);
-    draw_obj_slice(head, surf);
-    sgl_surf_buffer_swap(surf);
+        SGL_LOG_TRACE("[fb:%d]sgl_draw_task: dirty area  x1:%d y1:%d x2:%d y2:%d", sgl_ctx.fb_swap, dirty->x1, dirty->y1, dirty->x2, dirty->y2);
+        draw_obj_slice(head, surf);
+        sgl_surf_buffer_swap(surf);
 #endif
+    }
 }
 
 
@@ -1513,11 +1519,9 @@ void sgl_task_handle_sync(void)
 
     /**
      * draw task for complete frame
-     * dirty area number must less than SGL_DIRTY_AREA_MAX
      */
-    for (uint8_t i = 0; i < sgl_ctx.dirty_num; i++) {
-        sgl_draw_task(&sgl_ctx.dirty[i]);
-    }
+    sgl_draw_task(&sgl_ctx);
 
+    /* clear dirty area */
     sgl_dirty_area_init();
 }
