@@ -1466,7 +1466,7 @@ static inline void sgl_draw_task(sgl_fbdev_t *fbdev)
         /* check dirty area, ensure it is valid */
         SGL_ASSERT(dirty != NULL && dirty->x1 >= 0 && dirty->y1 >= 0 && dirty->x2 < SGL_SCREEN_WIDTH && dirty->y2 < SGL_SCREEN_HEIGHT);
 
-        SGL_LOG_TRACE("[fb:%d]sgl_draw_task: dirty area  x1:%d y1:%d x2:%d y2:%d", fbdev.fb_swap, dirty->x1, dirty->y1, dirty->x2, dirty->y2);
+        SGL_LOG_TRACE("[fb:%d]sgl_draw_task: dirty area  x1:%d y1:%d x2:%d y2:%d", fbdev->fb_swap, dirty->x1, dirty->y1, dirty->x2, dirty->y2);
         draw_obj_slice(head, surf);
         sgl_surf_buffer_swap(surf);
 #endif
