@@ -54,10 +54,6 @@ extern "C" {
 #define  SGL_TEXT_ASCII_OFFSET             (32)
 
 
-#define SGL_FLUSH_NORMAL                   (0)
-#define SGL_FLUSH_REMAINING                (1 << 4)
-
-
 /**
 * @brief This enumeration type defines the alignment of controls in sgl,
 *        i.e. coordinate positions
@@ -428,6 +424,23 @@ typedef struct sgl_page {
 
 
 /**
+ * @brief sgl framebuffer info struct
+ * @buffer: framebuffer, this specify the memory address of the framebuffer
+ * @framebuffer_size: framebuffer size
+ * @xres: x resolution
+ * @yres: y resolution
+ * @flush_area: flush area callback function pointer, return the finished flag
+ */
+typedef struct sgl_fbinfo {
+    void                *buffer[SGL_DRAW_BUFFER_MAX];
+    uint32_t             buffer_size;
+    int16_t              xres;
+    int16_t              yres;
+    void                 (*flush_area)(sgl_area_t *area, sgl_color_t *src);
+} sgl_fbinfo_t;
+
+
+/**
  * @brief sgl framebuffer device struct
  * @buffer: framebuffer, this specify the memory address of the framebuffer
  * @framebuffer_size: framebuffer size
@@ -435,39 +448,25 @@ typedef struct sgl_page {
  * @yres: y resolution
  * @flush_area: flush area callback function pointer, return the finished flag
  */
-typedef struct sgl_device_fb {
-    void      *buffer[SGL_DRAW_BUFFER_MAX];
-    uint32_t   buffer_size;
-    int16_t    xres;
-    int16_t    yres;
-    void       (*flush_area)(int16_t x1, int16_t y1, int16_t x2, int16_t y2, sgl_color_t *src);
-} sgl_device_fb_t;
+typedef struct sgl_fbdev {
+    sgl_fbinfo_t      fbinfo;
+    uint16_t          dirty_num;
+    uint8_t           fb_swap;
+    volatile uint8_t  fb_status;
+    sgl_area_t        dirty[SGL_DIRTY_AREA_NUM_MAX];
+    sgl_page_t        *page;
+} sgl_fbdev_t;
 
 
 /**
  * @brief sgl log print device struct
- * @log_puts: log print callback function pointer
+ * @logdev: log print callback function pointer
  */
-typedef struct sgl_device_log {
-    void      (*log_puts)(const char *str);
-} sgl_device_log_t;
-
-
-/**
- * current context, page pointer, and dirty area
- * fb_swap: 0 for fb_dev.buffer[0], 1 for fb_dev.buffer[1]
- * fb_status: bit 0: fb_dev.buffer[0] is ready, bit 1: fb_dev.buffer[1] is ready
- */
-typedef struct sgl_context {
-    sgl_page_t           *page;
-    sgl_device_fb_t      fb_dev;
-    sgl_device_log_t     log_dev;
-    uint8_t              fb_swap;
-    volatile uint8_t     fb_status;
-    volatile uint8_t     tick_ms;
-    uint8_t              dirty_num;
-    sgl_area_t           *dirty;
-} sgl_context_t;
+typedef struct sgl_system {
+    void                 (*logdev)(const char *str);
+    sgl_fbdev_t          fbdev;
+    volatile uint32_t    tick_ms;
+} sgl_system_t;
 
 
 /**
@@ -479,26 +478,24 @@ typedef struct sgl_context {
 
 
 /* dont to use this variable, it is used internally by sgl library */
-extern sgl_context_t sgl_ctx;
+extern sgl_system_t sgl_system;
 
 
 /**
  * @brief register the frame buffer device
- * @param fb_dev the frame buffer device
+ * @param fbinfo the frame buffer device information
  * @return int, 0 if success, -1 if failed
+ * @note you must check the result of this function
  */
-int sgl_device_fb_register(sgl_device_fb_t *fb_dev);
+int sgl_fbdev_register(sgl_fbinfo_t *fbinfo);
 
 
 /**
- * @brief panel flush function
- * @param x [in] x coordinate
- * @param y [in] y coordinate
- * @param w [in] width
- * @param h [in] height
+ * @brief framebuffer device flush function
+ * @param area [in] area of flush, that is x1, y1, x2, y2: area of flush
  * @param src [in] source color
  */
-static inline void sgl_panel_flush_area(int16_t x1, int16_t y1, int16_t x2, int16_t y2, sgl_color_t *src)
+static inline void sgl_fbdev_flush_area(sgl_area_t *area, sgl_color_t *src)
 {
 #if CONFIG_SGL_COLOR16_SWAP
     uint16_t w = x2 - x1 + 1;
@@ -508,30 +505,30 @@ static inline void sgl_panel_flush_area(int16_t x1, int16_t y1, int16_t x2, int1
         dst[i] = (dst[i] << 8) | (dst[i] >> 8);
     }
 #endif
-    sgl_ctx.fb_dev.flush_area(x1, y1, x2, y2, src);
+    sgl_system.fbdev.fbinfo.flush_area(area, src);
 }
 
 
 /**
- * @brief set panel flush ready
+ * @brief set framebuffer device flush ready
  * @param none
  * @return none
- * @note this function must be called in DMA callback function after panel flush
+ * @note this function must be called in DMA callback function after framebuffer device flush
  */
-static inline void sgl_panel_flush_ready(void)
+static inline void sgl_fbdev_flush_ready(void)
 {
-    sgl_ctx.fb_status = (sgl_ctx.fb_status & (1 << sgl_ctx.fb_swap)) | ((1 << (sgl_ctx.fb_swap ^ 1)));
+    sgl_system.fbdev.fb_status = (sgl_system.fbdev.fb_status & (1 << sgl_system.fbdev.fb_swap)) | ((1 << (sgl_system.fbdev.fb_swap ^ 1)));
 }
 
 
 /**
- * @brief check if panel need to wait ready
- * @param none
- * @return none
+ * @brief check if framebuffer device buffer need to wait ready
+ * @param fbdev point to the framebuffer device
+ * @return bool true if need to wait ready, false if not
  */
-static inline bool sgl_panel_flush_wait_ready(void)
+static inline bool sgl_fbdev_flush_wait_ready(sgl_fbdev_t *fbdev)
 {
-    return sgl_ctx.fb_status == 0;
+    return fbdev->fb_status == 0;
 }
 
 
@@ -539,60 +536,60 @@ static inline bool sgl_panel_flush_wait_ready(void)
  * @brief swap the surface buffer
  * @param none
  * @return none
- * @note if you use double buffer, you must call this function after panel flush
+ * @note if you use double buffer, you must call this function after framebuffer device flush
  */
 static inline void sgl_surf_buffer_swap(sgl_surf_t *surf)
 {
-    if (sgl_ctx.fb_dev.buffer[1] != NULL) {
-        surf->buffer = sgl_ctx.fb_dev.buffer[sgl_ctx.fb_swap ^= 1];
+    if (sgl_system.fbdev.fbinfo.buffer[1] != NULL) {
+        surf->buffer = sgl_system.fbdev.fbinfo.buffer[sgl_system.fbdev.fb_swap ^= 1];
     }
 }
 
 
 /**
- * @brief get panel resolution width
+ * @brief get framebuffer device buffer resolution width
  * @param none
- * @return panel resolution width
+ * @return framebuffer device buffer resolution width
  */
-static inline int16_t sgl_panel_resolution_width(void)
+static inline int16_t sgl_fbdev_resolution_width(void)
 {
-    return sgl_ctx.fb_dev.xres;
+    return sgl_system.fbdev.fbinfo.xres;
 }
 
 /**
- * @brief get panel resolution height
+ * @brief get framebuffer device buffer resolution height
  * @param none
- * @return panel resolution height
+ * @return framebuffer device buffer resolution height
  */
-#define  SGL_SCREEN_WIDTH  sgl_panel_resolution_width()
+#define  SGL_SCREEN_WIDTH  sgl_fbdev_resolution_width()
 
 
 /**
- * @brief get panel resolution height
+ * @brief get framebuffer device buffer resolution height
  * @param none
- * @return panel resolution height
+ * @return framebuffer device buffer resolution height
  */
-static inline int16_t sgl_panel_resolution_height(void)
+static inline int16_t sgl_fbdev_resolution_height(void)
 {
-    return sgl_ctx.fb_dev.yres;
+    return sgl_system.fbdev.fbinfo.yres;
 }
 
 /**
- * @brief get panel resolution width
+ * @brief get framebuffer device buffer resolution width
  * @param none
- * @return panel resolution width
+ * @return framebuffer device buffer resolution width
  */
-#define  SGL_SCREEN_HEIGHT  sgl_panel_resolution_height()
+#define  SGL_SCREEN_HEIGHT  sgl_fbdev_resolution_height()
 
 
 /**
- * @brief get panel buffer address
+ * @brief get framebuffer device buffer address
  * @param none
- * @return panel buffer address
+ * @return framebuffer device buffer address
  */
-static inline void* sgl_panel_buffer_address(void)
+static inline void* sgl_fbdev_buffer_address(void)
 {
-    return sgl_ctx.fb_dev.buffer[0];
+    return sgl_system.fbdev.fbinfo.buffer[0];
 }
 
 
@@ -600,10 +597,11 @@ static inline void* sgl_panel_buffer_address(void)
  * @brief register log output device
  * @param log_puts log output function
  * @return none
+ * @note if you want to use print log into uart or other devices, you must register log output device first
  */
-static inline void sgl_device_log_register(void (*log_puts)(const char *str))
+static inline void sgl_logdev_register(void (*puts)(const char *str))
 {
-    sgl_ctx.log_dev.log_puts = log_puts;
+    sgl_system.logdev = puts;
 }
 
 
@@ -611,11 +609,12 @@ static inline void sgl_device_log_register(void (*log_puts)(const char *str))
  * @brief log output function
  * @param str log string
  * @return none
+ * @note if you want to use printf function, you must register log output device first
  */
 static inline void sgl_log_stdout(const char *str)
 {
-    if (sgl_ctx.log_dev.log_puts) {
-        sgl_ctx.log_dev.log_puts(str);
+    if (sgl_system.logdev) {
+        sgl_system.logdev(str);
     }
 }
 
@@ -635,7 +634,7 @@ uint8_t sgl_pixmal_get_bits(const sgl_pixmap_t *pixmap);
  */
 static inline uint8_t sgl_tick_get(void)
 {
-    return sgl_ctx.tick_ms;
+    return sgl_system.tick_ms;
 }
 
 
@@ -648,7 +647,7 @@ static inline uint8_t sgl_tick_get(void)
  */
 static inline void sgl_tick_inc(uint8_t ms)
 {
-    sgl_ctx.tick_ms += ms;
+    sgl_system.tick_ms += ms;
 }
 
 
@@ -659,7 +658,7 @@ static inline void sgl_tick_inc(uint8_t ms)
  */
 static inline void sgl_tick_reset(void)
 {
-    sgl_ctx.tick_ms = 0;
+    sgl_system.tick_ms = 0;
 }
 
 
@@ -1495,7 +1494,7 @@ void sgl_screen_load(sgl_obj_t *obj);
  */
 static inline sgl_obj_t* sgl_screen_act(void)
 {
-    return &sgl_ctx.page->obj;
+    return &sgl_system.fbdev.page->obj;
 }
 
 
@@ -1506,7 +1505,7 @@ static inline sgl_obj_t* sgl_screen_act(void)
  */
 static inline sgl_page_t* sgl_page_get_active(void)
 {
-    return sgl_ctx.page;
+    return sgl_system.fbdev.page;
 }
 
 
