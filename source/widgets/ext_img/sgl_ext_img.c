@@ -35,11 +35,8 @@
 static inline void ext_img_rle_init(sgl_ext_img_t *img)
 {
     SGL_ASSERT(img != NULL);
-    if (img->started == 0) {
-        img->started = 1;
-        img->index = 0;
-        img->remainder = 0;
-    }
+    img->index = 0;
+    img->remainder = 0;
 }
 
 static inline void rle_decompress_line(sgl_ext_img_t *img, sgl_area_t *coords, sgl_area_t *area, sgl_color_t *out)
@@ -171,15 +168,18 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
         }
         else {
             /* RLE pixmap support */
+            if (clip.y1 == surf->area->y1 || clip.y1 == area.y1) {
+                ext_img_rle_init(ext_img);
+                for (int y = area.y1; y <= clip.y1; y++) {
+                    rle_decompress_line(ext_img, &area, &clip, NULL);
+                }
+            }
+
             buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, (clip.y1 - surf->y1));
-            clip.y2 = sgl_min(clip.y2, area.y2);
-            ext_img_rle_init(ext_img);
+
             for (int y = clip.y1; y <= clip.y2; y++) {
                 rle_decompress_line(ext_img, &area, &clip, buf);
                 buf += surf->w;
-            }
-            if (surf->y2 >= area.y2) {
-                ext_img->started = 0;
             }
         }
     }
@@ -207,7 +207,5 @@ sgl_obj_t* sgl_ext_img_create(sgl_obj_t* parent)
     obj->construct_fn = sgl_ext_img_construct_cb;
 
     ext_img->alpha = SGL_ALPHA_MAX;
-    ext_img->started = 0;
-
     return obj;
 }
