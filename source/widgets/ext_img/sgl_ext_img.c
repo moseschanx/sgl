@@ -168,7 +168,7 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
         }
         else {
             /* RLE pixmap support */
-            if (clip.y1 == surf->area->y1 || clip.y1 == area.y1) {
+            if (clip.y1 == surf->dirty->y1 || clip.y1 == area.y1) {
                 ext_img_rle_init(ext_img);
                 for (int y = area.y1; y <= clip.y1; y++) {
                     rle_decompress_line(ext_img, &area, &clip, NULL);
