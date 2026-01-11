@@ -88,7 +88,7 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
 {
     sgl_area_t clip = SGL_AREA_INVALID;
     sgl_ext_img_t *ext_img = (sgl_ext_img_t*)obj;
-    const sgl_pixmap_t *pixmap = &ext_img->pixmap[ext_img->bitmap_idx];
+    const sgl_pixmap_t *pixmap = &ext_img->pixmap[ext_img->pixmap_idx];
     const uint8_t *bitmap = pixmap->bitmap;
     uint8_t pix_byte = sgl_pixmal_get_bits(pixmap);
 
@@ -184,9 +184,9 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
             }
         }
 
-        if (ext_img->bitmap_auto && (clip.y2 == surf->dirty->y2 || clip.y2 == obj->area.y2)) {
+        if (ext_img->pixmap_auto && (clip.y2 == surf->dirty->y2 || clip.y2 == obj->area.y2)) {
             uint8_t index = ext_img->index + 1;
-            ext_img->bitmap_idx = (index < ext_img->bitmap_num ? index : 0);
+            ext_img->pixmap_idx = (index < ext_img->pixmap_num ? index : 0);
             sgl_obj_set_dirty(obj);
         }
     }
@@ -214,9 +214,9 @@ sgl_obj_t* sgl_ext_img_create(sgl_obj_t* parent)
     obj->construct_fn = sgl_ext_img_construct_cb;
 
     ext_img->alpha = SGL_ALPHA_MAX;
-    ext_img->bitmap_idx = 0;
-    ext_img->bitmap_num = 1;
-    ext_img->bitmap_auto = 0;
+    ext_img->pixmap_idx = 0;
+    ext_img->pixmap_num = 1;
+    ext_img->pixmap_auto = 0;
 
     return obj;
 }
