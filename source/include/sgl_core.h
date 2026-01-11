@@ -504,8 +504,8 @@ int sgl_fbdev_register(sgl_fbinfo_t *fbinfo);
 static inline void sgl_fbdev_flush_area(sgl_area_t *area, sgl_color_t *src)
 {
 #if CONFIG_SGL_COLOR16_SWAP
-    uint16_t w = x2 - x1 + 1;
-    uint16_t h = y2 - y1 + 1;
+    uint16_t w = area->x2 - area->x1 + 1;
+    uint16_t h = area->y2 - area->y1 + 1;
     uint16_t *dst = (uint16_t *)src;
     for (size_t i = 0; i < (size_t)(w * h); i++) {
         dst[i] = (dst[i] << 8) | (dst[i] >> 8);
