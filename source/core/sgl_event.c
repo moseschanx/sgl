@@ -66,6 +66,7 @@ static struct event_context {
  * @param none
  * @return 0 on success, -1 on failure
  * @note !!!!!! the SGL_EVENT_QUEUE_SIZE must be power of 2 !!!!!!
+ *       You must check the return value of this function.
  */
 int sgl_event_queue_init(void)
 {
