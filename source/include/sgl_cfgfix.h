@@ -38,10 +38,13 @@ extern "C" {
  * 
  * @description:
  * 
- * CONFIG_SGL_PANEL_PIXEL_DEPTH:
- *      The pixel depth of panel, it will be used to define the color type
+ * CONFIG_SGL_FBDEV_PIXEL_DEPTH:
+ *      The pixel depth of framebuffer device, it will be used to define the color type
  *
- * CONFIG_SGL_USE_FB_VRAM:
+ * CONFIG_SGL_FBDEV_ROTATION:
+ *      The rotation of framebuffer device, default: 0
+ * 
+ * CONFIG_SGL_USE_FBDEV_VRAM:
  *      If you want to use full framebuffer, please define this macro to 1
  *
  * CONFIG_SGL_SYSTICK_MS:
@@ -86,12 +89,16 @@ extern "C" {
  * 
  */
 
-#ifndef CONFIG_SGL_PANEL_PIXEL_DEPTH
-#define CONFIG_SGL_PANEL_PIXEL_DEPTH                               (16)
+#ifndef CONFIG_SGL_FBDEV_PIXEL_DEPTH
+#define CONFIG_SGL_FBDEV_PIXEL_DEPTH                               (16)
 #endif
 
-#ifndef CONFIG_SGL_USE_FB_VRAM
-#define CONFIG_SGL_USE_FB_VRAM                                     (0)
+#ifndef CONFIG_SGL_FBDEV_ROTATION
+#define CONFIG_SGL_FBDEV_ROTATION                                  (0)
+#endif
+
+#ifndef CONFIG_SGL_USE_FBDEV_VRAM
+#define CONFIG_SGL_USE_FBDEV_VRAM                                  (0)
 #endif
 
 #ifndef CONFIG_SGL_SYSTICK_MS

@@ -210,13 +210,13 @@ typedef union {
 } sgl_color8_t;
 
 
-#if (CONFIG_SGL_PANEL_PIXEL_DEPTH == 32)
+#if (CONFIG_SGL_FBDEV_PIXEL_DEPTH == 32)
 #define sgl_color_t sgl_color32_t
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == 24)
+#elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == 24)
 #define sgl_color_t sgl_color24_t
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == 16)
+#elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == 16)
 #define sgl_color_t sgl_color16_t
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == 8)
+#elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == 8)
 #define sgl_color_t sgl_color8_t
 #endif
 
@@ -467,6 +467,9 @@ typedef struct sgl_system {
     void               (*logdev)(const char *str);
     sgl_fbdev_t        fbdev;
     volatile uint32_t  tick_ms;
+#if (CONFIG_SGL_FBDEV_ROTATION != 0)
+    sgl_color_t        *rotation;
+#endif
 } sgl_system_t;
 
 
@@ -489,30 +492,6 @@ extern sgl_system_t sgl_system;
  * @note you must check the result of this function
  */
 int sgl_fbdev_register(sgl_fbinfo_t *fbinfo);
-
-
-/**
- * @brief framebuffer device flush function
- * @param area [in] area of flush, that is x1, y1, x2, y2: area of flush
- *                  area contains the coordinates of the area to be flushed
- *                  - x1: x coordinate of the top left corner of the area
- *                  - y1: y coordinate of the top left corner of the area
- *                  - x2: x coordinate of the bottom right corner of the area
- *                  - y2: y coordinate of the bottom right corner of the area
- * @param src [in] source color
- */
-static inline void sgl_fbdev_flush_area(sgl_area_t *area, sgl_color_t *src)
-{
-#if CONFIG_SGL_COLOR16_SWAP
-    uint16_t w = area->x2 - area->x1 + 1;
-    uint16_t h = area->y2 - area->y1 + 1;
-    uint16_t *dst = (uint16_t *)src;
-    for (size_t i = 0; i < (size_t)(w * h); i++) {
-        dst[i] = (dst[i] << 8) | (dst[i] >> 8);
-    }
-#endif
-    sgl_system.fbdev.fbinfo.flush_area(area, src);
-}
 
 
 /**
@@ -600,6 +579,79 @@ static inline void* sgl_fbdev_buffer_address(void)
 
 
 /**
+ * @brief framebuffer device flush function
+ * @param area [in] area of flush, that is x1, y1, x2, y2: area of flush
+ *                  area contains the coordinates of the area to be flushed
+ *                  - x1: x coordinate of the top left corner of the area
+ *                  - y1: y coordinate of the top left corner of the area
+ *                  - x2: x coordinate of the bottom right corner of the area
+ *                  - y2: y coordinate of the bottom right corner of the area
+ * @param src [in] source color
+ */
+static inline void sgl_fbdev_flush_area(sgl_area_t *area, sgl_color_t *src)
+{
+#if CONFIG_SGL_COLOR16_SWAP
+    uint16_t w = area->x2 - area->x1 + 1;
+    uint16_t h = area->y2 - area->y1 + 1;
+    uint16_t *dst = (uint16_t *)src;
+    for (size_t i = 0; i < (size_t)(w * h); i++) {
+        dst[i] = (dst[i] << 8) | (dst[i] >> 8);
+    }
+#endif
+
+#if (CONFIG_SGL_FBDEV_ROTATION != 0)
+    uint16_t width = area->x2 - area->x1 + 1;
+    uint16_t height = area->y2 - area->y1 + 1;
+    sgl_area_t area_dst = *area;
+
+#if (CONFIG_SGL_FBDEV_ROTATION == 90)
+    for (uint16_t y = 0; y < height; y++) {
+        for (uint16_t x = 0; x < width; x++) {
+            size_t src_idx = y * width + x;
+            size_t dst_idx = x * height + (height - 1 - y); // 新图是 height × width
+            sgl_system.rotation[dst_idx] = src[src_idx];
+        }
+    }
+
+    area_dst.x1 = area->y1;
+    area_dst.y1 = SGL_SCREEN_WIDTH - area->x2 - 1;
+    area_dst.x2 = area->y2;
+    area_dst.y2 = SGL_SCREEN_WIDTH - area->x1 - 1;
+
+#elif (CONFIG_SGL_FBDEV_ROTATION == 180)
+    size_t total = (size_t)(width * height);
+    for (size_t i = 0; i < total; i++) {
+        sgl_system.rotation[i] = src[total - 1 - i];
+    }
+
+    area_dst.x1 = SGL_SCREEN_WIDTH  - area->x2 - 1;
+    area_dst.y1 = SGL_SCREEN_HEIGHT - area->y2 - 1;
+    area_dst.x2 = SGL_SCREEN_WIDTH  - area->x1 - 1;
+    area_dst.y2 = SGL_SCREEN_HEIGHT - area->y1 - 1;
+#elif (CONFIG_SGL_FBDEV_ROTATION == 270)
+    for (uint16_t y = 0; y < height; y++) {
+        for (uint16_t x = 0; x < width; x++) {
+            size_t src_idx = y * width + x;
+            size_t dst_idx = (width - 1 - x) * height + y;
+            sgl_system.rotation[dst_idx] = src[src_idx];
+        }
+    }
+
+    area_dst.x1 = SGL_SCREEN_HEIGHT - area->y2 - 1;
+    area_dst.y1 = area->x1;
+    area_dst.x2 = SGL_SCREEN_HEIGHT - area->y1 - 1;
+    area_dst.y2 = area->x2;
+#else
+#error "CONFIG_SGL_FBDEV_ROTATION is invalid rotation value"
+#endif
+    sgl_system.fbdev.fbinfo.flush_area(&area_dst, sgl_system.rotation);
+#else
+    sgl_system.fbdev.fbinfo.flush_area(area, src);
+#endif
+}
+
+
+/**
  * @brief register log output device
  * @param log_puts log output function
  * @return none
@@ -676,17 +728,17 @@ static inline void sgl_tick_reset(void)
 static inline sgl_color_t sgl_int2color(uint32_t color)
 {
     sgl_color_t c;
-#if (CONFIG_SGL_PANEL_PIXEL_DEPTH == 32)
+#if (CONFIG_SGL_FBDEV_PIXEL_DEPTH == 32)
     c.full = color;
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == 24)
+#elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == 24)
     c.ch.blue    = (uint8_t)(color & 0xff);
     c.ch.green   = (uint8_t)((color >> 8) & 0xff);
     c.ch.red     = (uint8_t)((color >> 16) & 0xff);
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == 16)
+#elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == 16)
     c.ch.blue    = (uint8_t)(color & 0x1f);
     c.ch.green   = (uint8_t)((color >> 5) & 0x3f);
     c.ch.red     = (uint8_t)((color >> 11) & 0x1f);
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == 8)
+#elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == 8)
     c.ch.blue    = (uint8_t)(color & 0x3);
     c.ch.green   = (uint8_t)((color >> 2) & 0x7);
     c.ch.red     = (uint8_t)((color >> 5) & 0x7);
@@ -703,7 +755,7 @@ static inline sgl_color_t sgl_int2color(uint32_t color)
 static inline uint32_t sgl_color2int(sgl_color_t color)
 {
     uint32_t c;
-#if (CONFIG_SGL_PANEL_PIXEL_DEPTH == 24)
+#if (CONFIG_SGL_FBDEV_PIXEL_DEPTH == 24)
     c = color.ch.blue | (color.ch.green << 8) | (color.ch.red << 16);
 #else
     c = color.full;
@@ -1595,13 +1647,13 @@ static inline void sgl_obj_delete_sync(sgl_obj_t *obj)
 static inline sgl_color_t sgl_color_mixer(sgl_color_t fg_color, sgl_color_t bg_color, uint8_t factor)
 {
     sgl_color_t ret;
-#if (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_RGB332)
+#if (CONFIG_SGL_FBDEV_PIXEL_DEPTH == SGL_COLOR_RGB332)
 
     ret.ch.red   = bg_color.ch.red + ((fg_color.ch.red - bg_color.ch.red) * (factor >> 5) >> 3);
     ret.ch.green = bg_color.ch.green + ((fg_color.ch.green - bg_color.ch.green) * (factor >> 5) >> 3);
     ret.ch.blue  = bg_color.ch.blue + ((fg_color.ch.blue - bg_color.ch.blue) * (factor >> 6) >> 2);
 
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_RGB565)
+#elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == SGL_COLOR_RGB565)
 
     factor = (uint32_t)((uint32_t)factor + 4) >> 3;
     uint32_t bg = (uint32_t)((uint32_t)bg_color.full | ((uint32_t)bg_color.full << 16)) & 0x07E0F81F; 
@@ -1609,13 +1661,13 @@ static inline sgl_color_t sgl_color_mixer(sgl_color_t fg_color, sgl_color_t bg_c
     uint32_t result = ((((fg - bg) * factor) >> 5) + bg) & 0x7E0F81F;
     ret.full = (uint16_t)((result >> 16) | result);
 
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_RGB888)
+#elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == SGL_COLOR_RGB888)
 
     ret.ch.red   = bg_color.ch.red + ((fg_color.ch.red - bg_color.ch.red) * factor >> 8);
     ret.ch.green = bg_color.ch.green + ((fg_color.ch.green - bg_color.ch.green) * factor >> 8);
     ret.ch.blue  = bg_color.ch.blue + ((fg_color.ch.blue - bg_color.ch.blue) * factor >> 8);
 
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_ARGB8888)
+#elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == SGL_COLOR_ARGB8888)
 
     ret.ch.alpha = bg_color.ch.alpha + ((fg_color.ch.alpha - bg_color.ch.alpha) * factor >> 8);
     ret.ch.red   = bg_color.ch.red + ((fg_color.ch.red - bg_color.ch.red) * factor >> 8);

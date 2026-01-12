@@ -661,6 +661,15 @@ int sgl_init(void)
         return -1;
     }
 
+    /* if the rotation is not 0 or 180, we need to alloc a buffer for rotation */
+#if (CONFIG_SGL_FBDEV_ROTATION != 0)
+    sgl_system.rotation = (sgl_color_t*)sgl_malloc(sgl_system.fbdev.fbinfo.buffer_size * sizeof(sgl_color_t));
+    if (sgl_system.rotation == NULL) {
+        SGL_LOG_ERROR("sgl_init: alloc rotation buffer failed");
+        return -1;
+    }
+#endif
+
     /* create event queue */
     return sgl_event_queue_init();
 }
@@ -1441,7 +1450,7 @@ static inline void sgl_draw_task(sgl_fbdev_t *fbdev)
         /* check dirty area, ensure it is valid */
         SGL_ASSERT(dirty != NULL && dirty->x1 >= 0 && dirty->y1 >= 0 && dirty->x2 < SGL_SCREEN_WIDTH && dirty->y2 < SGL_SCREEN_HEIGHT);
 
-#if (!CONFIG_SGL_USE_FB_VRAM)
+#if (!CONFIG_SGL_USE_FBDEV_VRAM)
 
         uint16_t draw_h = 0;
         surf->h = dirty->y2 - dirty->y1 + 1;

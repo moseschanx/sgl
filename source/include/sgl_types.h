@@ -185,7 +185,7 @@ extern "C" {
 
 
 // prototype: sgl_rgb(uint8_t r, uint8_t g, uint8_t b)
-#if (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_ARGB8888 || CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_RGB888)
+#if (CONFIG_SGL_FBDEV_PIXEL_DEPTH == SGL_COLOR_ARGB8888 || CONFIG_SGL_FBDEV_PIXEL_DEPTH == SGL_COLOR_RGB888)
 #define sgl_rgb(r,g,b)                          (sgl_color_t){ .ch.blue    = (b),                                     \
                                                                .ch.green   = (g),                                     \
                                                                .ch.red     = (r),}
@@ -206,7 +206,7 @@ extern "C" {
                                                                .ch.green   = (((rgb888) >> 8) & 0xFF),                \
                                                                .ch.red     = (((rgb888) >> 16) & 0xFF),}
 
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_RGB565)
+#elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == SGL_COLOR_RGB565)
 #define sgl_rgb(r,g,b)                          (sgl_color_t){ .ch.blue    = (b) >> 3,                                \
                                                                .ch.green   = (g) >> 2,                                \
                                                                .ch.red     = (r) >> 3,}
@@ -226,7 +226,7 @@ extern "C" {
 #define sgl_rgb888_to_color(rgb888)             (sgl_color_t){ .ch.blue    = ((((rgb888) >> 0) & 0xFF) >> 3),         \
                                                                .ch.green   = ((((rgb888) >> 8) & 0xFF) >> 2),         \
                                                                .ch.red     = ((((rgb888) >> 16) & 0xFF) >> 3),}
-#elif (CONFIG_SGL_PANEL_PIXEL_DEPTH == SGL_COLOR_RGB332)
+#elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == SGL_COLOR_RGB332)
 #define sgl_rgb(r,g,b)                          (sgl_color_t){ .ch.blue    = (b >> 6),                                \
                                                                .ch.green   = (g >> 5),                                \
                                                                .ch.red     = (r >> 5),}
