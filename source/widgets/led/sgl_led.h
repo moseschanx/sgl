@@ -73,7 +73,6 @@ static inline void sgl_led_set_on_color(sgl_obj_t *obj, sgl_color_t color)
     sgl_obj_set_dirty(obj);
 }
 
-
 /**
  * @brief set the off color of the led
  * @param obj led object
@@ -86,6 +85,7 @@ static inline void sgl_led_set_off_color(sgl_obj_t *obj, sgl_color_t color)
     led->off_color = color;
     sgl_obj_set_dirty(obj);
 }
+
 /**
  * @brief Set the border color of the led
  * @param obj led object
@@ -94,11 +94,11 @@ static inline void sgl_led_set_off_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_led_set_border_color(sgl_obj_t *obj, sgl_color_t color)
 {
-
     sgl_led_t *led = (sgl_led_t *)obj;
     led->border_color = color;
     sgl_obj_set_dirty(obj);
 }
+
 /**
  * @brief set the alpha of the led
  * @param obj led object
