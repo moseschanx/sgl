@@ -628,19 +628,20 @@ static inline void sgl_fbdev_flush_area(sgl_area_t *area, sgl_color_t *src)
     area_dst.y1 = SGL_SCREEN_HEIGHT - area->y2 - 1;
     area_dst.x2 = SGL_SCREEN_WIDTH  - area->x1 - 1;
     area_dst.y2 = SGL_SCREEN_HEIGHT - area->y1 - 1;
+
 #elif (CONFIG_SGL_FBDEV_ROTATION == 270)
     for (uint16_t y = 0; y < height; y++) {
         for (uint16_t x = 0; x < width; x++) {
             size_t src_idx = y * width + x;
-            size_t dst_idx = x * height + (width - 1 - y);
+            size_t dst_idx = x * height + (height - 1 - y);
             sgl_system.rotation[dst_idx] = src[src_idx];
         }
     }
 
     area_dst.x1 = SGL_SCREEN_HEIGHT - area->y2 - 1;
     area_dst.y1 = area->x1;
-    area_dst.x2 = sgl_min(SGL_SCREEN_HEIGHT - area->y1 - 1, SGL_SCREEN_WIDTH - 1);
-    area_dst.y2 = sgl_min(area->x2, SGL_SCREEN_WIDTH - 1);
+    area_dst.x2 = sgl_min(area_dst.x1 + height - 1, SGL_SCREEN_WIDTH - 1);
+    area_dst.y2 = sgl_min(area_dst.y1 + width - 1, SGL_SCREEN_HEIGHT - 1);
 #else
 #error "CONFIG_SGL_FBDEV_ROTATION is invalid rotation value"
 #endif
