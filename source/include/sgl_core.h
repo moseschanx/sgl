@@ -615,8 +615,8 @@ static inline void sgl_fbdev_flush_area(sgl_area_t *area, sgl_color_t *src)
 
     area_dst.x1 = area->y1;
     area_dst.y1 = SGL_SCREEN_WIDTH - area->x2 - 1;
-    area_dst.x2 = sgl_min(area->y2, SGL_SCREEN_WIDTH - 1);
-    area_dst.y2 = sgl_min(SGL_SCREEN_WIDTH - area->x1 - 1, SGL_SCREEN_HEIGHT - 1);
+    area_dst.x2 = sgl_min(area->y2, SGL_SCREEN_HEIGHT - 1);
+    area_dst.y2 = sgl_min(SGL_SCREEN_WIDTH - area->x1 - 1, SGL_SCREEN_WIDTH - 1);
 
 #elif (CONFIG_SGL_FBDEV_ROTATION == 180)
     size_t total = (size_t)(width * height);
@@ -640,8 +640,8 @@ static inline void sgl_fbdev_flush_area(sgl_area_t *area, sgl_color_t *src)
 
     area_dst.x1 = SGL_SCREEN_HEIGHT - area->y2 - 1;
     area_dst.y1 = area->x1;
-    area_dst.x2 = sgl_min(area_dst.x1 + height - 1, SGL_SCREEN_WIDTH - 1);
-    area_dst.y2 = sgl_min(area_dst.y1 + width - 1, SGL_SCREEN_HEIGHT - 1);
+    area_dst.x2 = sgl_min(area_dst.x1 + height - 1, SGL_SCREEN_HEIGHT - 1);
+    area_dst.y2 = sgl_min(area_dst.y1 + width - 1, SGL_SCREEN_WIDTH - 1);
 #else
 #error "CONFIG_SGL_FBDEV_ROTATION is invalid rotation value"
 #endif
