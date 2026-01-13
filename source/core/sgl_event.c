@@ -383,17 +383,33 @@ void sgl_event_pos_input(int16_t x, int16_t y, bool flag)
     static bool pressed_flag = false;
     sgl_event_pos_t pos = { .x = x, .y = y };
 
+    /* rotate touch position */
+#if (CONFIG_SGL_FBDEV_ROTATION != 0)
+#if (CONFIG_SGL_FBDEV_ROTATION == 90)
+    pos.x = sgl_min(SGL_SCREEN_WIDTH - y, SGL_SCREEN_WIDTH - 1);
+    pos.y = sgl_min(x, SGL_SCREEN_HEIGHT - 1);
+#elif (CONFIG_SGL_FBDEV_ROTATION == 180)
+    pos.x = SGL_SCREEN_WIDTH - x - 1;
+    pos.y = SGL_SCREEN_HEIGHT - y - 1;
+#elif (CONFIG_SGL_FBDEV_ROTATION == 270)
+    pos.x = sgl_min(y, SGL_SCREEN_WIDTH - 1);
+    pos.y = sgl_min(SGL_SCREEN_HEIGHT - x, SGL_SCREEN_HEIGHT - 1);
+#else
+    #error "CONFIG_SGL_FBDEV_ROTATION is invalid rotation value (only 0/90/180/270 supported)"
+#endif
+#endif //!CONFIG_SGL_FBDEV_ROTATION
+
     if (flag) {
         if (!pressed_flag) {
             pressed_flag = true;
             sgl_event_send_pos(pos, SGL_EVENT_PRESSED);
-            SGL_LOG_INFO("Touch SGL_EVENT_PRESSED x: %d, y: %d", x, y);
+            SGL_LOG_INFO("Touch SGL_EVENT_PRESSED x: %d, y: %d", pos.x, pos.y);
         }
         else {
             if (last_pos.x != x || last_pos.y != y) {
                 sgl_event_send_pos(pos, SGL_EVENT_MOTION);
                 last_pos = pos;
-                SGL_LOG_INFO("Touch SGL_EVENT_MOTION x: %d, y: %d", x, y);
+                SGL_LOG_INFO("Touch SGL_EVENT_MOTION x: %d, y: %d", pos.x, pos.y);
             }
         }
     }
@@ -401,7 +417,7 @@ void sgl_event_pos_input(int16_t x, int16_t y, bool flag)
         if (pressed_flag) {
             pressed_flag = false;
             sgl_event_send_pos(pos, SGL_EVENT_RELEASED);
-            SGL_LOG_INFO("Touch SGL_EVENT_RELEASED x: %d, y: %d", x, y);
+            SGL_LOG_INFO("Touch SGL_EVENT_RELEASED x: %d, y: %d", pos.x, pos.y);
         }
     }
 }

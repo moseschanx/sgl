@@ -643,7 +643,7 @@ static inline void sgl_fbdev_flush_area(sgl_area_t *area, sgl_color_t *src)
     area_dst.x2 = sgl_min(area_dst.x1 + height - 1, SGL_SCREEN_HEIGHT - 1);
     area_dst.y2 = sgl_min(area_dst.y1 + width - 1, SGL_SCREEN_WIDTH - 1);
 #else
-#error "CONFIG_SGL_FBDEV_ROTATION is invalid rotation value"
+#error "CONFIG_SGL_FBDEV_ROTATION is invalid rotation value (only 0/90/180/270 supported)"
 #endif
     sgl_system.fbdev.fbinfo.flush_area(&area_dst, sgl_system.rotation);
 #else
