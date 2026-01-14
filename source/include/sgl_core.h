@@ -732,9 +732,9 @@ static inline sgl_color_t sgl_int2color(uint32_t color)
 #if (CONFIG_SGL_FBDEV_PIXEL_DEPTH == 32)
     c.full = color;
 #elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == 24)
-    c.ch.blue    = (uint8_t)(color & 0xff);
-    c.ch.green   = (uint8_t)((color >> 8) & 0xff);
-    c.ch.red     = (uint8_t)((color >> 16) & 0xff);
+    c.ch.blue    = (uint8_t)color;
+    c.ch.green   = (uint8_t)(color >> 8);
+    c.ch.red     = (uint8_t)(color >> 16);
 #elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == 16)
     c.ch.blue    = (uint8_t)(color & 0x1f);
     c.ch.green   = (uint8_t)((color >> 5) & 0x3f);
@@ -837,7 +837,7 @@ void sgl_obj_remove(sgl_obj_t *obj);
  */
 static inline bool sgl_obj_has_child(sgl_obj_t *obj) {
     SGL_ASSERT(obj != NULL);
-    return obj->child != NULL ? true : false;
+    return (bool)obj->child;
 }
 
 
@@ -860,7 +860,7 @@ static inline sgl_obj_t* sgl_obj_get_child(sgl_obj_t* obj)
  */
 static inline bool sgl_obj_has_sibling(sgl_obj_t *obj) {
     SGL_ASSERT(obj != NULL);
-    return obj->sibling != NULL ? true : false;
+    return (bool)obj->sibling;
 }
 
 
@@ -930,7 +930,7 @@ static inline void sgl_obj_set_destroyed(sgl_obj_t *obj)
 static inline bool sgl_obj_is_destroyed(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-    return obj->destroyed == 1 ? true : false;
+    return (bool)obj->destroyed;
 }
 
 
@@ -967,7 +967,7 @@ static inline void sgl_obj_clear_dirty(sgl_obj_t *obj)
 static inline bool sgl_obj_is_dirty(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-    return obj->dirty == 1 ? true : false;
+    return (bool)obj->dirty;
 }
 
 
@@ -991,7 +991,7 @@ static inline void sgl_obj_needinit(sgl_obj_t *obj)
 static inline bool sgl_obj_is_needinit(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-    return obj->needinit == 1 ? true : false;
+    return (bool)obj->needinit;
 }
 
 
@@ -1041,7 +1041,7 @@ static inline void sgl_obj_set_visible(sgl_obj_t *obj)
 static inline bool sgl_obj_is_hidden(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-    return obj->hide == 1 ? true : false;
+    return (bool)obj->hide;
 }
 
 
@@ -1081,7 +1081,7 @@ static inline void sgl_obj_set_unclickable(sgl_obj_t *obj)
 static inline bool sgl_obj_is_clickable(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-    return obj->clickable == 1 ? true : false;
+    return (bool)obj->clickable;
 }
 
 
@@ -1117,7 +1117,7 @@ static inline void sgl_obj_set_unflexible(sgl_obj_t *obj)
 static inline bool sgl_obj_is_flexible(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-    return obj->flexible == 1 ? true : false;
+    return (bool)obj->flexible;
 }
 
 
@@ -1153,7 +1153,7 @@ static inline void sgl_obj_set_unmovable(sgl_obj_t *obj)
 static inline bool sgl_obj_is_movable(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-    return obj->movable == 1 ? true : false;
+    return (bool)obj->movable;
 }
 
 

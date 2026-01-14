@@ -276,6 +276,7 @@ sgl_obj_t* sgl_box_create(sgl_obj_t* parent)
     box->bg.color = SGL_THEME_COLOR;
     box->bg.radius = 10;
     box->bg.border = 1;
+    sgl_obj_set_border_width(obj, 1);
     box->bg.border_color = SGL_THEME_BORDER_COLOR;
 
     box->scroll.alpha = SGL_THEME_ALPHA;

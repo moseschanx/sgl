@@ -202,9 +202,9 @@ extern "C" {
                                                                .ch.green   = ((((rgb565) >> 5) & 0x3F) << 2),         \
                                                                .ch.red     = ((((rgb565) >> 11) & 0x1F) << 3),}
 
-#define sgl_rgb888_to_color(rgb888)             (sgl_color_t){ .ch.blue    = (((rgb888) >> 0) & 0xFF),                \
-                                                               .ch.green   = (((rgb888) >> 8) & 0xFF),                \
-                                                               .ch.red     = (((rgb888) >> 16) & 0xFF),}
+#define sgl_rgb888_to_color(rgb888)             (sgl_color_t){ .ch.blue    = ((rgb888) >> 0),                         \
+                                                               .ch.green   = ((rgb888) >> 8),                         \
+                                                               .ch.red     = ((rgb888) >> 16),}
 
 #elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == SGL_COLOR_RGB565)
 #define sgl_rgb(r,g,b)                          (sgl_color_t){ .ch.blue    = (b) >> 3,                                \
@@ -223,9 +223,9 @@ extern "C" {
                                                                .ch.green   = ((rgb565) >> 5) & 0x3F,                  \
                                                                .ch.red     = ((rgb565) >> 11) & 0x1F,}
 
-#define sgl_rgb888_to_color(rgb888)             (sgl_color_t){ .ch.blue    = ((((rgb888) >> 0) & 0xFF) >> 3),         \
-                                                               .ch.green   = ((((rgb888) >> 8) & 0xFF) >> 2),         \
-                                                               .ch.red     = ((((rgb888) >> 16) & 0xFF) >> 3),}
+#define sgl_rgb888_to_color(rgb888)             (sgl_color_t){ .ch.blue    = (((rgb888) >> 0) >> 3),                  \
+                                                               .ch.green   = (((rgb888) >> 8) >> 2),                  \
+                                                               .ch.red     = (((rgb888) >> 16) >> 3),}
 #elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == SGL_COLOR_RGB332)
 #define sgl_rgb(r,g,b)                          (sgl_color_t){ .ch.blue    = (b >> 6),                                \
                                                                .ch.green   = (g >> 5),                                \
@@ -243,9 +243,9 @@ extern "C" {
                                                                .ch.green   = ((((rgb565) >> 5) & 0x3F) >> 3),         \
                                                                .ch.red     = ((((rgb565) >> 11) & 0x1F) >> 2),}
 
-#define sgl_rgb888_to_color(rgb888)             (sgl_color_t){ .ch.blue    = ((((rgb888) >> 0) & 0xFF) >> 6),         \
-                                                               .ch.green   = ((((rgb888) >> 8) & 0xFF) >> 5),         \
-                                                               .ch.red     = ((((rgb888) >> 16) & 0xFF) >> 6),}
+#define sgl_rgb888_to_color(rgb888)             (sgl_color_t){ .ch.blue    = (((rgb888) >> 0)>> 6),                   \
+                                                               .ch.green   = (((rgb888) >> 8) >> 5),                  \
+                                                               .ch.red     = (((rgb888) >> 16) >> 6),}
 #endif
 
 
