@@ -418,7 +418,7 @@ static size_t rand_next = 1;
 int16_t sgl_rand(void)
 {
     rand_next = rand_next * 1103515245 + 12345;
-    return (unsigned int)(rand_next / 65536) % 32768;
+    return (int16_t)((rand_next >> 16) & 0x7FFF);
 }
 
 
