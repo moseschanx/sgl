@@ -42,7 +42,7 @@ static inline void ext_img_rle_init(sgl_ext_img_t *img)
 static inline void rle_decompress_line(sgl_ext_img_t *img, sgl_area_t *coords, sgl_area_t *area, sgl_color_t *out)
 {
     uint8_t tmp_buf[8] = {0};
-    const uint8_t *bitmap = img->pixmap->bitmap;
+    const uint8_t *bitmap = img->pixmap[img->pixmap_idx].bitmap;
     uint8_t format = img->pixmap->format;
 
     for (int i = coords->x1; i <= coords->x2; i++) {
@@ -185,8 +185,8 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
         }
 
         if (ext_img->pixmap_auto && (clip.y2 == surf->dirty->y2 || clip.y2 == obj->area.y2)) {
-            uint8_t index = ext_img->index + 1;
-            ext_img->pixmap_idx = (index < ext_img->pixmap_num ? index : 0);
+            uint32_t pixmap_idx = ext_img->pixmap_idx + 1;
+            ext_img->pixmap_idx = pixmap_idx >= ext_img->pixmap_num ? 0 : pixmap_idx;
             sgl_obj_set_dirty(obj);
         }
     }
