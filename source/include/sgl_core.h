@@ -484,14 +484,6 @@ typedef struct sgl_system {
 
 
 /**
- * @brief sgl object foreach child macro
- * @param obj: The parent object whose children are being iterated.
- * @param child: The current child object being processed.
- */
-#define  sgl_obj_for_each_child(obj, child)                 for ((child) = (obj)->child; (child) != NULL; (child) = (child)->sibling)
-
-
-/**
  * @brief for each child object of parent
  * @param _child: pointer of child object
  * @param parent: pointer of parent object
