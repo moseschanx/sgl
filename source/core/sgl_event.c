@@ -339,6 +339,7 @@ void sgl_event_task(void)
 
             SGL_ASSERT(obj->construct_fn);
             evt.param = obj->event_data;
+            evt.obj = obj;
             obj->construct_fn(NULL, obj, &evt);
 
             /* call user event function */
