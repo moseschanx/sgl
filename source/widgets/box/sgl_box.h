@@ -33,30 +33,30 @@
 #include <sgl_cfgfix.h>
 #include <string.h>
 
-// 定义移动模式
-#define SGL_BOX_SCROLL_VERTICAL_ONLY      (0x01)  // 仅支持垂直滚动
-#define SGL_BOX_SCROLL_HORIZONTAL_ONLY    (0x02)  // 仅支持水平滚动
-#define SGL_BOX_SCROLL_BOTH               (0x03)  // 支持双向滚动
+// Define scroll modes
+#define SGL_BOX_SCROLL_VERTICAL_ONLY      (0x01)  // Vertical scrolling only
+#define SGL_BOX_SCROLL_HORIZONTAL_ONLY    (0x02)  // Horizontal scrolling only
+#define SGL_BOX_SCROLL_BOTH               (0x03)  // Both vertical and horizontal scrolling enabled
 
 /**
  * @brief sgl box struct
- * @desc: container for scrolling child widgets
+ * @desc: Container for scrolling child widgets
  */
 typedef struct sgl_box {
     sgl_obj_t       obj;
     sgl_draw_rect_t bg;
-    uint8_t         scroll_mode;        // 滚动模式
-    int32_t         x_offset;           // X轴偏移
-    int32_t         y_offset;           // Y轴偏移
+    int16_t         x_offset;             // X-axis offset
+    int16_t         y_offset;             // Y-axis offset
     sgl_draw_rect_t scroll;
-    uint32_t        scroll_enable: 1;
-    uint32_t        show_v_scrollbar: 1;  // 是否显示垂直滚动条
-    uint32_t        show_h_scrollbar: 1;  // 是否显示水平滚动条
-    int16_t         elastic_scroll_up;    // 向上滚动的最大偏移量
-    int16_t         elastic_scroll_down;  // 向下滚动的最大偏移量 
-    int16_t         elastic_scroll_left;  // 向左滚动的最大偏移量 
-    int16_t         elastic_scroll_right; // 向右滚动的最大偏移量 
-}sgl_box_t;
+    uint8_t         scroll_mode;          // Scroll mode (vertical/horizontal/both)
+    uint8_t         scroll_enable : 1;    // Whether scrolling is enabled
+    uint8_t         show_v_scrollbar : 1; // Whether to show the vertical scrollbar
+    uint8_t         show_h_scrollbar : 1; // Whether to show the horizontal scrollbar
+    int16_t         elastic_scroll_up;    // Maximum allowable upward elastic scroll offset
+    int16_t         elastic_scroll_down;  // Maximum allowable downward elastic scroll offset
+    int16_t         elastic_scroll_left;  // Maximum allowable leftward elastic scroll offset
+    int16_t         elastic_scroll_right; // Maximum allowable rightward elastic scroll offset
+} sgl_box_t;
 
 
 /**

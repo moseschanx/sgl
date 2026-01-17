@@ -237,9 +237,9 @@ sgl_obj_t* sgl_box_create(sgl_obj_t* parent)
     box->x_offset = 0;
     box->y_offset = 0;
     box->scroll_enable = 0;
-    box->show_v_scrollbar = 1;  // 默认显示垂直滚动条
-    box->show_h_scrollbar = 1;  // 默认显示水平滚动条
-    box->scroll_mode = SGL_BOX_SCROLL_BOTH;  // 默认支持双向滚动
+    box->show_v_scrollbar = 1;
+    box->show_h_scrollbar = 1;
+    box->scroll_mode = SGL_BOX_SCROLL_BOTH;
     box->elastic_scroll_up = 0;    // Default: unlimited scrolling up
     box->elastic_scroll_down = 0;  // Default: unlimited scrolling down
     box->elastic_scroll_left = 0;  // Default: unlimited scrolling left
