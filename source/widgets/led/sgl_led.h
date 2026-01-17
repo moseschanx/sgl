@@ -47,7 +47,7 @@ typedef struct sgl_led {
     bool            status;
     sgl_color_t     on_color;
     sgl_color_t     off_color;
-    sgl_color_t     border_color;
+    sgl_color_t     bg_color;
 
 }sgl_led_t;
 
@@ -95,7 +95,7 @@ static inline void sgl_led_set_off_color(sgl_obj_t *obj, sgl_color_t color)
 static inline void sgl_led_set_bg_color(sgl_obj_t *obj, sgl_color_t color)
 {
     sgl_led_t *led = (sgl_led_t *)obj;
-    led->border_color = color;
+    led->bg_color = color;
     sgl_obj_set_dirty(obj);
 }
 

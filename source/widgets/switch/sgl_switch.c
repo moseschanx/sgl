@@ -56,7 +56,7 @@ static void sgl_switch_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
         }
 
         sgl_draw_rect(surf, &obj->area, &obj->coords, &p_switch->bg_desc);
-        sgl_draw_fill_rect(surf, &obj->area, &knob_rect, obj->radius - 2 * bg_desc->border, p_switch->knob_color, p_switch->bg_desc.alpha);
+        sgl_draw_fill_rect(surf, &obj->area, &knob_rect, obj->radius - bg_desc->border, p_switch->knob_color, p_switch->bg_desc.alpha);
     }
     else if(evt->type == SGL_EVENT_PRESSED) {
         p_switch->status = !p_switch->status;
