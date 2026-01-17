@@ -3,36 +3,20 @@
 
 ![SGL_LOGO](SGL_logo.png)
 
-## 快速预览
-<table>
-  <tr>
-    <td><img src="docs/gif/button.gif" width="250" alt="按钮"></td>
-    <td><img src="docs/gif/checkbox.gif" width="250" alt="复选框"></td>
-    <td><img src="docs/gif/label.gif" width="250" alt="标签"></td>
-  </tr>
-</table>
-<table>
-  <tr>
-    <td><img src="docs/gif/switch.gif" width="250" alt="开关"></td>
-    <td><img src="docs/gif/msgbox.gif" width="250" alt="消息框"></td>
-    <td><img src="docs/gif/keyboard.gif" width="250" alt="键盘"></td>
-  </tr>
-</table>
-<table>
-  <tr>
-    <td><img src="docs/gif/textbox.gif" width="250" alt="文本框"></td>
-    <td><img src="docs/gif/arcbar.gif" width="250" alt="弧形进度条"></td>
-    <td><img src="docs/gif/slider.gif" width="250" alt="滑块"></td>
-  </tr>
-</table>
+## SGL UI库特点
+- 轻量级，最小只需要`3KBytes RAM`和`15KBytes ROM`即可运行
+- 部分帧缓冲支持，最小只需要一行屏幕分辨率的缓冲即可
+- 包围盒+贪心算法的脏矩形算法
+- 支持帧缓冲控制器，直接向帧缓冲控制器写入数据，零拷贝
+- 颜色深度支持: `8bit`, `16bit`, `24bit`, `32bit`
+- 现代化的字体取模工具
+- `SGL`自己的`UI`设计器，图形化拖动绘制界面后一键可生成代码
 
 ### 最低硬件要求
 | Flash大小 | Ram大小 |
 | :---------:| :------: |
 | 15kB       |    3kb   |
 
-### 部分帧缓冲支持
-最低只需单行像素的帧缓冲。
 
 ### 简介
 SGL (Small Graphics Library) 是一个轻量级且快速的图形库，专为MCU级别处理器提供美观轻量的GUI（图形用户界面）。
@@ -40,12 +24,13 @@ SGL (Small Graphics Library) 是一个轻量级且快速的图形库，专为MCU
 
 ## 快速开始 (基于SDL2模拟)
 步骤如下：
-1. 安装gcc编译器
-2. git clone https://github.com/sgl-org/sgl-port-windows.git    
-3. cd sgl-port-windows && git submodule init    
-4. git submodule update --remote    
-3. cd demo && make -j8    
-4. make run    
+1. 确保安装了make工具
+2. 安装gcc编译器，(https://github.com/niXman/mingw-builds-binaries/releases/download/13.2.0-rt_v11-rev0/x86_64-13.2.0-release-posix-seh-ucrt-rt_v11-rev0.7z)
+3. git clone https://github.com/sgl-org/sgl-port-windows.git    
+4. cd sgl-port-windows && git submodule init    
+5. git submodule update --remote    
+6. cd demo && make -j8    
+7. make run    
 
 注意：请使用git终端或VSCode的git bash终端输入上述命令
 
@@ -63,6 +48,5 @@ cd demo && make -j8
 
 ## 4. 运行
 执行 `make run` 命令运行    
-         
+     
 QQ群: 544602724
-如有任何问题，请联系我: 1477153217@qq.com
