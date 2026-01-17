@@ -81,6 +81,45 @@ static inline void append_int(char *buf, size_t size, size_t *pos, int val)
 }
 
 /**
+ * @brief append an integer to the buffer with optional width/padding
+ * @param buf buffer
+ * @param size buffer size
+ * @param pos current position
+ * @param val integer to append
+ * @param width minimum field width (-1 for no padding)
+ * @param pad padding character (' ' or '0')
+ */
+static inline void append_int_width(char *buf, size_t size, size_t *pos, int val, int width, char pad)
+{
+    char digits[32];
+    int di = 0;
+    bool neg = val < 0;
+    if (neg) val = -val;
+
+    do {
+        digits[di++] = (char)('0' + (val % 10));
+        val /= 10;
+    } while (val);
+
+    int len = di + (neg ? 1 : 0);
+
+    if (neg && pad == '0') {
+        append_char(buf, size, pos, '-');
+        // adjust length since '-' already emitted
+        len = di; 
+    }
+
+    int padCount = (width > len) ? (width - len) : 0;
+    while (padCount-- > 0) append_char(buf, size, pos, pad);
+
+    if (neg && pad != '0') {
+        append_char(buf, size, pos, '-');
+    }
+
+    while (di--) append_char(buf, size, pos, digits[di]);
+}
+
+/**
  * @brief append a hexadecimal number to the buffer
  * @param buf buffer
  * @param size buffer size
@@ -156,6 +195,8 @@ int sgl_vsnprintf(char *buf, size_t size, const char *fmt, va_list ap)
 
         fmt++;
         int precision = -1;
+        int width = -1;
+        char pad = ' ';
 
         // Parse precision (e.g., %.2f)
         if (*fmt == '.') {
@@ -163,6 +204,19 @@ int sgl_vsnprintf(char *buf, size_t size, const char *fmt, va_list ap)
             precision = 0;
             while (*fmt >= '0' && *fmt <= '9') {
                 precision = precision * 10 + (*fmt - '0');
+                fmt++;
+            }
+        }
+
+        // Parse padding/width (e.g., %02d or %5d)
+        if (*fmt == '0') {
+            pad = '0';
+            fmt++;
+        }
+        if (*fmt >= '0' && *fmt <= '9') {
+            width = 0;
+            while (*fmt >= '0' && *fmt <= '9') {
+                width = width * 10 + (*fmt - '0');
                 fmt++;
             }
         }
@@ -178,7 +232,11 @@ int sgl_vsnprintf(char *buf, size_t size, const char *fmt, va_list ap)
 
         case 'd': {
             int d = va_arg(ap, int);
-            append_int(buf, size, &pos, d);
+            if (width >= 0) {
+                append_int_width(buf, size, &pos, d, width, pad);
+            } else {
+                append_int(buf, size, &pos, d);
+            }
             break;
         }
 
