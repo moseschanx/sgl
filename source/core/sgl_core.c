@@ -177,7 +177,6 @@ void sgl_obj_move_child_pos(sgl_obj_t *obj, int16_t ofs_x, int16_t ofs_y)
     if (obj->child == NULL) {
         return;
     }
-    obj->dirty = 1;
     stack[top++] = obj->child;
 
     while (top > 0) {
@@ -1407,6 +1406,7 @@ static inline void sgl_dirty_area_calculate(sgl_obj_t *obj)
             /* update obj area */
             if (unlikely(!sgl_area_clip(&fill_area, &obj->coords, &obj->area))) {
                 sgl_area_init(&obj->area);
+                sgl_obj_clear_dirty(obj);
                 continue;
             }
 

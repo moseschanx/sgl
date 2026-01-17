@@ -50,6 +50,10 @@ static void sgl_slider_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
         else {
             knob.y1 = obj->coords.y2 - (obj->coords.y2 - obj->coords.y1) * slider->value / 100 + slider->body.border;
         }
+
+        /* set knob area */
+        sgl_area_selfclip(&knob, &obj->area);
+
         sgl_draw_rect(surf, &obj->area, &obj->coords, &slider->body);
         sgl_draw_fill_rect_with_border(surf, &knob, &obj->coords, obj->radius, slider->color, slider->body.border_color, slider->body.border, slider->alpha);
     }
