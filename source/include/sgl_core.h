@@ -1482,7 +1482,7 @@ static inline int16_t sgl_obj_get_height(sgl_obj_t *obj)
 static inline void sgl_obj_set_border_width(sgl_obj_t *obj, uint8_t border)
 {
     SGL_ASSERT(obj != NULL);
-    obj->border = border;
+    obj->border = sgl_min3(border, sgl_obj_get_width(obj) / 2, sgl_obj_get_height(obj) / 2);
 }
 
 
@@ -1507,11 +1507,12 @@ static inline int16_t sgl_obj_get_border_width(sgl_obj_t *obj)
 static inline sgl_area_t sgl_obj_get_fill_rect(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-    sgl_area_t fill = SGL_AREA_INVALID;
-    fill.x1 = sgl_max(obj->coords.x1 + obj->border, obj->area.x1);
-    fill.y1 = sgl_max(obj->coords.y1 + obj->border, obj->area.y1);
-    fill.x2 = sgl_min(obj->coords.x2 - obj->border, obj->area.x2);
-    fill.y2 = sgl_min(obj->coords.y2 - obj->border, obj->area.y2);
+    sgl_area_t fill = {
+        .x1 = obj->coords.x1 + obj->border,
+        .y1 = obj->coords.y1 + obj->border,
+        .x2 = obj->coords.x2 - obj->border,
+        .y2 = obj->coords.y2 - obj->border
+    };
     return fill;
 }
 

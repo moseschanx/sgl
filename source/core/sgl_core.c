@@ -1403,7 +1403,6 @@ static inline void sgl_dirty_area_calculate(sgl_obj_t *obj)
             sgl_dirty_area_push(&obj->area);
 
             sgl_area_t fill_area = sgl_obj_get_fill_rect(obj->parent);
-            SGL_LOG_INFO("fill_area obj area: ========== %d, %d, %d, %d", fill_area.x1, fill_area.y1, fill_area.x2, fill_area.y2);
             /* update obj area */
             if (unlikely(!sgl_area_clip(&fill_area, &obj->coords, &obj->area))) {
                 sgl_area_init(&obj->area);
