@@ -1508,10 +1508,10 @@ static inline sgl_area_t sgl_obj_get_fill_rect(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
     sgl_area_t fill = {
-        .x1 = obj->coords.x1 + obj->border,
-        .y1 = obj->coords.y1 + obj->border,
-        .x2 = obj->coords.x2 - obj->border,
-        .y2 = obj->coords.y2 - obj->border
+        .x1 = sgl_max(obj->coords.x1 + obj->border, obj->area.x1),
+        .y1 = sgl_max(obj->coords.y1 + obj->border, obj->area.y1),
+        .x2 = sgl_min(obj->coords.x2 - obj->border, obj->area.x2),
+        .y2 = sgl_min(obj->coords.y2 - obj->border, obj->area.y2),
     };
     return fill;
 }
