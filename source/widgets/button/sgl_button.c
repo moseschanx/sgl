@@ -44,7 +44,8 @@
 static void sgl_button_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
     sgl_button_t *button = (sgl_button_t*)obj;
-    sgl_pos_t   align_pos;
+    sgl_pos_t align_pos;
+    sgl_rect_t fill_area;
     sgl_draw_rect_t rect = {
         .alpha = button->alpha,
         .color = button->color,
@@ -59,7 +60,8 @@ static void sgl_button_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
 
         if(button->text) {
             SGL_ASSERT(button->font != NULL);
-            align_pos = sgl_get_text_pos(&obj->coords, button->font, button->text, 0, (sgl_align_type_t)button->align);
+            fill_area = sgl_obj_get_fill_rect(obj);
+            align_pos = sgl_get_text_pos(&fill_area, button->font, button->text, 0, (sgl_align_type_t)button->align);
 
             sgl_draw_string(surf, &obj->area, align_pos.x, align_pos.y, button->text, button->text_color, button->alpha, button->font);
         }
