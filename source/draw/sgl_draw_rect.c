@@ -333,6 +333,10 @@ void sgl_draw_fill_rect_pixmap(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *r
  */
 void sgl_draw_rect(sgl_surf_t *surf, sgl_area_t *area, sgl_rect_t *rect, sgl_draw_rect_t *desc)
 {
+    if (unlikely(desc->alpha == SGL_ALPHA_MIN)) {
+        return;
+    }
+
     if (desc->pixmap == NULL) {
         if (desc->border == 0) {
             sgl_draw_fill_rect(surf, area, rect, desc->radius, desc->color, desc->alpha);
