@@ -171,7 +171,7 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
             /* RLE pixmap support */
             if (clip.y1 == surf->dirty->y1 || clip.y1 == obj->area.y1) {
                 ext_img_rle_init(ext_img);
-                for (int y = area.y1; y <= clip.y1; y++) {
+                for (int y = area.y1; y < clip.y1; y++) {
                     rle_decompress_line(ext_img, &area, &clip, NULL);
                 }
             }
@@ -184,7 +184,7 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
             }
         }
 
-        if (ext_img->pixmap_auto && (clip.y2 == surf->dirty->y2 || clip.y2 == obj->area.y2)) {
+        if (ext_img->pixmap_auto && (clip.y2 > surf->dirty->y2 || clip.y2 > obj->area.y2)) {
             uint32_t pixmap_idx = ext_img->pixmap_idx + 1;
             ext_img->pixmap_idx = pixmap_idx >= ext_img->pixmap_num ? 0 : pixmap_idx;
             sgl_obj_set_dirty(obj);
