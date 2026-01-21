@@ -73,6 +73,14 @@ int sgl_fbdev_register(sgl_fbinfo_t *fbinfo)
 
     sgl_system.fbdev.fbinfo = *fbinfo;
 
+    sgl_system.fbdev.surf.buffer = (sgl_color_t*)fbinfo->buffer[0];
+    sgl_system.fbdev.surf.x1 = 0;
+    sgl_system.fbdev.surf.y1 = 0;
+    sgl_system.fbdev.surf.x2 = fbinfo->xres - 1;
+    sgl_system.fbdev.surf.y2 = fbinfo->yres - 1;
+    sgl_system.fbdev.surf.size = fbinfo->buffer_size;
+    sgl_system.fbdev.surf.w = fbinfo->xres;
+
     return 0;
 }
 
@@ -538,13 +546,6 @@ static sgl_page_t* sgl_page_create(void)
         return NULL;
     }
 
-    page->surf.buffer = (sgl_color_t*)sgl_system.fbdev.fbinfo.buffer[0];
-    page->surf.x1 = 0;
-    page->surf.y1 = 0;
-    page->surf.x2 = sgl_system.fbdev.fbinfo.xres - 1;
-    page->surf.y2 = sgl_system.fbdev.fbinfo.yres - 1;
-    page->surf.size = sgl_system.fbdev.fbinfo.buffer_size;
-    page->surf.w = sgl_system.fbdev.fbinfo.xres;
     page->color = SGL_THEME_DESKTOP;
 
     obj->parent = obj;
@@ -554,10 +555,10 @@ static sgl_page_t* sgl_page_create(void)
     obj->page = 1;
     obj->border = 0;
     obj->coords = (sgl_area_t) {
-        .x1 = 0,
-        .y1 = 0,
-        .x2 = page->surf.x2,
-        .y2 = page->surf.y2,
+        .x1 = sgl_system.fbdev.surf.x1,
+        .y1 = sgl_system.fbdev.surf.y1,
+        .x2 = sgl_system.fbdev.surf.x2,
+        .y2 = sgl_system.fbdev.surf.y2,
     };
 
     obj->area = obj->coords;
@@ -1432,7 +1433,7 @@ static inline void sgl_dirty_area_calculate(sgl_obj_t *obj)
  */
 static inline void sgl_draw_task(sgl_fbdev_t *fbdev)
 {
-    sgl_surf_t *surf = &fbdev->page->surf;
+    sgl_surf_t *surf = &fbdev->surf;
     sgl_obj_t  *head = &fbdev->page->obj;
     sgl_area_t *dirty = NULL;
 

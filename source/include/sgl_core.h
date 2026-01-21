@@ -419,14 +419,12 @@ typedef struct sgl_obj {
  *
  * Members:
  * - obj      : Base object (inherits sgl_obj_t), providing position, size, visibility, etc.
- * - surf     : Drawing surface associated with this page; defines the target buffer or area for rendering.
  * - color    : Default background color used when no pixmap is set.
  * - pixmap   : Optional pointer to a background pixmap. If non-NULL, it typically overrides 'color'
  *              as the background content during rendering (behavior depends on flush/render logic).
  */
 typedef struct sgl_page {
     sgl_obj_t          obj;
-    sgl_surf_t         surf;
     sgl_color_t        color;
     const sgl_pixmap_t *pixmap;
 } sgl_page_t;
@@ -452,6 +450,7 @@ typedef struct sgl_fbinfo {
 /**
  * @brief sgl framebuffer device struct
  * @fbinfo: framebuffer information, that specify the memory address of the framebuffer and resolution
+ * @surf: Drawing surface associated with this page; defines the target buffer or area for rendering.
  * @dirty_num: dirty area number
  * @fb_swap: framebuffer swap flag
  * @fb_status: framebuffer status flag
@@ -460,6 +459,7 @@ typedef struct sgl_fbinfo {
  */
 typedef struct sgl_fbdev {
     sgl_fbinfo_t      fbinfo;
+    sgl_surf_t        surf;
     uint16_t          dirty_num;
     uint8_t           fb_swap;
     volatile uint8_t  fb_status;
