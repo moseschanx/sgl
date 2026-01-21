@@ -52,20 +52,23 @@ struct sgl_page;
 #define  SGL_EVENT_PRESSED              (2)
 #define  SGL_EVENT_RELEASED             (3)
 #define  SGL_EVENT_CLICKED              (4)
-#define  SGL_EVENT_MOTION               (5)
-#define  SGL_EVENT_MOVE_UP              (6)
-#define  SGL_EVENT_MOVE_DOWN            (7)
-#define  SGL_EVENT_MOVE_LEFT            (8)
-#define  SGL_EVENT_MOVE_RIGHT           (9)
-#define  SGL_EVENT_LONG_PRESSED         (10)
-#define  SGL_EVENT_OPTION_WALK          (11)
-#define  SGL_EVENT_OPTION_TAP           (12)
-#define  SGL_EVENT_DRAW_INIT            (13)
-#define  SGL_EVENT_DRAW_MAIN            (14)
-#define  SGL_EVENT_FOCUSED              (15)
-#define  SGL_EVENT_UNFOCUSED            (16)
+#define  SGL_EVENT_LONG_CLICKED         (5)
+#define  SGL_EVENT_MOTION               (6)
+#define  SGL_EVENT_MOVE_UP              (7)
+#define  SGL_EVENT_MOVE_DOWN            (8)
+#define  SGL_EVENT_MOVE_LEFT            (9)
+#define  SGL_EVENT_MOVE_RIGHT           (10)
+#define  SGL_EVENT_LONG_PRESSED         (11)
+#define  SGL_EVENT_OPTION_WALK          (12)
+#define  SGL_EVENT_OPTION_TAP           (13)
+#define  SGL_EVENT_DRAW_INIT            (14)
+#define  SGL_EVENT_DRAW_MAIN            (15)
+#define  SGL_EVENT_FOCUSED              (16)
+#define  SGL_EVENT_UNFOCUSED            (17)
 #define  sgl_event_type_t               uint8_t
 
+
+#define  SGL_EVENT_CLICK_INTERVAL       (CONFIG_SGL_EVENT_CLICK_INTERVAL)
 
 /**
 * @brief Event location structure, Used to represent the coordinates of an event, 

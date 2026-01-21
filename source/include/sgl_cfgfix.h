@@ -56,6 +56,9 @@ extern "C" {
  * CONFIG_SGL_EVENT_QUEUE_SIZE:
  *      the size of event queue, default: 32
  * 
+ * CONFIG_SGL_EVENT_CLICK_INTERVAL:
+ *      The click interval, default: 10
+ * 
  * CONFIG_SGL_OBJ_SLOT_DYNAMIC
  *      If the object slot is dynamic, the object slot size will be dynamic allocated, otherwise, the object 
  *      slot size will be static allocated that you should define CONFIG_SGL_OBJ_NUM_MAX macro
@@ -114,6 +117,10 @@ extern "C" {
 
 #ifndef CONFIG_SGL_EVENT_QUEUE_SIZE
 #define CONFIG_SGL_EVENT_QUEUE_SIZE                                (16)
+#endif
+
+#ifndef CONFIG_SGL_EVENT_CLICK_INTERVAL
+#define CONFIG_SGL_EVENT_CLICK_INTERVAL                            (10)
 #endif
 
 #ifndef CONFIG_SGL_DIRTY_AREA_NUM_MAX

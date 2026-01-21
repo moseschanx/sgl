@@ -78,7 +78,7 @@ sgl_obj_t* sgl_label_create(sgl_obj_t* parent)
     sgl_obj_init(&label->obj, parent);
     obj->construct_fn = sgl_label_construct_cb;
 
-    label->alpha = SGL_ALPHA_MAX;
+    label->alpha = SGL_THEME_ALPHA;
     label->bg_flag = 0;
     label->color = SGL_THEME_TEXT_COLOR;
     label->text = "";
