@@ -42,13 +42,13 @@ static inline void ext_img_rle_init(sgl_ext_img_t *img)
 static inline void rle_decompress_line(sgl_ext_img_t *img, sgl_area_t *coords, sgl_area_t *area, sgl_color_t *out)
 {
     uint8_t tmp_buf[8] = {0};
-    const uint8_t *bitmap = img->pixmap[img->pixmap_idx].bitmap;
+    const uint8_t *bitmap = img->pixmap[img->pixmap_idx].bitmap.data;
     uint8_t format = img->pixmap->format;
 
     for (int i = coords->x1; i <= coords->x2; i++) {
         if (img->remainder == 0) {
             if (img->read != NULL) {
-                img->read(bitmap + img->index, tmp_buf, sizeof(tmp_buf));
+                img->read(((size_t)bitmap) + img->index, tmp_buf, sizeof(tmp_buf));
             }
             else {
                 tmp_buf[0] = bitmap[img->index];
@@ -89,7 +89,7 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
     sgl_area_t clip = SGL_AREA_INVALID;
     sgl_ext_img_t *ext_img = (sgl_ext_img_t*)obj;
     const sgl_pixmap_t *pixmap = &ext_img->pixmap[ext_img->pixmap_idx];
-    const uint8_t *bitmap = pixmap->bitmap;
+    const uint8_t *bitmap = pixmap->bitmap.data;
     uint8_t pix_byte = sgl_pixmal_get_bits(pixmap);
 
     sgl_area_t area = {
@@ -118,7 +118,7 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
                     blend = buf;
                     offset = ((((y - area.y1) * pixmap->width) + (clip.x1 - area.x1)) * pix_byte);
 
-                    ext_img->read(bitmap + offset, pixmap_buf, pix_byte * (clip.x2 - clip.x1 + 1));
+                    ext_img->read(((size_t)bitmap) + offset, pixmap_buf, pix_byte * (clip.x2 - clip.x1 + 1));
                     line_ofs = 0;
 
                     for (int x = clip.x1; x <= clip.x2; x++) {
@@ -184,7 +184,7 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
             }
         }
 
-        if (ext_img->pixmap_auto && (clip.y2 > surf->dirty->y2 || clip.y2 > obj->area.y2)) {
+        if (ext_img->pixmap_auto && (clip.y2 == surf->dirty->y2 || clip.y2 == obj->area.y2)) {
             uint32_t pixmap_idx = ext_img->pixmap_idx + 1;
             ext_img->pixmap_idx = pixmap_idx >= ext_img->pixmap_num ? 0 : pixmap_idx;
             sgl_obj_set_dirty(obj);

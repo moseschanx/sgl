@@ -38,7 +38,7 @@
  * 1. Extern Flash image object:
  *      you can use this object to draw image from external flash memory
  *      for example:
- *          void flash_port_read_data_from_flash(uint8_t *addr, uint8_t *buf, uint32_t len)
+ *          void flash_port_read_data_from_flash(const size_t addr, uint8_t *buf, uint32_t len)
  *          {
  *              //read the data to the buf from the addr of flash
  *              Flash_Read(addr, buf, len);
@@ -73,7 +73,7 @@
  * 3. Mult pixmap image object:
  *      you can use this object to draw image from external flash memory
  *      for example:
- *          void flash_port_read_data_from_flash(uint8_t *addr, uint8_t *buf, uint32_t len)
+ *          void flash_port_read_data_from_flash(const size_t addr, uint8_t *buf, uint32_t len)
  *          {
  *              //read the data to the buf from the addr of flash
  *              Flash_Read(addr, buf, len);
@@ -116,7 +116,7 @@
 typedef struct sgl_ext_img {
     sgl_obj_t       obj;
     const sgl_pixmap_t *pixmap;
-    void            (*read)(const uint8_t *addr, uint8_t *out, uint32_t len_bytes);
+    void            (*read)(const size_t addr, uint8_t *buf, uint32_t len_bytes);
     uint8_t         alpha;
     uint8_t         pixmap_auto;
     uint8_t         pixmap_idx;
@@ -152,7 +152,7 @@ static inline void sgl_ext_img_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pi
  * @param read ext_img read operation
  * @return none
  */
-static inline void sgl_ext_img_set_read_ops(sgl_obj_t *obj, void (*read)(const uint8_t *addr, uint8_t *out, uint32_t len_bytes))
+static inline void sgl_ext_img_set_read_ops(sgl_obj_t *obj, void (*read)(const size_t addr, uint8_t *out, uint32_t len_bytes))
 {
     SGL_ASSERT(obj != NULL);
     ((sgl_ext_img_t*)obj)->read = read;
