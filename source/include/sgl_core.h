@@ -522,6 +522,11 @@ int sgl_fbdev_register(sgl_fbinfo_t *fbinfo);
 static inline void sgl_fbdev_flush_ready(void)
 {
     sgl_system.fbdev.fb_status |= (1 << sgl_system.fbdev.fb_swap);
+
+    /* change to next framebuffer */
+    if (sgl_system.fbdev.fbinfo.buffer[1] != NULL) {
+        sgl_system.fbdev.surf.buffer = (sgl_color_t *)sgl_system.fbdev.fbinfo.buffer[sgl_system.fbdev.fb_swap ^= 1];
+    }
 }
 
 
@@ -532,21 +537,7 @@ static inline void sgl_fbdev_flush_ready(void)
  */
 static inline bool sgl_fbdev_flush_wait_ready(sgl_fbdev_t *fbdev)
 {
-    return (fbdev->fb_status & (1 + sgl_system.fbdev.fb_swap)) == 0;
-}
-
-
-/**
- * @brief swap the surface buffer
- * @param none
- * @return none
- * @note if you use double buffer, you must call this function after framebuffer device flush
- */
-static inline void sgl_surf_buffer_swap(sgl_surf_t *surf)
-{
-    if (sgl_system.fbdev.fbinfo.buffer[1] != NULL) {
-        surf->buffer = (sgl_color_t *)sgl_system.fbdev.fbinfo.buffer[sgl_system.fbdev.fb_swap ^= 1];
-    }
+    return (fbdev->fb_status & (1 << sgl_system.fbdev.fb_swap)) == 0;
 }
 
 
