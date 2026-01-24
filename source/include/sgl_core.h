@@ -526,7 +526,7 @@ int sgl_fbdev_register(sgl_fbinfo_t *fbinfo);
  */
 static inline void sgl_fbdev_flush_ready(void)
 {
-    sgl_system.fbdev.fb_status = (sgl_system.fbdev.fb_status & (1 << sgl_system.fbdev.fb_swap)) | ((1 << (sgl_system.fbdev.fb_swap ^ 1)));
+    sgl_system.fbdev.fb_status |= (1 << sgl_system.fbdev.fb_swap);
 }
 
 
@@ -537,7 +537,7 @@ static inline void sgl_fbdev_flush_ready(void)
  */
 static inline bool sgl_fbdev_flush_wait_ready(sgl_fbdev_t *fbdev)
 {
-    return fbdev->fb_status == 0;
+    return (fbdev->fb_status & (1 + sgl_system.fbdev.fb_swap)) == 0;
 }
 
 

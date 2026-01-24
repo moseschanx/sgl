@@ -1466,16 +1466,16 @@ static inline void sgl_draw_task(sgl_fbdev_t *fbdev)
             draw_h = sgl_min(dirty->y2 - surf->y1 + 1, surf->h);
 
             surf->y2 = surf->y1 + draw_h - 1;
-            fbdev->fb_status = (fbdev->fb_status & (1 << fbdev->fb_swap));
+            fbdev->fb_status = (fbdev->fb_status & (2 - fbdev->fb_swap));
 
             draw_obj_slice(head, surf);
             surf->y1 += draw_h;
 
+            /* change to next framebuffer*/
+            sgl_surf_buffer_swap(surf);
+
             /* wait flush ready */
             while (sgl_fbdev_flush_wait_ready(fbdev));
-
-            /* swap the double buffer */
-            sgl_surf_buffer_swap(surf);
         }
 #else
         /* check dirty area, ensure it is valid */
