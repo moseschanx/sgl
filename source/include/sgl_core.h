@@ -550,7 +550,7 @@ static inline bool sgl_fbdev_flush_wait_ready(sgl_fbdev_t *fbdev)
 static inline void sgl_surf_buffer_swap(sgl_surf_t *surf)
 {
     if (sgl_system.fbdev.fbinfo.buffer[1] != NULL) {
-        surf->buffer = sgl_system.fbdev.fbinfo.buffer[sgl_system.fbdev.fb_swap ^= 1];
+        surf->buffer = (sgl_color_t *)sgl_system.fbdev.fbinfo.buffer[sgl_system.fbdev.fb_swap ^= 1];
     }
 }
 
