@@ -566,8 +566,8 @@ static sgl_page_t* sgl_page_create(void)
     /* init child list */
     sgl_obj_node_init(&page->obj);
 
-    if (sgl_system.fbdev.page == NULL) {
-        sgl_system.fbdev.page = page;
+    if (sgl_system.fbdev.active == NULL) {
+        sgl_system.fbdev.active = &page->obj;
     }
 
     return page;
@@ -643,7 +643,7 @@ int sgl_init(void)
     sgl_mm_init(sgl_mem_pool, sizeof(sgl_mem_pool));
 
     /* initialize current context */
-    sgl_system.fbdev.page = NULL;
+    sgl_system.fbdev.active = NULL;
 
     /* initialize dirty area */
     sgl_dirty_area_init();
@@ -677,7 +677,7 @@ int sgl_init(void)
 void sgl_screen_load(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-    sgl_system.fbdev.page = (sgl_page_t*)obj;
+    sgl_system.fbdev.active = obj;
 
     /* initilize framebuffer swap */
     sgl_system.fbdev.fb_swap = 0;
@@ -1434,7 +1434,7 @@ static inline void sgl_dirty_area_calculate(sgl_obj_t *obj)
 static inline void sgl_draw_task(sgl_fbdev_t *fbdev)
 {
     sgl_surf_t *surf = &fbdev->surf;
-    sgl_obj_t  *head = &fbdev->page->obj;
+    sgl_obj_t  *head = fbdev->active;
     sgl_area_t *dirty = NULL;
 
     /* dirty area number must less than SGL_DIRTY_AREA_MAX */
@@ -1504,7 +1504,7 @@ void sgl_task_handle_sync(void)
     sgl_tick_reset();
 
     /* foreach all object tree and calculate dirty area */
-    sgl_dirty_area_calculate(&sgl_system.fbdev.page->obj);
+    sgl_dirty_area_calculate(sgl_system.fbdev.active);
 
     /* draw all object into screen */
     sgl_draw_task(&sgl_system.fbdev);

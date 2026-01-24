@@ -469,7 +469,7 @@ typedef struct sgl_fbdev {
     uint8_t           fb_swap;
     volatile uint8_t  fb_status;
     sgl_area_t        dirty[SGL_DIRTY_AREA_NUM_MAX];
-    sgl_page_t        *page;
+    sgl_obj_t         *active;
 } sgl_fbdev_t;
 
 
@@ -1575,7 +1575,7 @@ void sgl_screen_load(sgl_obj_t *obj);
  */
 static inline sgl_obj_t* sgl_screen_act(void)
 {
-    return &sgl_system.fbdev.page->obj;
+    return sgl_system.fbdev.active;
 }
 
 
@@ -1586,7 +1586,7 @@ static inline sgl_obj_t* sgl_screen_act(void)
  */
 static inline sgl_page_t* sgl_page_get_active(void)
 {
-    return sgl_system.fbdev.page;
+    return (sgl_page_t*)sgl_system.fbdev.active;
 }
 
 
