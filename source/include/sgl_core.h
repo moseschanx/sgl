@@ -461,7 +461,7 @@ typedef struct sgl_fbdev {
     sgl_fbinfo_t      fbinfo;
     sgl_surf_t        surf;
     uint16_t          dirty_num;
-    uint8_t           fb_swap;
+    volatile uint8_t  fb_swap;
     volatile uint8_t  fb_status;
     sgl_area_t        dirty[SGL_DIRTY_AREA_NUM_MAX];
     sgl_obj_t         *active;
