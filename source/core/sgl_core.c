@@ -81,6 +81,10 @@ int sgl_fbdev_register(sgl_fbinfo_t *fbinfo)
     sgl_system.fbdev.surf.size = fbinfo->buffer_size;
     sgl_system.fbdev.surf.w = fbinfo->xres;
 
+    sgl_system.tick_ms = 0;
+    sgl_system.fbdev.fb_status = 3;
+    sgl_system.fbdev.fb_swap = 0;
+
     return 0;
 }
 
