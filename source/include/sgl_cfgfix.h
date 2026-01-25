@@ -66,6 +66,9 @@ extern "C" {
  * CONFIG_SGL_OBJ_NUM_MAX:
  *      If CONFIG_SGL_OBJ_SLOT_DYNAMIC is 0 or not defined, you should define CONFIG_SGL_OBJ_NUM_MAX macro
  * 
+ * CONFIG_SGL_PIXMAP_BILINEAR_INTERP:
+ *      If you want to use pixmap bilinear interpolation, please define this macro to 1
+ * 
  * CONFIG_SGL_ANIMATION:
  *      If you want to use animation, please define this macro to 1
  * 
@@ -125,6 +128,10 @@ extern "C" {
 
 #ifndef CONFIG_SGL_DIRTY_AREA_NUM_MAX
 #define CONFIG_SGL_DIRTY_AREA_NUM_MAX                              (16)
+#endif
+
+#ifndef CONFIG_SGL_PIXMAP_BILINEAR_INTERP
+#define CONFIG_SGL_PIXMAP_BILINEAR_INTERP                          (0)
 #endif
 
 #ifndef CONFIG_SGL_ANIMATION

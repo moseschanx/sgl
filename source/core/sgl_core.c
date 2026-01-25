@@ -1466,10 +1466,10 @@ static inline void sgl_draw_task(sgl_fbdev_t *fbdev)
             draw_h = sgl_min(dirty->y2 - surf->y1 + 1, surf->h);
             surf->y2 = surf->y1 + draw_h - 1;
 
-            /* wait current framebuffer is ready */
+            /* wait current framebuffer for ready */
             while (sgl_fbdev_flush_wait_ready(fbdev));
 
-            /* reset current framebuffer flag */
+            /* reset current framebuffer ready flag */
             fbdev->fb_status = (fbdev->fb_status & (2 - fbdev->fb_swap));
 
             /* draw object slice until the dirty area is finished */
