@@ -918,7 +918,6 @@ void sgl_obj_delete(sgl_obj_t *obj)
     }
 
     sgl_obj_set_destroyed(obj);
-    sgl_obj_set_dirty(obj);
 }
 
 
