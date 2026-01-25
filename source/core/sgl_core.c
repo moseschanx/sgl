@@ -150,6 +150,7 @@ void sgl_obj_add_child(sgl_obj_t *parent, sgl_obj_t *obj)
  * @brief remove an object from its parent
  * @param obj object to remove
  * @return none
+ * @note This function will remove the object from its parent.
  */
 void sgl_obj_remove(sgl_obj_t *obj)
 {
@@ -683,9 +684,6 @@ void sgl_screen_load(sgl_obj_t *obj)
     SGL_ASSERT(obj != NULL);
     sgl_system.fbdev.active = obj;
 
-    /* initilize framebuffer swap */
-    sgl_system.fbdev.fb_swap = 0;
-
     /* initialize dirty area */
     sgl_dirty_area_init();
     sgl_obj_set_dirty(obj);
@@ -869,7 +867,7 @@ int sgl_obj_init(sgl_obj_t *obj, sgl_obj_t *parent)
  * @brief  free an object
  * @param  obj: object to free
  * @retval none
- * @note this function will free all the children of the object
+ * @note this function will free all the itself and children of the object
  */
 void sgl_obj_free(sgl_obj_t *obj)
 {
@@ -907,11 +905,11 @@ void sgl_obj_delete(sgl_obj_t *obj)
 {
     if (obj == NULL || obj == sgl_screen_act()) {
         obj = sgl_screen_act();
-        sgl_dirty_area_push(&obj->area);
         if (obj->child) {
             sgl_obj_free(obj->child);
         }
         sgl_obj_node_init(obj);
+        sgl_obj_set_dirty(obj);
         return;
     }
     else if (obj->page == 1) {

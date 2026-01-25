@@ -333,6 +333,7 @@ void sgl_draw_fill_rect_pixmap(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *r
  */
 static sgl_color_t sgl_bilinear_interpolate(const sgl_pixmap_t *pixmap, int32_t fx, int32_t fy)
 {
+    sgl_color_t result;
     int32_t max_x = ((int32_t)pixmap->width - 1) << SGL_FIXED_SHIFT;
     int32_t max_y = ((int32_t)pixmap->height - 1) << SGL_FIXED_SHIFT;
     fx = fx < 0 ? 0 : (fx > max_x ? max_x : fx);
@@ -350,7 +351,6 @@ static sgl_color_t sgl_bilinear_interpolate(const sgl_pixmap_t *pixmap, int32_t 
     sgl_color_t *c10 = sgl_pixmap_get_buf(pixmap, x0 + 1, y0);
     sgl_color_t *c11 = sgl_pixmap_get_buf(pixmap, x0 + 1, y0 + 1);
 
-    sgl_color_t result;
     // bilinear interpolate expression
     // color = c00*dx1*dy1 + c01*dx1*dy + c10*dx*dy1 + c11*dx*dy
     #define INTERP_VAL(c00, c01, c10, c11) \
