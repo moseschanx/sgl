@@ -28,7 +28,7 @@ static void sgl_draw_rotated_string(sgl_surf_t *surf, sgl_area_t *area, int16_t 
     // 计算文本尺寸
     int16_t text_width = 0;
     int16_t text_height = font->font_height;
-    
+
     uint32_t unicode = 0;
     const char *temp_str = str;
     while (*temp_str) {
@@ -64,7 +64,7 @@ static void sgl_draw_rotated_string(sgl_surf_t *surf, sgl_area_t *area, int16_t 
     
     int16_t x4r = (cos_val * (-half_w) - sin_val * half_h) / 32767;
     int16_t y4r = (sin_val * (-half_w) + cos_val * half_h) / 32767;
-    
+
     // 计算旋转后的边界
     int16_t min_x = sgl_min4(x1r, x2r, x3r, x4r);
     int16_t min_y = sgl_min4(y1r, y2r, y3r, y4r);
@@ -193,7 +193,7 @@ static void sgl_label_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t
         }
 
         align_pos = sgl_get_text_pos(&obj->coords, label->font, label->text, 0, (sgl_align_type_t)label->align);
-        
+
         // 如果设置了文本旋转，则使用旋转绘制函数
         if (label->transform.rotation == 0) {
             sgl_draw_string(surf, &obj->area, align_pos.x + label->transform.offset.offset_x, 

@@ -158,6 +158,10 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
                         else if (pixmap->format == SGL_PIXMAP_FMT_RGB888) {
                             tmp_color = sgl_rgb888_to_color(bitmap[offset] | (bitmap[offset + 1] << 8) | (bitmap[offset + 2] << 16));
                         }
+                        else if (pixmap->format == SGL_PIXMAP_FMT_ARGB8888) {
+                            tmp_color = sgl_rgb888_to_color(bitmap[offset + 1] | (bitmap[offset + 2] << 8) | (bitmap[offset + 3] << 16));
+                            tmp_color = sgl_color_mixer(tmp_color, *blend, bitmap[offset]);
+                        }
 
                         offset += pix_byte;
                         *blend = ext_img->alpha == SGL_ALPHA_MAX ? tmp_color : sgl_color_mixer(tmp_color, *blend, ext_img->alpha);
