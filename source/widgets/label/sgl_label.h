@@ -167,5 +167,17 @@ static inline void sgl_label_set_text_offset(sgl_obj_t *obj, int8_t offset_x, in
     sgl_obj_set_dirty(obj);
 }
 
-
+/**
+ * @brief set label text rotation
+ * @param obj pointer to the label object
+ * @param text_rotation text rotation angle (0-360 degree)
+ * @return none
+ */
+static inline void sgl_label_set_text_rotation(sgl_obj_t *obj, int16_t text_rotation)
+{
+    sgl_label_t *label = sgl_container_of(obj, sgl_label_t, obj);
+    label->text_rotation = text_rotation % 360;
+    if (label->text_rotation < 0) label->text_rotation += 360;
+    sgl_obj_set_dirty(obj);
+}
 #endif // !__SGL_LABEL_H__
