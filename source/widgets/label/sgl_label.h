@@ -48,8 +48,13 @@ typedef struct sgl_label {
     uint8_t          alpha;
     uint8_t          align: 7;
     uint8_t          bg_flag : 1;
-    int8_t           offset_x;
-    int8_t           offset_y;
+    union {
+        struct {
+            int8_t offset_x;
+            int8_t offset_y;
+        } offset;
+        int16_t rotation;
+    } transform;
 }sgl_label_t;
 
 
@@ -162,8 +167,8 @@ static inline void sgl_label_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 static inline void sgl_label_set_text_offset(sgl_obj_t *obj, int8_t offset_x, int8_t offset_y)
 {
     sgl_label_t *label = sgl_container_of(obj, sgl_label_t, obj);
-    label->offset_x = offset_x;
-    label->offset_y = offset_y;
+    label->transform.offset.offset_x = offset_x;
+    label->transform.offset.offset_y = offset_y;
     sgl_obj_set_dirty(obj);
 }
 
@@ -176,8 +181,9 @@ static inline void sgl_label_set_text_offset(sgl_obj_t *obj, int8_t offset_x, in
 static inline void sgl_label_set_text_rotation(sgl_obj_t *obj, int16_t text_rotation)
 {
     sgl_label_t *label = sgl_container_of(obj, sgl_label_t, obj);
-    label->text_rotation = text_rotation % 360;
-    if (label->text_rotation < 0) label->text_rotation += 360;
+    label->transform.rotation = text_rotation % 360;
+    if (label->transform.rotation < 0) label->transform.rotation += 360;
     sgl_obj_set_dirty(obj);
 }
+
 #endif // !__SGL_LABEL_H__

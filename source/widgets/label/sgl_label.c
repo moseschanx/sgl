@@ -36,13 +36,13 @@ static void sgl_draw_rotated_string(sgl_surf_t *surf, sgl_area_t *area, int16_t 
         uint32_t ch_index = sgl_search_unicode_ch_index(font, unicode);
         text_width += (font->table[ch_index].adv_w >> 4);
     }
-    
+
     // 如果没有旋转，直接调用普通绘制函数
     if (rotation == 0) {
         sgl_draw_string(surf, area, x, y, str, color, alpha, font);
         return;
     }
-    
+
     // 使用定点数计算旋转角度的正弦和余弦值
     int32_t sin_val = sgl_sin(rotation);
     int32_t cos_val = sgl_cos(rotation);
@@ -195,15 +195,18 @@ static void sgl_label_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t
         align_pos = sgl_get_text_pos(&obj->coords, label->font, label->text, 0, (sgl_align_type_t)label->align);
         
         // 如果设置了文本旋转，则使用旋转绘制函数
-        if (label->text_rotation != 0) {
+        if (label->transform.rotation == 0) {
+            sgl_draw_string(surf, &obj->area, align_pos.x + label->transform.offset.offset_x, 
+                                              align_pos.y + label->transform.offset.offset_y, 
+                                              label->text, label->color, label->alpha, label->font);
+        }
+        else {
             sgl_draw_rotated_string(surf, &obj->area, 
-                                  align_pos.x + label->offset_x, 
-                                  align_pos.y + label->offset_y, 
+                                  align_pos.x, 
+                                  align_pos.y, 
                                   label->text, label->color, label->alpha, 
-                                  label->font, label->text_rotation, 
+                                  label->font, label->transform.rotation, 
                                   label->bg_flag ? label->bg_color : surf->buffer[0]);
-        } else {
-            sgl_draw_string(surf, &obj->area, align_pos.x + label->offset_x, align_pos.y + label->offset_y, label->text, label->color, label->alpha, label->font);
         }
     }
 }
@@ -233,7 +236,7 @@ sgl_obj_t* sgl_label_create(sgl_obj_t* parent)
     label->bg_flag = 0;
     label->color = SGL_THEME_TEXT_COLOR;
     label->text = "";
-    label->text_rotation = 0; // 默认文字不旋转
+    label->transform.rotation = 0;
 
     return obj;
 }
