@@ -195,7 +195,7 @@ static void sgl_label_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t
         align_pos = sgl_get_text_pos(&obj->coords, label->font, label->text, 0, (sgl_align_type_t)label->align);
 
         // 如果设置了文本旋转，则使用旋转绘制函数
-        if (label->transform.rotation == 0) {
+        if (label->rota == 0) {
             sgl_draw_string(surf, &obj->area, align_pos.x + label->transform.offset.offset_x, 
                                               align_pos.y + label->transform.offset.offset_y, 
                                               label->text, label->color, label->alpha, label->font);
@@ -237,6 +237,7 @@ sgl_obj_t* sgl_label_create(sgl_obj_t* parent)
     label->color = SGL_THEME_TEXT_COLOR;
     label->text = "";
     label->transform.rotation = 0;
+    label->rota = 0;
 
     return obj;
 }
