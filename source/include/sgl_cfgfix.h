@@ -44,6 +44,9 @@ extern "C" {
  * CONFIG_SGL_FBDEV_ROTATION:
  *      The rotation of framebuffer device, default: 0
  * 
+ * CONFIG_SGL_FBDEV_RUNTIME_ROTATION:
+ *      If you want to use runtime rotation, please define this macro to 1
+ * 
  * CONFIG_SGL_USE_FBDEV_VRAM:
  *      If you want to use full framebuffer, please define this macro to 1
  *
@@ -104,6 +107,10 @@ extern "C" {
 
 #ifndef CONFIG_SGL_FBDEV_ROTATION
 #define CONFIG_SGL_FBDEV_ROTATION                                  (0)
+#endif
+
+#ifndef CONFIG_SGL_FBDEV_RUNTIME_ROTATION
+#define CONFIG_SGL_FBDEV_RUNTIME_ROTATION                          (0)
 #endif
 
 #ifndef CONFIG_SGL_USE_FBDEV_VRAM

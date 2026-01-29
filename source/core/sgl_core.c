@@ -150,7 +150,7 @@ void sgl_obj_add_child(sgl_obj_t *parent, sgl_obj_t *obj)
  * @brief remove an object from its parent
  * @param obj object to remove
  * @return none
- * @note This function will remove the object from its parent.
+ * @note This function will remove the object from its parent, of course, his children will also be removed
  */
 void sgl_obj_remove(sgl_obj_t *obj)
 {
@@ -661,12 +661,15 @@ int sgl_init(void)
     }
 
     /* if the rotation is not 0 or 180, we need to alloc a buffer for rotation */
-#if (CONFIG_SGL_FBDEV_ROTATION != 0)
+#if ((CONFIG_SGL_FBDEV_ROTATION != 0) || CONFIG_SGL_FBDEV_RUNTIME_ROTATION)
     sgl_system.rotation = (sgl_color_t*)sgl_malloc(sgl_system.fbdev.fbinfo.buffer_size * sizeof(sgl_color_t));
     if (sgl_system.rotation == NULL) {
         SGL_LOG_ERROR("sgl_init: alloc rotation buffer failed");
         return -1;
     }
+#if (CONFIG_SGL_FBDEV_RUNTIME_ROTATION)
+    sgl_system.angle = 0;
+#endif
 #endif
 
     /* create event queue */
@@ -688,6 +691,40 @@ void sgl_screen_load(sgl_obj_t *obj)
     sgl_dirty_area_init();
     sgl_obj_set_dirty(obj);
 }
+
+
+#if (CONFIG_SGL_FBDEV_RUNTIME_ROTATION)
+/**
+ * @brief set framebuffer device rotation angle
+ * @param angle [in] rotation angle, that is 0, 90, 180, 270
+ * @return none
+ * @note Rotation angle must be 0, 90, 180, 270
+ */
+void sgl_fbdev_set_angle(uint16_t angle)
+{
+    // 角度未变化，直接返回，减少无效操作
+    if (angle == sgl_system.angle) {
+        return;
+    }
+
+    const uint8_t cur_status = (sgl_system.angle == 0 || sgl_system.angle == 180) ? 0 : 
+                               (sgl_system.angle == 90 || sgl_system.angle == 270) ? 1 : 2;
+
+    const uint8_t new_status = (angle == 0 || angle == 180) ? 0 : 
+                               (angle == 90 || angle == 270) ? 1 : 2;
+
+    if (cur_status == 2 || new_status == 2) {
+        SGL_LOG_WARN("sgl_fbdev_set_angle: invalid angle");
+        return;
+    }
+
+    if (cur_status != new_status) {
+        sgl_swap(&sgl_system.fbdev.fbinfo.xres, &sgl_system.fbdev.fbinfo.yres);
+    }
+
+    sgl_system.angle = angle;
+}
+#endif // !CONFIG_SGL_FBDEV_RUNTIME_ROTATION
 
 
 /**
@@ -1442,6 +1479,11 @@ static inline void sgl_draw_task(sgl_fbdev_t *fbdev)
     for (int i = 0; i < fbdev->dirty_num; i++) {
         dirty = &fbdev->dirty[i];
         surf->dirty = dirty;
+
+#if (CONFIG_SGL_FBDEV_RUNTIME_ROTATION)
+        sgl_area_t screen = { .x1 = 0, .y1 = 0, .x2 = SGL_SCREEN_WIDTH - 1, .y2 = SGL_SCREEN_HEIGHT - 1 };
+        sgl_area_selfclip(dirty, &screen);
+#endif
 
         /* check dirty area, ensure it is valid */
         SGL_ASSERT(dirty != NULL && dirty->x1 >= 0 && dirty->y1 >= 0 && dirty->x2 < SGL_SCREEN_WIDTH && dirty->y2 < SGL_SCREEN_HEIGHT);
