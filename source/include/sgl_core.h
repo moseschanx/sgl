@@ -1704,12 +1704,10 @@ static inline sgl_color_t sgl_color_mixer(sgl_color_t fg_color, sgl_color_t bg_c
 
 #elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == SGL_COLOR_RGB565)
 
-    const uint32_t factor_opt = ((uint32_t)factor + 4) >> 3;
-    const uint32_t bg = ((uint32_t)bg_color.full | ((uint32_t)bg_color.full << 16)) & 0x07E0F81F;
-    const uint32_t fg = ((uint32_t)fg_color.full | ((uint32_t)fg_color.full << 16)) & 0x07E0F81F;
-    const uint32_t diff = fg - bg;
-    const uint32_t diff_scaled = (diff * factor_opt) >> 5;
-    const uint32_t result = (diff_scaled + bg) & 0x07E0F81F;
+    factor = (uint32_t)((uint32_t)factor + 4) >> 3;
+    uint32_t bg = (uint32_t)((uint32_t)bg_color.full | ((uint32_t)bg_color.full << 16)) & 0x07E0F81F; 
+    uint32_t fg = (uint32_t)((uint32_t)fg_color.full | ((uint32_t)fg_color.full << 16)) & 0x07E0F81F;
+    uint32_t result = ((((fg - bg) * factor) >> 5) + bg) & 0x7E0F81F;
     ret.full = (uint16_t)((result >> 16) | result);
 
 #elif (CONFIG_SGL_FBDEV_PIXEL_DEPTH == SGL_COLOR_RGB888)
