@@ -172,5 +172,17 @@ static inline void sgl_box_set_show_scrollbar(sgl_obj_t *obj, uint8_t show_verti
     box->show_h_scrollbar = show_horizontal;
     sgl_obj_set_dirty(obj);
 }
+/**
+ * @brief set alpha (transparency) of the box
+ * @param obj box object
+ * @param alpha alpha value to be set (0-255, where 0 is fully transparent and 255 is fully opaque)
+ * @return none
+ */
+static inline void sgl_box_set_alpha(sgl_obj_t *obj, uint8_t alpha)
+{
+    sgl_box_t *box = (sgl_box_t*)obj;
+    box->bg.alpha = alpha;
+    sgl_obj_set_dirty(obj);
+}
 
 #endif // !__SGL_BOX_H__
