@@ -259,7 +259,10 @@ typedef struct sgl_pixmap {
     uint32_t width : 13;
     uint32_t height : 13;
     uint32_t format : 6;
-    const uint8_t *bitmap;
+    union {
+        const uint8_t *array;
+        const uintptr_t addr;
+    } bitmap;
 } sgl_pixmap_t;
 
 
@@ -1784,7 +1787,7 @@ static inline void sgl_area_init(sgl_area_t *area)
 static inline sgl_color_t sgl_pixmap_get_pixel(const sgl_pixmap_t *pixmap, int16_t x, int16_t y)
 {
     SGL_ASSERT(pixmap != NULL);
-    return ((sgl_color_t*)pixmap->bitmap)[y * pixmap->width + x];
+    return ((sgl_color_t*)pixmap->bitmap.array)[y * pixmap->width + x];
 }
 
 
@@ -1798,7 +1801,7 @@ static inline sgl_color_t sgl_pixmap_get_pixel(const sgl_pixmap_t *pixmap, int16
 static inline sgl_color_t* sgl_pixmap_get_buf(const sgl_pixmap_t *pixmap, int16_t x, int16_t y)
 {
     SGL_ASSERT(pixmap != NULL);
-    return &((sgl_color_t*)pixmap->bitmap)[y * pixmap->width + x];
+    return &((sgl_color_t*)pixmap->bitmap.array)[y * pixmap->width + x];
 }
 
 
