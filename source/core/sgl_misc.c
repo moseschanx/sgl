@@ -134,6 +134,12 @@ void sgl_logo_anim(sgl_anim_t *anim, int32_t value)
     sgl_logo_set_alpha(logo, value);
 }
 
+/**
+ * @brief to show the sgl logo after sgl init
+ * @param none
+ * @return none
+ * @note: you can call this function in your main function to show the sgl logo
+ */
 void sgl_boot_logo(void)
 {
     sgl_obj_t *logo = sgl_logo_create(NULL);
