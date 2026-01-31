@@ -560,10 +560,10 @@ static sgl_page_t* sgl_page_create(void)
     obj->page = 1;
     obj->border = 0;
     obj->coords = (sgl_area_t) {
-        .x1 = sgl_system.fbdev.surf.x1,
-        .y1 = sgl_system.fbdev.surf.y1,
-        .x2 = sgl_system.fbdev.surf.x2,
-        .y2 = sgl_system.fbdev.surf.y2,
+        .x1 = 0,
+        .y1 = 0,
+        .x2 = sgl_system.fbdev.fbinfo.xres - 1,
+        .y2 = sgl_system.fbdev.fbinfo.yres - 1,
     };
 
     obj->area = obj->coords;
