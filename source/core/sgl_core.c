@@ -33,7 +33,7 @@
 #include <sgl_theme.h>
 
 
-/* current sgl system variable */
+/* current sgl system variable, do not used it */
 sgl_system_t sgl_system;
 
 
@@ -702,7 +702,6 @@ void sgl_screen_load(sgl_obj_t *obj)
  */
 void sgl_fbdev_set_angle(uint16_t angle)
 {
-    // 角度未变化，直接返回，减少无效操作
     if (angle == sgl_system.angle) {
         return;
     }
