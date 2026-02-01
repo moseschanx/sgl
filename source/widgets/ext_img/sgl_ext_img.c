@@ -111,7 +111,7 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
     sgl_ext_img_t *ext_img = (sgl_ext_img_t*)obj;
     const sgl_pixmap_t *pixmap = &ext_img->pixmap[ext_img->pixmap_idx];
     const uint8_t *bitmap = pixmap->bitmap.array;
-    uint8_t pix_byte = sgl_pixmal_get_bits(pixmap);
+    uint8_t pix_byte = sgl_pixmal_get_bytes_per_pixel(pixmap);
 
     sgl_area_t area = {
         .x1 = obj->coords.x1,

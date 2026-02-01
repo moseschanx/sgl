@@ -745,11 +745,11 @@ static inline void sgl_log_stdout(const char *str)
 
 
 /**
- * @brief get pixmap format bits
+ * @brief get pixmap bytes of per pixel
  * @param pixmap pointer to pixmap
- * @return pixmap bits
+ * @return pixmap bytes of per pixel
  */
-uint8_t sgl_pixmal_get_bits(const sgl_pixmap_t *pixmap);
+uint8_t sgl_pixmal_get_bytes_per_pixel(const sgl_pixmap_t *pixmap);
 
 
 /**
