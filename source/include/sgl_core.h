@@ -693,7 +693,7 @@ static inline void sgl_fbdev_flush_area(sgl_area_t *area, sgl_color_t *src)
         sgl_fbdev_rotate_270(area_dst, area, sgl_system.rotation, src);
         break;
     default:
-        sgl_system.fbdev.fbinfo.flush_area(area, src);
+        SGL_LOG_ERROR("invalid angle: %d", sgl_system.angle);
         return;
     }
     sgl_system.fbdev.fbinfo.flush_area(&area_dst, sgl_system.rotation);
