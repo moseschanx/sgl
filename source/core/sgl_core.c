@@ -118,9 +118,9 @@ uint8_t sgl_pixmal_get_bits(const sgl_pixmap_t *pixmap)
     case SGL_PIXMAP_FMT_RLE_ARGB4444:
         bits = 2; break;
     case SGL_PIXMAP_FMT_RGB888:
-    case SGL_PIXMAP_FMT_ARGB8888:
     case SGL_PIXMAP_FMT_RLE_RGB888:
         bits = 3; break;
+    case SGL_PIXMAP_FMT_ARGB8888:
     case SGL_PIXMAP_FMT_RLE_ARGB8888:
         bits = 4; break;
     default:
