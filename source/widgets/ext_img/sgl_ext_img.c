@@ -44,10 +44,8 @@ static inline void rle_decompress_line(sgl_ext_img_t *img, sgl_area_t *coords, s
     uint8_t tmp_buf[8] = {0};
     const uint8_t *bitmap = img->pixmap[img->pixmap_idx].bitmap.array;
     uint8_t format = img->pixmap->format;
-    bool opaque = true;
 
     for (int i = coords->x1; i <= coords->x2; i++) {
-        opaque = true;
 
         if (img->remainder == 0) {
             if (img->read != NULL) {
@@ -69,28 +67,23 @@ static inline void rle_decompress_line(sgl_ext_img_t *img, sgl_area_t *coords, s
                 img->color = sgl_rgb332_to_color(tmp_buf[1]);
                 img->index ++;
                 break;
-            case SGL_PIXMAP_FMT_RLE_ARGB1331:
-                opaque = tmp_buf[1];
-                img->color = sgl_rgb331_to_color(tmp_buf[1]);
-                img->index ++;
-                break;
             case SGL_PIXMAP_FMT_RLE_RGB565:
                 img->color = sgl_rgb565_to_color(tmp_buf[1] | (tmp_buf[2] << 8));
                 img->index += 2;
                 break;
-            case SGL_PIXMAP_FMT_RLE_ARGB1564:
-                opaque = tmp_buf[2];
-                img->color = sgl_rgb564_to_color(tmp_buf[1] | (tmp_buf[2] << 8));
+            case SGL_PIXMAP_FMT_RLE_ARGB4444:
+                img->color = sgl_rgb444_to_color(tmp_buf[1] | (tmp_buf[2] << 8));
+                img->color = sgl_color_mixer(img->color, *out, sgl_opa4_table[tmp_buf[2] >> 4]);
                 img->index += 2;
                 break;
             case SGL_PIXMAP_FMT_RLE_RGB888:
                 img->color = sgl_rgb888_to_color(tmp_buf[1] | (tmp_buf[2] << 8) | (tmp_buf[3] << 16));
                 img->index += 3;
                 break;
-            case SGL_PIXMAP_FMT_RLE_ARGB1887:
-                opaque = tmp_buf[3];
-                img->color = sgl_rgb887_to_color(tmp_buf[1] | (tmp_buf[2] << 8) | (tmp_buf[3] << 16));
-                img->index += 3;
+            case SGL_PIXMAP_FMT_RLE_ARGB8888:
+                img->color = sgl_rgb888_to_color(tmp_buf[1] | (tmp_buf[2] << 8) | (tmp_buf[3] << 16));
+                img->color = sgl_color_mixer(img->color, *out, tmp_buf[4]);
+                img->index += 4;
                 break;
             default:
                 break;
@@ -98,9 +91,7 @@ static inline void rle_decompress_line(sgl_ext_img_t *img, sgl_area_t *coords, s
         }
 
         if (out != NULL && i >= area->x1 && i <= area->x2) {
-            if (opaque) {
-                *out = (img->alpha == SGL_ALPHA_MAX ? img->color : sgl_color_mixer(img->color, *out, img->alpha));
-            }
+            *out = (img->alpha == SGL_ALPHA_MAX ? img->color : sgl_color_mixer(img->color, *out, img->alpha));
             out ++;
         }
         img->remainder --;
@@ -115,7 +106,6 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
     const sgl_pixmap_t *pixmap = &ext_img->pixmap[ext_img->pixmap_idx];
     const uint8_t *bitmap = pixmap->bitmap.array;
     uint8_t pix_byte = sgl_pixmal_get_bits(pixmap);
-    bool opaque = true;
 
     sgl_area_t area = {
         .x1 = obj->coords.x1,
@@ -147,38 +137,29 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
                     line_ofs = 0;
 
                     for (int x = clip.x1; x <= clip.x2; x++) {
-                        opaque = true;
-
                         switch (pixmap->format) {
                         case SGL_PIXMAP_FMT_RGB332:
                             tmp_color = sgl_rgb332_to_color(pixmap_buf[line_ofs]);
                             break;
-                        case SGL_PIXMAP_FMT_ARGB1331:
-                            opaque = pixmap_buf[line_ofs];
-                            tmp_color = sgl_rgb331_to_color(pixmap_buf[line_ofs]);
-                            break;
                         case SGL_PIXMAP_FMT_RGB565:
                             tmp_color = sgl_rgb565_to_color(pixmap_buf[line_ofs] | (pixmap_buf[line_ofs + 1] << 8));
                             break;
-                        case SGL_PIXMAP_FMT_ARGB1564:
-                            opaque = pixmap_buf[line_ofs + 1];
-                            tmp_color = sgl_rgb564_to_color(pixmap_buf[line_ofs] | (pixmap_buf[line_ofs + 1] << 8));
+                        case SGL_PIXMAP_FMT_ARGB4444:
+                            tmp_color = sgl_rgb444_to_color(pixmap_buf[line_ofs] | (pixmap_buf[line_ofs + 1] << 8));
+                            tmp_color = sgl_color_mixer(tmp_color, *blend, sgl_opa4_table[pixmap_buf[line_ofs + 1] >> 4]);
                             break;
                         case SGL_PIXMAP_FMT_RGB888:
                             tmp_color = sgl_rgb888_to_color(pixmap_buf[line_ofs] | (pixmap_buf[line_ofs + 1] << 8) | (pixmap_buf[line_ofs + 2] << 16));
                             break;
-                        case SGL_PIXMAP_FMT_ARGB1887:
-                            opaque = pixmap_buf[line_ofs + 2];
-                            tmp_color = sgl_rgb887_to_color(pixmap_buf[line_ofs] | (pixmap_buf[line_ofs + 1] << 8) | (pixmap_buf[line_ofs + 2] << 16));
+                        case SGL_PIXMAP_FMT_ARGB8888:
+                            tmp_color = sgl_rgb888_to_color(pixmap_buf[line_ofs] | (pixmap_buf[line_ofs + 1] << 8) | (pixmap_buf[line_ofs + 2] << 16));
+                            tmp_color = sgl_color_mixer(tmp_color, *blend, pixmap_buf[line_ofs + 3]);
                             break;
                         default:
-                            opaque = false;
+                            break;
                         }
 
-                        if (opaque) {
-                            *blend = ext_img->alpha == SGL_ALPHA_MAX ? tmp_color : sgl_color_mixer(tmp_color, *blend, ext_img->alpha);
-                        }
-
+                        *blend = ext_img->alpha == SGL_ALPHA_MAX ? tmp_color : sgl_color_mixer(tmp_color, *blend, ext_img->alpha);
                         line_ofs += pix_byte;
                         blend ++;
                     }
@@ -195,38 +176,29 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
                     offset = ((((y - area.y1) * pixmap->width) + (clip.x1 - area.x1)) * pix_byte);
 
                     for (int x = clip.x1; x <= clip.x2; x++) {
-                        opaque = true;
-
                         switch (pixmap->format) {
                         case SGL_PIXMAP_FMT_RGB332:
                             tmp_color = sgl_rgb332_to_color(bitmap[offset]);
                             break;
-                        case SGL_PIXMAP_FMT_ARGB1331:
-                            opaque = bitmap[offset];
-                            tmp_color = sgl_rgb331_to_color(bitmap[offset]);
-                            break;
                         case SGL_PIXMAP_FMT_RGB565:
                             tmp_color = sgl_rgb565_to_color(bitmap[offset] | (bitmap[offset + 1] << 8));
                             break;
-                        case SGL_PIXMAP_FMT_ARGB1564:
-                            opaque = bitmap[offset + 1];
-                            tmp_color = sgl_rgb564_to_color(bitmap[offset] | (bitmap[offset + 1] << 8));
+                        case SGL_PIXMAP_FMT_ARGB4444:
+                            tmp_color = sgl_rgb444_to_color(bitmap[offset] | (bitmap[offset + 1] << 8));
+                            tmp_color = sgl_color_mixer(tmp_color, *blend, sgl_opa4_table[bitmap[offset + 1] >> 4]);
                             break;
                         case SGL_PIXMAP_FMT_RGB888:
                             tmp_color = sgl_rgb888_to_color(bitmap[offset] | (bitmap[offset + 1] << 8) | (bitmap[offset + 2] << 16));
                             break;
-                        case SGL_PIXMAP_FMT_ARGB1887:
-                            opaque = bitmap[offset + 2];
-                            tmp_color = sgl_rgb887_to_color(bitmap[offset] | (bitmap[offset + 1] << 8) | (bitmap[offset + 2] << 16));
+                        case SGL_PIXMAP_FMT_ARGB8888:
+                            tmp_color = sgl_rgb888_to_color(bitmap[offset] | (bitmap[offset + 1] << 8) | (bitmap[offset + 2] << 16));
+                            tmp_color = sgl_color_mixer(tmp_color, *blend, bitmap[offset + 3]);
                             break;
                         default:
-                            opaque = false;
                             break;
                         }
 
-                        if (opaque) {
-                            *blend = ext_img->alpha == SGL_ALPHA_MAX ? tmp_color : sgl_color_mixer(tmp_color, *blend, ext_img->alpha);
-                        }
+                        *blend = ext_img->alpha == SGL_ALPHA_MAX ? tmp_color : sgl_color_mixer(tmp_color, *blend, ext_img->alpha);
                         offset += pix_byte;
                         blend ++;
                     };

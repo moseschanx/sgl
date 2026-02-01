@@ -38,6 +38,13 @@ sgl_system_t sgl_system;
 
 
 /**
+ * @brief Alpha blending table for 4 bpp and 2 bpp
+ */
+const uint8_t sgl_opa4_table[16] = {0,  17, 34,  51, 68, 85, 102, 119, 136, 153, 170, 187, 204, 221, 238, 255 };
+const uint8_t sgl_opa2_table[4]  = {0, 85, 170, 255};
+
+
+/**
  * the memory pool, it will be used to allocate memory for the page pool
 */
 static uint8_t sgl_mem_pool[CONFIG_SGL_HEAP_MEMORY_SIZE];
@@ -103,20 +110,19 @@ uint8_t sgl_pixmal_get_bits(const sgl_pixmap_t *pixmap)
     case SGL_PIXMAP_FMT_NONE:
         bits = sizeof(sgl_color_t); break;
     case SGL_PIXMAP_FMT_RGB332:
-    case SGL_PIXMAP_FMT_ARGB1331:
     case SGL_PIXMAP_FMT_RLE_RGB332:
-    case SGL_PIXMAP_FMT_RLE_ARGB1331:
         bits = 1; break;
     case SGL_PIXMAP_FMT_RGB565:
-    case SGL_PIXMAP_FMT_ARGB1564:
+    case SGL_PIXMAP_FMT_ARGB4444:
     case SGL_PIXMAP_FMT_RLE_RGB565:
-    case SGL_PIXMAP_FMT_RLE_ARGB1564:
+    case SGL_PIXMAP_FMT_RLE_ARGB4444:
         bits = 2; break;
     case SGL_PIXMAP_FMT_RGB888:
-    case SGL_PIXMAP_FMT_ARGB1887:
+    case SGL_PIXMAP_FMT_ARGB8888:
     case SGL_PIXMAP_FMT_RLE_RGB888:
-    case SGL_PIXMAP_FMT_RLE_ARGB1887:
         bits = 3; break;
+    case SGL_PIXMAP_FMT_RLE_ARGB8888:
+        bits = 4; break;
     default:
         SGL_LOG_ERROR("pixmap format error");
         break;

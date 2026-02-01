@@ -556,6 +556,12 @@ typedef struct sgl_system {
 /* dont to use this variable, it is used internally by sgl library */
 extern sgl_system_t sgl_system;
 
+/**
+ * @brief Alpha blending table for 4 bpp and 2 bpp
+ */
+extern const uint8_t sgl_opa4_table[16];
+extern const uint8_t sgl_opa2_table[4];
+
 
 /**
  * @brief register the frame buffer device
