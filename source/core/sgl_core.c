@@ -97,11 +97,11 @@ int sgl_fbdev_register(sgl_fbinfo_t *fbinfo)
 
 
 /**
- * @brief get pixmap format bits
+ * @brief get pixmap bytes of per pixel
  * @param pixmap pointer to pixmap
- * @return pixmap bits of per pixel
+ * @return pixmap bytes of per pixel
  */
-uint8_t sgl_pixmal_get_bits(const sgl_pixmap_t *pixmap)
+uint8_t sgl_pixmal_get_bytes_per_pixel(const sgl_pixmap_t *pixmap)
 {
     SGL_ASSERT(pixmap != NULL);
     uint8_t bits = 0;
