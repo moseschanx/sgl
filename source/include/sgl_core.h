@@ -513,38 +513,44 @@ typedef struct sgl_system {
  * @param src: source buffer
  * @note it only support 90/180/270 degree rotation
  */
-#define sgl_fbdev_rotate_90(area_dst, area_src, dst, src)   for (uint16_t y = 0; y < height; y++) {                                       \
-                                                                for (uint16_t x = 0; x < width; x++) {                                    \
-                                                                    size_t src_idx = y * width + x;                                       \
-                                                                    size_t dst_idx = (width - 1 - x) * height + y;                        \
-                                                                    dst[dst_idx] = src[src_idx];                                          \
-                                                                }                                                                         \
-                                                            }                                                                             \
-                                                            area_dst.x1 = area_src->y1;                                                   \
-                                                            area_dst.y1 = SGL_SCREEN_WIDTH - area_src->x2 - 1;                            \
-                                                            area_dst.x2 = sgl_min(area_src->y2, SGL_SCREEN_HEIGHT - 1);                   \
-                                                            area_dst.y2 = sgl_min(SGL_SCREEN_WIDTH - area_src->x1 - 1, SGL_SCREEN_WIDTH - 1);
+#define sgl_fbdev_rotate_90(area_dst, area_src, dst, src)   do {                                                                              \
+                                                            for (uint16_t y = 0; y < height; y++) {                                           \
+                                                                for (uint16_t x = 0; x < width; x++) {                                        \
+                                                                    size_t src_idx = y * width + x;                                           \
+                                                                    size_t dst_idx = (width - 1 - x) * height + y;                            \
+                                                                    dst[dst_idx] = src[src_idx];                                              \
+                                                                }                                                                             \
+                                                            }                                                                                 \
+                                                            area_dst.x1 = area_src->y1;                                                       \
+                                                            area_dst.y1 = SGL_SCREEN_WIDTH - area_src->x2 - 1;                                \
+                                                            area_dst.x2 = sgl_min(area_src->y2, SGL_SCREEN_HEIGHT - 1);                       \
+                                                            area_dst.y2 = sgl_min(SGL_SCREEN_WIDTH - area_src->x1 - 1, SGL_SCREEN_WIDTH - 1); \
+                                                            } while(0);
 
-#define sgl_fbdev_rotate_180(area_dst, area_src, dst, src)  size_t total = (size_t)(width * height);                                      \
-                                                            for (size_t i = 0; i < total; i++) {                                          \
-                                                                dst[i] = src[total - 1 - i];                                              \
-                                                            }                                                                             \
-                                                            area_dst.x1 = SGL_SCREEN_WIDTH  - area_src->x2 - 1;                           \
-                                                            area_dst.y1 = SGL_SCREEN_HEIGHT - area_src->y2 - 1;                           \
-                                                            area_dst.x2 = SGL_SCREEN_WIDTH  - area_src->x1 - 1;                           \
-                                                            area_dst.y2 = SGL_SCREEN_HEIGHT - area_src->y1 - 1;
+#define sgl_fbdev_rotate_180(area_dst, area_src, dst, src)  do {                                                                              \
+                                                            size_t total = (size_t)(width * height);                                          \
+                                                            for (size_t i = 0; i < total; i++) {                                              \
+                                                                dst[i] = src[total - 1 - i];                                                  \
+                                                            }                                                                                 \
+                                                            area_dst.x1 = SGL_SCREEN_WIDTH  - area_src->x2 - 1;                               \
+                                                            area_dst.y1 = SGL_SCREEN_HEIGHT - area_src->y2 - 1;                               \
+                                                            area_dst.x2 = SGL_SCREEN_WIDTH  - area_src->x1 - 1;                               \
+                                                            area_dst.y2 = SGL_SCREEN_HEIGHT - area_src->y1 - 1;                               \
+                                                            } while(0);
 
-#define sgl_fbdev_rotate_270(area_dst, area_src, dst, src)  for (uint16_t y = 0; y < height; y++) {                                       \
-                                                                for (uint16_t x = 0; x < width; x++) {                                    \
-                                                                    size_t src_idx = y * width + x;                                       \
-                                                                    size_t dst_idx = x * height + (height - 1 - y);                       \
-                                                                    dst[dst_idx] = src[src_idx];                                          \
-                                                                }                                                                         \
-                                                            }                                                                             \
-                                                            area_dst.x1 = SGL_SCREEN_HEIGHT - area_src->y2 - 1;                           \
-                                                            area_dst.y1 = area_src->x1;                                                   \
-                                                            area_dst.x2 = sgl_min(area_dst.x1 + height - 1, SGL_SCREEN_HEIGHT - 1);       \
-                                                            area_dst.y2 = sgl_min(area_dst.y1 + width - 1, SGL_SCREEN_WIDTH - 1);
+#define sgl_fbdev_rotate_270(area_dst, area_src, dst, src)  do {                                                                              \
+                                                            for (uint16_t y = 0; y < height; y++) {                                           \
+                                                                for (uint16_t x = 0; x < width; x++) {                                        \
+                                                                    size_t src_idx = y * width + x;                                           \
+                                                                    size_t dst_idx = x * height + (height - 1 - y);                           \
+                                                                    dst[dst_idx] = src[src_idx];                                              \
+                                                                }                                                                             \
+                                                            }                                                                                 \
+                                                            area_dst.x1 = SGL_SCREEN_HEIGHT - area_src->y2 - 1;                               \
+                                                            area_dst.y1 = area_src->x1;                                                       \
+                                                            area_dst.x2 = sgl_min(area_dst.x1 + height - 1, SGL_SCREEN_HEIGHT - 1);           \
+                                                            area_dst.y2 = sgl_min(area_dst.y1 + width - 1, SGL_SCREEN_WIDTH - 1);             \
+                                                            } while(0);
 
 
 /* dont to use this variable, it is used internally by sgl library */

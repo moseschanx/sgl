@@ -70,7 +70,7 @@ static inline void rle_decompress_line(sgl_ext_img_t *img, sgl_area_t *coords, s
                 img->index ++;
                 break;
             case SGL_PIXMAP_FMT_RLE_ARGB1331:
-                opaque = tmp_buf[1] & 0x80;
+                opaque = tmp_buf[1];
                 img->color = sgl_rgb331_to_color(tmp_buf[1]);
                 img->index ++;
                 break;
@@ -79,12 +79,17 @@ static inline void rle_decompress_line(sgl_ext_img_t *img, sgl_area_t *coords, s
                 img->index += 2;
                 break;
             case SGL_PIXMAP_FMT_RLE_ARGB1564:
-                opaque = tmp_buf[2] & 0x80;
+                opaque = tmp_buf[2];
                 img->color = sgl_rgb564_to_color(tmp_buf[1] | (tmp_buf[2] << 8));
                 img->index += 2;
                 break;
             case SGL_PIXMAP_FMT_RLE_RGB888:
                 img->color = sgl_rgb888_to_color(tmp_buf[1] | (tmp_buf[2] << 8) | (tmp_buf[3] << 16));
+                img->index += 3;
+                break;
+            case SGL_PIXMAP_FMT_RLE_ARGB1887:
+                opaque = tmp_buf[3];
+                img->color = sgl_rgb887_to_color(tmp_buf[1] | (tmp_buf[2] << 8) | (tmp_buf[3] << 16));
                 img->index += 3;
                 break;
             default:
@@ -149,18 +154,22 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
                             tmp_color = sgl_rgb332_to_color(pixmap_buf[line_ofs]);
                             break;
                         case SGL_PIXMAP_FMT_ARGB1331:
-                            opaque = pixmap_buf[line_ofs] & 0x80;
+                            opaque = pixmap_buf[line_ofs];
                             tmp_color = sgl_rgb331_to_color(pixmap_buf[line_ofs]);
                             break;
                         case SGL_PIXMAP_FMT_RGB565:
                             tmp_color = sgl_rgb565_to_color(pixmap_buf[line_ofs] | (pixmap_buf[line_ofs + 1] << 8));
                             break;
                         case SGL_PIXMAP_FMT_ARGB1564:
-                            opaque = pixmap_buf[line_ofs + 1] & 0x80;
+                            opaque = pixmap_buf[line_ofs + 1];
                             tmp_color = sgl_rgb564_to_color(pixmap_buf[line_ofs] | (pixmap_buf[line_ofs + 1] << 8));
                             break;
                         case SGL_PIXMAP_FMT_RGB888:
                             tmp_color = sgl_rgb888_to_color(pixmap_buf[line_ofs] | (pixmap_buf[line_ofs + 1] << 8) | (pixmap_buf[line_ofs + 2] << 16));
+                            break;
+                        case SGL_PIXMAP_FMT_ARGB1887:
+                            opaque = pixmap_buf[line_ofs + 2];
+                            tmp_color = sgl_rgb887_to_color(pixmap_buf[line_ofs] | (pixmap_buf[line_ofs + 1] << 8) | (pixmap_buf[line_ofs + 2] << 16));
                             break;
                         default:
                             opaque = false;
@@ -188,28 +197,27 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
                     for (int x = clip.x1; x <= clip.x2; x++) {
                         opaque = true;
 
-                        switch (pixmap->format)
-                        {
+                        switch (pixmap->format) {
                         case SGL_PIXMAP_FMT_RGB332:
                             tmp_color = sgl_rgb332_to_color(bitmap[offset]);
                             break;
                         case SGL_PIXMAP_FMT_ARGB1331:
-                            opaque = bitmap[offset] & 0x80;
+                            opaque = bitmap[offset];
                             tmp_color = sgl_rgb331_to_color(bitmap[offset]);
                             break;
                         case SGL_PIXMAP_FMT_RGB565:
                             tmp_color = sgl_rgb565_to_color(bitmap[offset] | (bitmap[offset + 1] << 8));
                             break;
                         case SGL_PIXMAP_FMT_ARGB1564:
-                            opaque = bitmap[offset + 1] & 0x80;
+                            opaque = bitmap[offset + 1];
                             tmp_color = sgl_rgb564_to_color(bitmap[offset] | (bitmap[offset + 1] << 8));
                             break;
                         case SGL_PIXMAP_FMT_RGB888:
                             tmp_color = sgl_rgb888_to_color(bitmap[offset] | (bitmap[offset + 1] << 8) | (bitmap[offset + 2] << 16));
                             break;
-                        case SGL_PIXMAP_FMT_ARGB8888:
-                            tmp_color = sgl_rgb888_to_color(bitmap[offset + 1] | (bitmap[offset + 2] << 8) | (bitmap[offset + 3] << 16));
-                            tmp_color = sgl_color_mixer(tmp_color, *blend, bitmap[offset]);
+                        case SGL_PIXMAP_FMT_ARGB1887:
+                            opaque = bitmap[offset + 2];
+                            tmp_color = sgl_rgb887_to_color(bitmap[offset] | (bitmap[offset + 1] << 8) | (bitmap[offset + 2] << 16));
                             break;
                         default:
                             opaque = false;

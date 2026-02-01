@@ -125,6 +125,9 @@ typedef struct sgl_ext_img {
     sgl_color_t     color;
     uint16_t        remainder;
     uint32_t        index;
+#if CONFIG_SGL_EXT_IMG_USE_BUFFER
+    uint8_t         flash_buffer[512];
+#endif
 }sgl_ext_img_t;
 
 /**
