@@ -46,6 +46,8 @@ static void sgl_msgbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
     const sgl_font_t *font = msgbox->font;
     int32_t font_height = sgl_font_get_height(font) + 8;
     int16_t border = msgbox->body_desc.border;
+    uint8_t title_height = msgbox->title_height ? msgbox->title_height : font_height;  // 使用自定义高度或默认高度
+    uint8_t msg_y_offset = msgbox->msg_y_offset;  // 消息文本Y轴偏移
 
     SGL_ASSERT(msgbox->font != NULL);
 
@@ -75,13 +77,13 @@ static void sgl_msgbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
         .x1 = obj->coords.x1 + border + 2,
         .x2 = obj->coords.x2 - border + 2,
         .y1 = obj->coords.y1 + 1,
-        .y2 = obj->coords.y1 + font_height + border,
+        .y2 = obj->coords.y1 + title_height + border,
     };
 
     sgl_area_t text_coords = {
         .x1 = obj->coords.x1 + border + 2,
         .x2 = obj->coords.x2 - border - 2,
-        .y1 = obj->coords.y1 + font_height + border,
+        .y1 = obj->coords.y1 + title_height + border + msg_y_offset,  // 应用Y轴偏移
         .y2 = obj->coords.y2 - (font_height + border),
     };
 
@@ -95,7 +97,7 @@ static void sgl_msgbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
         msgbox_draw_text(surf, &obj->area, &title_coords, msgbox->title_text, font, msgbox->title_color, msgbox->body_desc.alpha, 0);
 
         sgl_draw_fill_hline(surf, &obj->area,
-                            obj->coords.y1 + font_height + 4,
+                            obj->coords.y1 + title_height + 4,
                             obj->coords.x1 + msgbox->body_desc.border,
                             obj->coords.x2 - msgbox->body_desc.border,
                             msgbox->body_desc.border,
@@ -129,29 +131,40 @@ static void sgl_msgbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
     else if(evt->type == SGL_EVENT_PRESSED) {
         if(evt->pos.y > (obj->coords.y2 - font_height - 2) && evt->pos.x < ((obj->coords.x1 + obj->coords.x2) / 2)) {
             msgbox->status |= SGL_MSGBOX_STATUS_APPLY;
-            sgl_obj_update_area(&apply_coords);
+            // 调用左侧按钮事件回调
+            if(msgbox->apply_event_cb) {
+                msgbox->apply_event_cb(evt);
+            }
         }
         else if(evt->pos.y > (obj->coords.y2 - font_height - 2) && evt->pos.x > ((obj->coords.x1 + obj->coords.x2) / 2)) {
             msgbox->status |= SGL_MSGBOX_STATUS_CLOSE;
-            sgl_obj_update_area(&close_coords);
+            // 调用右侧按钮事件回调
+            if(msgbox->close_event_cb) {
+                msgbox->close_event_cb(evt);
+            }
         }
         else {
+            sgl_obj_clear_dirty(obj);
             return;
+        }
+
+        if(obj->event_fn) {
+            obj->event_fn(evt);
         }
     }
     else if(evt->type == SGL_EVENT_RELEASED) {
         if(evt->pos.y > (obj->coords.y2 - font_height - 2) && evt->pos.x < ((obj->coords.x1 + obj->coords.x2) / 2)) {
             msgbox->status |= SGL_MSGBOX_STATUS_EXIT;
-            sgl_obj_set_destroyed(obj);
         }
         else if(evt->pos.y > (obj->coords.y2 - font_height - 2) && evt->pos.x > ((obj->coords.x1 + obj->coords.x2) / 2)) {
             msgbox->status |= SGL_MSGBOX_STATUS_EXIT;
-            sgl_obj_set_destroyed(obj);
         }
         else {
+            sgl_obj_clear_dirty(obj);
             return;
         }
     }
+
 }
 
 
@@ -196,6 +209,12 @@ sgl_obj_t* sgl_msgbox_create(sgl_obj_t* parent)
     msgbox->btn_text_color = SGL_THEME_TEXT_COLOR;
 
     msgbox->status = SGL_MSGBOX_STATUS_NORMAL;
+    
+    /* 初始化新增字段 */
+    msgbox->title_height = 0;  // 0表示使用默认高度
+    msgbox->msg_y_offset = 0;  // 默认无偏移
+    msgbox->apply_event_cb = NULL;
+    msgbox->close_event_cb = NULL;
 
     sgl_obj_set_clickable(obj);
 

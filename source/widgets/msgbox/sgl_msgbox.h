@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: https://sgl-docs.readthedocs.io
+ * Document reference link: docs directory
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -57,6 +57,12 @@ typedef struct sgl_msgbox {
     sgl_color_t      close_color;
     const char       *apply_text;
     const char       *close_text;
+    
+    /* 新增字段 */
+    uint8_t          title_height;          /**< 标题栏高度 */
+    uint8_t          msg_y_offset;          /**< 消息文本Y轴偏移 */
+    void             (*apply_event_cb)(sgl_event_t *e);    /**< 左侧按钮事件回调 */
+    void             (*close_event_cb)(sgl_event_t *e);    /**< 右侧按钮事件回调 */
 }sgl_msgbox_t;
 
 
@@ -102,8 +108,7 @@ static inline void sgl_msgbox_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 static inline void sgl_msgbox_set_radius(sgl_obj_t *obj, uint8_t radius)
 {
     sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
-    sgl_obj_set_radius(obj, radius);
-    msgbox->body_desc.radius = obj->radius;
+    msgbox->body_desc.radius = sgl_obj_fix_radius(obj, radius);
     sgl_obj_set_dirty(obj);
 }
 
@@ -299,6 +304,56 @@ static inline bool sgl_msgbox_get_exit_answer(sgl_obj_t *obj)
 {
     sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
     return msgbox->status;
+}
+
+/**
+ * @brief set message box title height
+ * @param obj message box object
+ * @param height title bar height in pixels
+ * @return none
+ */
+static inline void sgl_msgbox_set_title_height(sgl_obj_t *obj, uint8_t height)
+{
+    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    msgbox->title_height = height;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set message box message text y offset
+ * @param obj message box object
+ * @param offset y axis offset for message text
+ * @return none
+ */
+static inline void sgl_msgbox_set_msg_y_offset(sgl_obj_t *obj, uint8_t offset)
+{
+    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    msgbox->msg_y_offset = offset;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set message box apply button event callback
+ * @param obj message box object
+ * @param cb callback function for apply button events
+ * @return none
+ */
+static inline void sgl_msgbox_set_apply_event_cb(sgl_obj_t *obj, void (*cb)(sgl_event_t *e))
+{
+    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    msgbox->apply_event_cb = cb;
+}
+
+/**
+ * @brief set message box close button event callback
+ * @param obj message box object
+ * @param cb callback function for close button events
+ * @return none
+ */
+static inline void sgl_msgbox_set_close_event_cb(sgl_obj_t *obj, void (*cb)(sgl_event_t *e))
+{
+    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    msgbox->close_event_cb = cb;
 }
 
 #endif // !__SGL_MSGBOX_H__
