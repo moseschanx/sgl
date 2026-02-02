@@ -689,6 +689,9 @@ static inline void sgl_fbdev_flush_area(sgl_area_t *area, sgl_color_t *src)
     sgl_area_t area_dst = *area;
 
     switch (sgl_system.angle) {
+    case 0:
+        sgl_system.fbdev.fbinfo.flush_area(area, src);
+        break;
     case 90:
         sgl_fbdev_rotate_90(area_dst, area, sgl_system.rotation, src);
         break;
@@ -745,11 +748,11 @@ static inline void sgl_log_stdout(const char *str)
 
 
 /**
- * @brief get pixmap format bits
+ * @brief get pixmap bytes of per pixel
  * @param pixmap pointer to pixmap
- * @return pixmap bits
+ * @return pixmap bytes of per pixel
  */
-uint8_t sgl_pixmal_get_bits(const sgl_pixmap_t *pixmap);
+uint8_t sgl_pixmal_get_bytes_per_pixel(const sgl_pixmap_t *pixmap);
 
 
 /**

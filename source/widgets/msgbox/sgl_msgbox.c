@@ -27,8 +27,8 @@
 
 
 #define  SGL_MSGBOX_STATUS_NORMAL               (1 << 7)
-#define  SGL_MSGBOX_STATUS_APPLY                (1 << 0)
-#define  SGL_MSGBOX_STATUS_CLOSE                (1 << 1)
+#define  SGL_MSGBOX_STATUS_LEFT                (1 << 0)
+#define  SGL_MSGBOX_STATUS_RIGHT                (1 << 1)
 #define  SGL_MSGBOX_STATUS_EXIT                 (1 << 2)
 
 
@@ -46,6 +46,8 @@ static void sgl_msgbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
     const sgl_font_t *font = msgbox->font;
     int32_t font_height = sgl_font_get_height(font) + 8;
     int16_t border = msgbox->body_desc.border;
+    uint8_t title_height = msgbox->title_height ? msgbox->title_height : font_height; // title height
+    uint8_t msg_y_offset = msgbox->text_y_offset;  // message text y coords offset
 
     SGL_ASSERT(msgbox->font != NULL);
 
@@ -57,14 +59,14 @@ static void sgl_msgbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
         .y2 = obj->coords.y2
     };
 
-    sgl_area_t apply_coords = {
+    sgl_area_t left_coords = {
         .x1 =  obj->coords.x1 + border,
         .x2 = (obj->coords.x1 + obj->coords.x2) / 2 - border / 2,
         .y1 = obj->coords.y2 - 2 * font_height,
         .y2 = obj->coords.y2 - border,
     };
 
-    sgl_area_t close_coords = {
+    sgl_area_t right_coords = {
         .x1 = (obj->coords.x1 + obj->coords.x2) / 2 + border / 2,
         .x2 = obj->coords.x2 - border,
         .y1 = obj->coords.y2 - 2 * font_height,
@@ -75,13 +77,13 @@ static void sgl_msgbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
         .x1 = obj->coords.x1 + border + 2,
         .x2 = obj->coords.x2 - border + 2,
         .y1 = obj->coords.y1 + 1,
-        .y2 = obj->coords.y1 + font_height + border,
+        .y2 = obj->coords.y1 + title_height + border,
     };
 
     sgl_area_t text_coords = {
         .x1 = obj->coords.x1 + border + 2,
         .x2 = obj->coords.x2 - border - 2,
-        .y1 = obj->coords.y1 + font_height + border,
+        .y1 = obj->coords.y1 + title_height + border + msg_y_offset,
         .y2 = obj->coords.y2 - (font_height + border),
     };
 
@@ -95,7 +97,7 @@ static void sgl_msgbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
         msgbox_draw_text(surf, &obj->area, &title_coords, msgbox->title_text, font, msgbox->title_color, msgbox->body_desc.alpha, 0);
 
         sgl_draw_fill_hline(surf, &obj->area,
-                            obj->coords.y1 + font_height + 4,
+                            obj->coords.y1 + title_height + 4,
                             obj->coords.x1 + msgbox->body_desc.border,
                             obj->coords.x2 - msgbox->body_desc.border,
                             msgbox->body_desc.border,
@@ -105,53 +107,62 @@ static void sgl_msgbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
 
         sgl_draw_string_mult_line(surf, &text_coords, text_coords.x1, text_coords.y1, msgbox->msg_text, msgbox->msg_color, msgbox->body_desc.alpha, font, msgbox->msg_line_margin);
 
-        if(msgbox->status & SGL_MSGBOX_STATUS_APPLY) {
-            tmp_color = msgbox->apply_color;
-            msgbox->apply_color = sgl_color_mixer(msgbox->btn_text_color, msgbox->body_desc.color, 128);
+        if(msgbox->status & SGL_MSGBOX_STATUS_LEFT) {
+            tmp_color = msgbox->lbtn_color;
+            msgbox->lbtn_color = sgl_color_mixer(msgbox->lbtn_text_color, msgbox->body_desc.color, 128);
         }
-        else if(msgbox->status & SGL_MSGBOX_STATUS_CLOSE) {
-            tmp_color = msgbox->close_color;
-            msgbox->close_color = sgl_color_mixer(msgbox->btn_text_color, msgbox->body_desc.color, 128);
+        else if(msgbox->status & SGL_MSGBOX_STATUS_RIGHT) {
+            tmp_color = msgbox->rbtn_color;
+            msgbox->rbtn_color = sgl_color_mixer(msgbox->rbtn_text_color, msgbox->body_desc.color, 128);
         }
 
-        sgl_draw_fill_rect(surf, &button_coords, &apply_coords, obj->radius, msgbox->apply_color, msgbox->body_desc.alpha);
-        sgl_draw_fill_rect(surf, &button_coords, &close_coords, obj->radius, msgbox->close_color, msgbox->body_desc.alpha);
-        msgbox_draw_text(surf, &obj->area, &apply_coords, msgbox->apply_text, font, msgbox->btn_text_color, msgbox->body_desc.alpha, font_height / 2);
-        msgbox_draw_text(surf, &obj->area, &close_coords, msgbox->close_text, font, msgbox->btn_text_color, msgbox->body_desc.alpha, font_height / 2);
+        sgl_draw_fill_rect(surf, &button_coords, &left_coords, obj->radius, msgbox->lbtn_color, msgbox->body_desc.alpha);
+        sgl_draw_fill_rect(surf, &button_coords, &right_coords, obj->radius, msgbox->rbtn_color, msgbox->body_desc.alpha);
+        msgbox_draw_text(surf, &obj->area, &left_coords, msgbox->lbtn_text, font, msgbox->lbtn_text_color, msgbox->body_desc.alpha, font_height / 2);
+        msgbox_draw_text(surf, &obj->area, &right_coords, msgbox->rbtn_text, font, msgbox->rbtn_text_color, msgbox->body_desc.alpha, font_height / 2);
     
-        if(msgbox->status & SGL_MSGBOX_STATUS_APPLY) {
-            msgbox->apply_color = tmp_color;
+        if(msgbox->status & SGL_MSGBOX_STATUS_LEFT) {
+            msgbox->lbtn_color = tmp_color;
         }
-        else if(msgbox->status & SGL_MSGBOX_STATUS_CLOSE) {
-            msgbox->close_color = tmp_color;
+        else if(msgbox->status & SGL_MSGBOX_STATUS_RIGHT) {
+            msgbox->rbtn_color = tmp_color;
         }
     }
     else if(evt->type == SGL_EVENT_PRESSED) {
         if(evt->pos.y > (obj->coords.y2 - font_height - 2) && evt->pos.x < ((obj->coords.x1 + obj->coords.x2) / 2)) {
-            msgbox->status |= SGL_MSGBOX_STATUS_APPLY;
-            sgl_obj_update_area(&apply_coords);
+            msgbox->status |= SGL_MSGBOX_STATUS_LEFT;
+            if (msgbox->exit_btn) {
+                *msgbox->exit_btn = msgbox->lbtn_text;
+            }
         }
         else if(evt->pos.y > (obj->coords.y2 - font_height - 2) && evt->pos.x > ((obj->coords.x1 + obj->coords.x2) / 2)) {
-            msgbox->status |= SGL_MSGBOX_STATUS_CLOSE;
-            sgl_obj_update_area(&close_coords);
+            msgbox->status |= SGL_MSGBOX_STATUS_RIGHT;
+            if (msgbox->exit_btn) {
+                *msgbox->exit_btn = msgbox->rbtn_text;
+            }
         }
         else {
+            sgl_obj_clear_dirty(obj);
             return;
+        }
+
+        if(obj->event_fn) {
+            obj->event_fn(evt);
         }
     }
     else if(evt->type == SGL_EVENT_RELEASED) {
         if(evt->pos.y > (obj->coords.y2 - font_height - 2) && evt->pos.x < ((obj->coords.x1 + obj->coords.x2) / 2)) {
             msgbox->status |= SGL_MSGBOX_STATUS_EXIT;
-            sgl_obj_set_destroyed(obj);
         }
         else if(evt->pos.y > (obj->coords.y2 - font_height - 2) && evt->pos.x > ((obj->coords.x1 + obj->coords.x2) / 2)) {
             msgbox->status |= SGL_MSGBOX_STATUS_EXIT;
-            sgl_obj_set_destroyed(obj);
         }
         else {
+            sgl_obj_clear_dirty(obj);
             return;
         }
     }
+
 }
 
 
@@ -189,13 +200,17 @@ sgl_obj_t* sgl_msgbox_create(sgl_obj_t* parent)
     msgbox->msg_line_margin = 1;
     msgbox->msg_text = "NULL";
 
-    msgbox->apply_color = sgl_color_mixer(SGL_THEME_COLOR, SGL_THEME_TEXT_COLOR, 200);
-    msgbox->close_color = sgl_color_mixer(SGL_THEME_COLOR, SGL_THEME_TEXT_COLOR, 200);
-    msgbox->apply_text = "OK";
-    msgbox->close_text = "NO";
-    msgbox->btn_text_color = SGL_THEME_TEXT_COLOR;
+    msgbox->lbtn_color = sgl_color_mixer(SGL_THEME_COLOR, SGL_THEME_TEXT_COLOR, 200);
+    msgbox->rbtn_color = sgl_color_mixer(SGL_THEME_COLOR, SGL_THEME_TEXT_COLOR, 200);
+    msgbox->lbtn_text = "OK";
+    msgbox->rbtn_text = "NO";
+    msgbox->lbtn_text_color = SGL_THEME_TEXT_COLOR;
+    msgbox->rbtn_text_color = SGL_THEME_TEXT_COLOR;
 
     msgbox->status = SGL_MSGBOX_STATUS_NORMAL;
+    msgbox->title_height = 0;
+    msgbox->text_y_offset = 0;
+    msgbox->exit_btn = NULL;
 
     sgl_obj_set_clickable(obj);
 
