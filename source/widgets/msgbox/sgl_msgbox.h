@@ -45,24 +45,21 @@ typedef struct sgl_msgbox {
     const sgl_font_t *font;
 
     const char       *title_text;
-    sgl_color_t      title_color;
-
     const char       *msg_text;
+    sgl_color_t      title_color;
     sgl_color_t      msg_color;
     uint8_t          msg_line_margin;
-
     uint8_t          status;
-    sgl_color_t      btn_text_color;
-    sgl_color_t      apply_color;
-    sgl_color_t      close_color;
-    const char       *apply_text;
-    const char       *close_text;
-    
-    /* 新增字段 */
-    uint8_t          title_height;          /**< 标题栏高度 */
-    uint8_t          msg_y_offset;          /**< 消息文本Y轴偏移 */
-    void             (*apply_event_cb)(sgl_event_t *e);    /**< 左侧按钮事件回调 */
-    void             (*close_event_cb)(sgl_event_t *e);    /**< 右侧按钮事件回调 */
+    sgl_color_t      lbtn_text_color;
+    sgl_color_t      rbtn_text_color;
+    sgl_color_t      lbtn_color;
+    sgl_color_t      rbtn_color;
+    const char       *lbtn_text;
+    const char       *rbtn_text;
+
+    uint8_t          title_height;
+    uint8_t          text_y_offset;
+    const char       **exit_btn;
 }sgl_msgbox_t;
 
 
@@ -107,8 +104,7 @@ static inline void sgl_msgbox_set_alpha(sgl_obj_t *obj, uint8_t alpha)
  */
 static inline void sgl_msgbox_set_radius(sgl_obj_t *obj, uint8_t radius)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
-    msgbox->body_desc.radius = sgl_obj_fix_radius(obj, radius);
+    sgl_obj_set_radius(obj, radius);
     sgl_obj_set_dirty(obj);
 }
 
@@ -231,79 +227,94 @@ static inline void sgl_msgbox_set_msg_line_margin(sgl_obj_t *obj, uint8_t margin
 }
 
 /**
- * @brief set message box apply button text
+ * @brief set message box left button text
  * @param obj message box object
- * @param text message box apply button text
+ * @param text message box left button text
  * @return none
  */
-static inline void sgl_msgbox_set_apply_text(sgl_obj_t *obj, const char *text)
+static inline void sgl_msgbox_set_left_btn_text(sgl_obj_t *obj, const char *text)
 {
     sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
-    msgbox->apply_text = text;
+    msgbox->lbtn_text = text;
     sgl_obj_set_dirty(obj);
 }
 
 /**
- * @brief set message box apply button text color
+ * @brief set message box left button text color
  * @param obj message box object
- * @param color message box apply button text color
+ * @param color message box left button text color
  * @return none
  */
-static inline void sgl_msgbox_set_apply_text_color(sgl_obj_t *obj, sgl_color_t color)
+static inline void sgl_msgbox_set_left_btn_text_color(sgl_obj_t *obj, sgl_color_t color)
 {
     sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
-    msgbox->btn_text_color = color;
+    msgbox->lbtn_text_color = color;
     sgl_obj_set_dirty(obj);
 }
 
 /**
- * @brief set message box apply button color
+ * @brief set message box left button color
  * @param obj message box object
- * @param color message box apply button color
+ * @param color message box left button color
  * @return none
  */
-static inline void sgl_msgbox_set_apply_color(sgl_obj_t *obj, sgl_color_t color)
+static inline void sgl_msgbox_set_left_btn_color(sgl_obj_t *obj, sgl_color_t color)
 {
     sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
-    msgbox->apply_color = color;
+    msgbox->lbtn_color = color;
     sgl_obj_set_dirty(obj);
 }
 
 /**
- * @brief set message box close button text
+ * @brief set message box right button text
  * @param obj message box object
- * @param text message box close button text
+ * @param text message box right button text
  * @return none
  */
-static inline void sgl_msgbox_set_close_text(sgl_obj_t *obj, const char *text)
+static inline void sgl_msgbox_set_right_btn_text(sgl_obj_t *obj, const char *text)
 {
     sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
-    msgbox->close_text = text;
+    msgbox->rbtn_text = text;
     sgl_obj_set_dirty(obj);
 }
 
 /**
- * @brief set message box close button text color
+ * @brief set message box right button text color
  * @param obj message box object
- * @param color message box close button text color
+ * @param color message box right button text color
  * @return none
  */
-static inline void sgl_msgbox_set_close_text_color(sgl_obj_t *obj, sgl_color_t color)
+static inline void sgl_msgbox_set_right_btn_text_color(sgl_obj_t *obj, sgl_color_t color)
 {
     sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
-    msgbox->btn_text_color = color;
+    msgbox->rbtn_text_color = color;
     sgl_obj_set_dirty(obj);
 }
 
 /**
- * @brief get message box exit answer
+ * @brief set message box right button color
  * @param obj message box object
- * @return true if exit answer is yes, false otherwise
+ * @param color message box right button color
+ * @return none
  */
-static inline bool sgl_msgbox_get_exit_answer(sgl_obj_t *obj)
+static inline void sgl_msgbox_set_right_btn_color(sgl_obj_t *obj, sgl_color_t color)
 {
     sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
-    return msgbox->status;
+    msgbox->rbtn_color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set message box exit answer
+ * @param obj message box object
+ * @param answer [out] pointer to exit answer
+ * @return none
+ * @note the answer will point to the answer btn string when the message box is destroyed
+ */
+static inline void sgl_msgbox_set_exit_answer(sgl_obj_t *obj, const char **answer)
+{
+    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    msgbox->exit_btn = answer;
 }
 
 /**
@@ -328,32 +339,8 @@ static inline void sgl_msgbox_set_title_height(sgl_obj_t *obj, uint8_t height)
 static inline void sgl_msgbox_set_msg_y_offset(sgl_obj_t *obj, uint8_t offset)
 {
     sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
-    msgbox->msg_y_offset = offset;
+    msgbox->text_y_offset = offset;
     sgl_obj_set_dirty(obj);
-}
-
-/**
- * @brief set message box apply button event callback
- * @param obj message box object
- * @param cb callback function for apply button events
- * @return none
- */
-static inline void sgl_msgbox_set_apply_event_cb(sgl_obj_t *obj, void (*cb)(sgl_event_t *e))
-{
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
-    msgbox->apply_event_cb = cb;
-}
-
-/**
- * @brief set message box close button event callback
- * @param obj message box object
- * @param cb callback function for close button events
- * @return none
- */
-static inline void sgl_msgbox_set_close_event_cb(sgl_obj_t *obj, void (*cb)(sgl_event_t *e))
-{
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
-    msgbox->close_event_cb = cb;
 }
 
 #endif // !__SGL_MSGBOX_H__
