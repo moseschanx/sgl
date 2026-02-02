@@ -689,6 +689,9 @@ static inline void sgl_fbdev_flush_area(sgl_area_t *area, sgl_color_t *src)
     sgl_area_t area_dst = *area;
 
     switch (sgl_system.angle) {
+    case 0:
+        sgl_system.fbdev.fbinfo.flush_area(area, src);
+        break;
     case 90:
         sgl_fbdev_rotate_90(area_dst, area, sgl_system.rotation, src);
         break;

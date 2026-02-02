@@ -106,7 +106,9 @@ uint8_t sgl_pixmal_get_bytes_per_pixel(const sgl_pixmap_t *pixmap)
     static const uint8_t s_bytes_per_pixel[] = {
         [SGL_PIXMAP_FMT_NONE]         = sizeof(sgl_color_t),
         [SGL_PIXMAP_FMT_RGB332]       = 1,
+        [SGL_PIXMAP_FMT_ARGB2222]     = 1,
         [SGL_PIXMAP_FMT_RLE_RGB332]   = 1,
+        [SGL_PIXMAP_FMT_RLE_ARGB2222] = 1,
         [SGL_PIXMAP_FMT_RGB565]       = 2,
         [SGL_PIXMAP_FMT_ARGB4444]     = 2,
         [SGL_PIXMAP_FMT_RLE_RGB565]   = 2,
