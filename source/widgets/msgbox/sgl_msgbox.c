@@ -141,10 +141,6 @@ static void sgl_msgbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
             sgl_obj_clear_dirty(obj);
             return;
         }
-
-        if(obj->event_fn) {
-            obj->event_fn(evt);
-        }
     }
     else if(evt->type == SGL_EVENT_RELEASED) {
         if(evt->pos.y > (obj->coords.y2 - font_height - 2) && evt->pos.x < ((obj->coords.x1 + obj->coords.x2) / 2)) {
@@ -161,13 +157,17 @@ static void sgl_msgbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
         }
     }
     else if (evt->type == SGL_EVENT_OPTION_WALK) {
-        if (msgbox->status == SGL_MSGBOX_STATUS_LEFT) {
-            msgbox->status = SGL_MSGBOX_STATUS_RIGHT;
+        if (msgbox->status == SGL_MSGBOX_STATUS_NORMAL) {
+            msgbox->status = SGL_MSGBOX_STATUS_LEFT;
             *msgbox->exit_btn = msgbox->lbtn_text;
+        }
+        else if (msgbox->status == SGL_MSGBOX_STATUS_LEFT) {
+            msgbox->status = SGL_MSGBOX_STATUS_RIGHT;
+            *msgbox->exit_btn = msgbox->rbtn_text;
         }
         else if (msgbox->status == SGL_MSGBOX_STATUS_RIGHT) {
             msgbox->status = SGL_MSGBOX_STATUS_LEFT;
-            *msgbox->exit_btn = msgbox->rbtn_text;
+            *msgbox->exit_btn = msgbox->lbtn_text;
         }
         sgl_obj_update_area(&button_coords);
     }
