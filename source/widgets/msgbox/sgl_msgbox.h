@@ -34,6 +34,11 @@
 #include <string.h>
 
 
+#define  SGL_MSGBOX_STATUS_NORMAL               (1 << 7)
+#define  SGL_MSGBOX_STATUS_LEFT                 (1 << 0)
+#define  SGL_MSGBOX_STATUS_RIGHT                (1 << 1)
+#define  SGL_MSGBOX_STATUS_EXIT                 (1 << 2)
+
 /**
  * @brief sgl message box struct
  * @obj: sgl general object
@@ -315,6 +320,17 @@ static inline void sgl_msgbox_set_exit_answer(sgl_obj_t *obj, const char **answe
 {
     sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
     msgbox->exit_btn = answer;
+}
+
+/**
+ * @brief get message box current button text
+ * @param obj message box object
+ * @return current current button text
+ */
+static inline const char* sgl_msgbox_get_current_btn(sgl_obj_t *obj)
+{
+    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    return msgbox->status & SGL_MSGBOX_STATUS_LEFT ? msgbox->lbtn_text : msgbox->rbtn_text;
 }
 
 /**
