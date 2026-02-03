@@ -64,6 +64,7 @@ typedef struct sgl_msgbox {
 
     uint8_t          title_height;
     uint8_t          text_y_offset;
+    uint8_t          text_x_offset;
     const char       **exit_btn;
 }sgl_msgbox_t;
 
@@ -343,6 +344,19 @@ static inline void sgl_msgbox_set_title_height(sgl_obj_t *obj, uint8_t height)
 {
     sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
     msgbox->title_height = height;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set message box message text x offset
+ * @param obj message box object
+ * @param offset x axis offset for message text
+ * @return none
+ */
+static inline void sgl_msgbox_set_msg_x_offset(sgl_obj_t *obj, uint8_t offset)
+{
+    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    msgbox->text_x_offset = offset;
     sgl_obj_set_dirty(obj);
 }
 

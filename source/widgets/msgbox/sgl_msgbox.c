@@ -75,7 +75,7 @@ static void sgl_msgbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
     };
 
     sgl_area_t text_coords = {
-        .x1 = obj->coords.x1 + border + 2,
+        .x1 = obj->coords.x1 + border + 2 + msgbox->text_x_offset,
         .x2 = obj->coords.x2 - border - 2,
         .y1 = obj->coords.y1 + title_height + border + msg_y_offset,
         .y2 = obj->coords.y2 - (font_height + border),
@@ -221,6 +221,7 @@ sgl_obj_t* sgl_msgbox_create(sgl_obj_t* parent)
     msgbox->status = SGL_MSGBOX_STATUS_NORMAL;
     msgbox->title_height = 0;
     msgbox->text_y_offset = 0;
+    msgbox->text_x_offset = 0;
     msgbox->exit_btn = NULL;
 
     sgl_obj_set_clickable(obj);
