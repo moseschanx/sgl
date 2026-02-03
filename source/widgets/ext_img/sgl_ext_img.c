@@ -71,7 +71,7 @@ static inline void rle_decompress_line(sgl_ext_img_t *img, sgl_area_t *coords, s
                 break;
             case SGL_PIXMAP_FMT_RLE_ARGB2222:
                 pix_value = tmp_buf[1];
-                img->color = sgl_rgb332_to_color(pix_value);
+                img->color = sgl_rgb222_to_color(pix_value);
                 img->color = sgl_color_mixer(img->color, *out, sgl_opa2_table[pix_value >> 6]);
                 img->index ++;
                 break;
@@ -205,7 +205,7 @@ static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event
                             break;
                         case SGL_PIXMAP_FMT_ARGB2222:
                             pix_value = bitmap[offset];
-                            tmp_color = sgl_rgb332_to_color(pix_value);
+                            tmp_color = sgl_rgb222_to_color(pix_value);
                             tmp_color = sgl_color_mixer(tmp_color, *blend, sgl_opa2_table[pix_value >> 6]);
                             break;
                         case SGL_PIXMAP_FMT_RGB565:

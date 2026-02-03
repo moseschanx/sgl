@@ -34,6 +34,11 @@
 #include <string.h>
 
 
+#define  SGL_MSGBOX_STATUS_NORMAL               (1 << 7)
+#define  SGL_MSGBOX_STATUS_LEFT                 (1 << 0)
+#define  SGL_MSGBOX_STATUS_RIGHT                (1 << 1)
+#define  SGL_MSGBOX_STATUS_EXIT                 (1 << 2)
+
 /**
  * @brief sgl message box struct
  * @obj: sgl general object
@@ -59,6 +64,7 @@ typedef struct sgl_msgbox {
 
     uint8_t          title_height;
     uint8_t          text_y_offset;
+    uint8_t          text_x_offset;
     const char       **exit_btn;
 }sgl_msgbox_t;
 
@@ -318,6 +324,17 @@ static inline void sgl_msgbox_set_exit_answer(sgl_obj_t *obj, const char **answe
 }
 
 /**
+ * @brief get message box current button text
+ * @param obj message box object
+ * @return current current button text
+ */
+static inline const char* sgl_msgbox_get_current_btn(sgl_obj_t *obj)
+{
+    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    return msgbox->status & SGL_MSGBOX_STATUS_LEFT ? msgbox->lbtn_text : msgbox->rbtn_text;
+}
+
+/**
  * @brief set message box title height
  * @param obj message box object
  * @param height title bar height in pixels
@@ -327,6 +344,19 @@ static inline void sgl_msgbox_set_title_height(sgl_obj_t *obj, uint8_t height)
 {
     sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
     msgbox->title_height = height;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set message box message text x offset
+ * @param obj message box object
+ * @param offset x axis offset for message text
+ * @return none
+ */
+static inline void sgl_msgbox_set_msg_x_offset(sgl_obj_t *obj, uint8_t offset)
+{
+    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    msgbox->text_x_offset = offset;
     sgl_obj_set_dirty(obj);
 }
 

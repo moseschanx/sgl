@@ -22,14 +22,8 @@
  * SOFTWARE.
  */
 
-#include <sgl.h>
+#include "sgl_msgbox.h"
 #include <sgl_theme.h>
-
-
-#define  SGL_MSGBOX_STATUS_NORMAL               (1 << 7)
-#define  SGL_MSGBOX_STATUS_LEFT                (1 << 0)
-#define  SGL_MSGBOX_STATUS_RIGHT                (1 << 1)
-#define  SGL_MSGBOX_STATUS_EXIT                 (1 << 2)
 
 
 static void msgbox_draw_text(sgl_surf_t *surf, sgl_area_t *area, sgl_rect_t *coords, const char *text, const sgl_font_t *font, sgl_color_t color, uint8_t alpha, uint8_t y_offset)
@@ -81,7 +75,7 @@ static void sgl_msgbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
     };
 
     sgl_area_t text_coords = {
-        .x1 = obj->coords.x1 + border + 2,
+        .x1 = obj->coords.x1 + border + 2 + msgbox->text_x_offset,
         .x2 = obj->coords.x2 - border - 2,
         .y1 = obj->coords.y1 + title_height + border + msg_y_offset,
         .y2 = obj->coords.y2 - (font_height + border),
@@ -134,35 +128,52 @@ static void sgl_msgbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
             if (msgbox->exit_btn) {
                 *msgbox->exit_btn = msgbox->lbtn_text;
             }
+            sgl_obj_update_area(&left_coords);
         }
         else if(evt->pos.y > (obj->coords.y2 - font_height - 2) && evt->pos.x > ((obj->coords.x1 + obj->coords.x2) / 2)) {
             msgbox->status |= SGL_MSGBOX_STATUS_RIGHT;
             if (msgbox->exit_btn) {
                 *msgbox->exit_btn = msgbox->rbtn_text;
             }
+            sgl_obj_update_area(&right_coords);
         }
         else {
             sgl_obj_clear_dirty(obj);
             return;
-        }
-
-        if(obj->event_fn) {
-            obj->event_fn(evt);
         }
     }
     else if(evt->type == SGL_EVENT_RELEASED) {
         if(evt->pos.y > (obj->coords.y2 - font_height - 2) && evt->pos.x < ((obj->coords.x1 + obj->coords.x2) / 2)) {
             msgbox->status |= SGL_MSGBOX_STATUS_EXIT;
+            sgl_obj_set_destroyed(obj);
         }
         else if(evt->pos.y > (obj->coords.y2 - font_height - 2) && evt->pos.x > ((obj->coords.x1 + obj->coords.x2) / 2)) {
             msgbox->status |= SGL_MSGBOX_STATUS_EXIT;
+            sgl_obj_set_destroyed(obj);
         }
         else {
             sgl_obj_clear_dirty(obj);
             return;
         }
     }
-
+    else if (evt->type == SGL_EVENT_OPTION_WALK) {
+        if (msgbox->status == SGL_MSGBOX_STATUS_NORMAL) {
+            msgbox->status = SGL_MSGBOX_STATUS_LEFT;
+            *msgbox->exit_btn = msgbox->lbtn_text;
+        }
+        else if (msgbox->status == SGL_MSGBOX_STATUS_LEFT) {
+            msgbox->status = SGL_MSGBOX_STATUS_RIGHT;
+            *msgbox->exit_btn = msgbox->rbtn_text;
+        }
+        else if (msgbox->status == SGL_MSGBOX_STATUS_RIGHT) {
+            msgbox->status = SGL_MSGBOX_STATUS_LEFT;
+            *msgbox->exit_btn = msgbox->lbtn_text;
+        }
+        sgl_obj_update_area(&button_coords);
+    }
+    else if (evt->type == SGL_EVENT_OPTION_TAP) {
+        sgl_obj_set_destroyed(obj);
+    }
 }
 
 
@@ -202,7 +213,7 @@ sgl_obj_t* sgl_msgbox_create(sgl_obj_t* parent)
 
     msgbox->lbtn_color = sgl_color_mixer(SGL_THEME_COLOR, SGL_THEME_TEXT_COLOR, 200);
     msgbox->rbtn_color = sgl_color_mixer(SGL_THEME_COLOR, SGL_THEME_TEXT_COLOR, 200);
-    msgbox->lbtn_text = "OK";
+    msgbox->lbtn_text = "YES";
     msgbox->rbtn_text = "NO";
     msgbox->lbtn_text_color = SGL_THEME_TEXT_COLOR;
     msgbox->rbtn_text_color = SGL_THEME_TEXT_COLOR;
@@ -210,6 +221,7 @@ sgl_obj_t* sgl_msgbox_create(sgl_obj_t* parent)
     msgbox->status = SGL_MSGBOX_STATUS_NORMAL;
     msgbox->title_height = 0;
     msgbox->text_y_offset = 0;
+    msgbox->text_x_offset = 0;
     msgbox->exit_btn = NULL;
 
     sgl_obj_set_clickable(obj);
