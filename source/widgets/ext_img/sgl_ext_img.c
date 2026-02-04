@@ -67,34 +67,37 @@ static inline void rle_decompress_line(sgl_ext_img_t *img, sgl_area_t *coords, s
             case SGL_PIXMAP_FMT_RLE_RGB332:
                 pix_value = tmp_buf[1];
                 img->color = sgl_rgb332_to_color(pix_value);
+                img->pix_alpha = SGL_ALPHA_MAX;
                 img->index ++;
                 break;
             case SGL_PIXMAP_FMT_RLE_ARGB2222:
                 pix_value = tmp_buf[1];
                 img->color = sgl_rgb222_to_color(pix_value);
-                img->color = sgl_color_mixer(img->color, *out, sgl_opa2_table[pix_value >> 6]);
+                img->pix_alpha = sgl_opa2_table[pix_value >> 6];
                 img->index ++;
                 break;
             case SGL_PIXMAP_FMT_RLE_RGB565:
                 pix_value = tmp_buf[1] | (tmp_buf[2] << 8);
                 img->color = sgl_rgb565_to_color(pix_value);
+                img->pix_alpha = SGL_ALPHA_MAX;
                 img->index += 2;
                 break;
             case SGL_PIXMAP_FMT_RLE_ARGB4444:
                 pix_value = tmp_buf[1] | (tmp_buf[2] << 8);
                 img->color = sgl_rgb444_to_color(pix_value);
-                img->color = sgl_color_mixer(img->color, *out, sgl_opa4_table[pix_value >> 12]);
+                img->pix_alpha = sgl_opa4_table[pix_value >> 12];
                 img->index += 2;
                 break;
             case SGL_PIXMAP_FMT_RLE_RGB888:
                 pix_value = tmp_buf[1] | (tmp_buf[2] << 8) | (tmp_buf[3] << 16);
                 img->color = sgl_rgb888_to_color(pix_value);
+                img->pix_alpha = SGL_ALPHA_MAX;
                 img->index += 3;
                 break;
             case SGL_PIXMAP_FMT_RLE_ARGB8888:
                 pix_value = tmp_buf[1] | (tmp_buf[2] << 8) | (tmp_buf[3] << 16);
                 img->color = sgl_rgb888_to_color(pix_value);
-                img->color = sgl_color_mixer(img->color, *out, tmp_buf[4]);
+                img->pix_alpha = tmp_buf[4];
                 img->index += 4;
                 break;
             default:
@@ -103,6 +106,7 @@ static inline void rle_decompress_line(sgl_ext_img_t *img, sgl_area_t *coords, s
         }
 
         if (out != NULL && i >= area->x1 && i <= area->x2) {
+            img->color = (img->pix_alpha == SGL_ALPHA_MAX ? img->color : sgl_color_mixer(img->color, *out, img->pix_alpha));
             *out = (img->alpha == SGL_ALPHA_MAX ? img->color : sgl_color_mixer(img->color, *out, img->alpha));
             out ++;
         }

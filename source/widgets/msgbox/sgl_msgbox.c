@@ -159,15 +159,18 @@ static void sgl_msgbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
     else if (evt->type == SGL_EVENT_OPTION_WALK) {
         if (msgbox->status == SGL_MSGBOX_STATUS_NORMAL) {
             msgbox->status = SGL_MSGBOX_STATUS_LEFT;
-            *msgbox->exit_btn = msgbox->lbtn_text;
         }
         else if (msgbox->status == SGL_MSGBOX_STATUS_LEFT) {
             msgbox->status = SGL_MSGBOX_STATUS_RIGHT;
-            *msgbox->exit_btn = msgbox->rbtn_text;
+            if (msgbox->exit_btn) {
+                *msgbox->exit_btn = msgbox->rbtn_text;
+            }
         }
         else if (msgbox->status == SGL_MSGBOX_STATUS_RIGHT) {
             msgbox->status = SGL_MSGBOX_STATUS_LEFT;
-            *msgbox->exit_btn = msgbox->lbtn_text;
+            if (msgbox->exit_btn) {
+                *msgbox->exit_btn = msgbox->lbtn_text;
+            }
         }
         sgl_obj_update_area(&button_coords);
     }

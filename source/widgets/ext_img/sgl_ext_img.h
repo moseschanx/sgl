@@ -123,7 +123,8 @@ typedef struct sgl_ext_img {
     uint8_t         pixmap_num;
     /* RLE compress context */
     sgl_color_t     color;
-    uint16_t        remainder;
+    uint8_t         remainder;
+    uint8_t         pix_alpha;
     uint32_t        index;
 #if CONFIG_SGL_EXT_IMG_USE_BUFFER
     uint8_t         flash_buffer[512];
