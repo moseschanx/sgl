@@ -110,6 +110,8 @@ static inline void sgl_msgbox_set_alpha(sgl_obj_t *obj, uint8_t alpha)
  */
 static inline void sgl_msgbox_set_radius(sgl_obj_t *obj, uint8_t radius)
 {
+    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    msgbox->body_desc.radius = radius;
     sgl_obj_set_radius(obj, radius);
     sgl_obj_set_dirty(obj);
 }
