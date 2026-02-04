@@ -31,6 +31,7 @@
 #include <sgl_draw.h>
 #include <sgl_font.h>
 #include <sgl_theme.h>
+#include <sgl_misc.h>
 
 
 /* current sgl system variable, do not used it */
@@ -678,9 +679,17 @@ int sgl_init(void)
     sgl_system.angle = 0;
 #endif
 #endif
-
     /* create event queue */
-    return sgl_event_queue_init();
+    if (sgl_event_queue_init()) {
+        SGL_LOG_ERROR("sgl_init: event queue init failed");
+        sgl_free(obj);
+        return -1;
+    }
+
+#if (CONFIG_SGL_BOOT_LOGO)
+    sgl_boot_logo();
+#endif
+    return 0;
 }
 
 
