@@ -28,7 +28,7 @@
 
 
 // Draw a dashed line using Bresenham's algorithm with dash pattern
-static void draw_dashed_line(sgl_surf_t *surf, sgl_area_t *area, int16_t x0, int16_t y0, int16_t x1, int16_t y1, sgl_color_t color)
+static void draw_dashed_line(sgl_surf_t *surf, sgl_area_t *area, int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t gap, sgl_color_t color)
 {
     int16_t dx = sgl_abs(x1 - x0);
     int16_t dy = sgl_abs(y1 - y0);
@@ -36,9 +36,7 @@ static void draw_dashed_line(sgl_surf_t *surf, sgl_area_t *area, int16_t x0, int
     int16_t sy = (y0 < y1) ? 1 : -1;
     int16_t err = dx - dy;
     int16_t e2;
-
     int16_t dash_len = 0;
-    const int16_t dash_pattern = 5; // Length of each dash segment
 
     sgl_area_t clip_area = {
         .x1 = surf->x1,
@@ -51,14 +49,14 @@ static void draw_dashed_line(sgl_surf_t *surf, sgl_area_t *area, int16_t x0, int
 
     while (1) {
         // Draw dash segment
-        if (dash_len < dash_pattern) {
+        if (dash_len < gap) {
             // Check if point is within clipping area
             if (x0 >= clip_area.x1 && x0 <= clip_area.x2 && y0 >= clip_area.y1 && y0 <= clip_area.y2) {
                 sgl_color_t *buf = sgl_surf_get_buf(surf, x0 - surf->x1, y0 - surf->y1);
                 *buf = color;
             }
             dash_len++;
-        } else if (dash_len < 2 * dash_pattern) {
+        } else if (dash_len < 2 * gap) {
             // Skip drawing (gap segment)
             dash_len++;
         } else {
@@ -237,18 +235,18 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
         int16_t y_center = obj->coords.y1 + (int32_t)(height * (display_max - (display_min + display_max) / 2)) / (display_max - display_min);
         
         // Draw horizontal center line (midpoint of display range)
-        if (scope->grid_style == 1) {
+        if (scope->grid_style) {
             // Draw dashed line
-            draw_dashed_line(surf, &obj->area, obj->coords.x1, y_center, obj->coords.x2, y_center, scope->grid_color);
+            draw_dashed_line(surf, &obj->area, obj->coords.x1, y_center, obj->coords.x2, y_center, scope->grid_style, scope->grid_color);
         } else {
             // Draw solid line
             sgl_draw_fill_hline(surf, &obj->area, y_center, obj->coords.x1, obj->coords.x2, 1, scope->grid_color, scope->alpha);
         }
 
         // Draw vertical center line
-        if (scope->grid_style == 1) {
+        if (scope->grid_style) {
             // Draw dashed line
-            draw_dashed_line(surf, &obj->area, x_center, obj->coords.y1, x_center, obj->coords.y2, scope->grid_color);
+            draw_dashed_line(surf, &obj->area, x_center, obj->coords.y1, x_center, obj->coords.y2, scope->grid_style, scope->grid_color);
         } else {
             // Draw solid line
             sgl_draw_fill_vline(surf, &obj->area, x_center, obj->coords.y1, obj->coords.y2, 1, scope->grid_color, scope->alpha);
@@ -258,9 +256,9 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
         for (int i = 1; i < 10; i++) {
             int16_t x_pos = obj->coords.x1 + (width * i / 10);
 
-            if (scope->grid_style == 1) {
+            if (scope->grid_style) {
                 // Draw dashed line
-                draw_dashed_line(surf, &obj->area, x_pos, obj->coords.y1, x_pos, obj->coords.y2, scope->grid_color);
+                draw_dashed_line(surf, &obj->area, x_pos, obj->coords.y1, x_pos, obj->coords.y2, scope->grid_style, scope->grid_color);
             } else {
                 // Draw solid line
                 sgl_draw_fill_vline(surf, &obj->area, x_pos, obj->coords.y1, obj->coords.y2, 1, scope->grid_color, scope->alpha);
@@ -270,9 +268,9 @@ static void scope_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *ev
         // Draw horizontal grid lines (10 divisions)
         for (int i = 1; i < 10; i++) {
             int16_t y_pos = obj->coords.y1 + (height * i / 10); 
-            if (scope->grid_style == 1) {
+            if (scope->grid_style) {
                 // Draw dashed line
-                draw_dashed_line(surf, &obj->area, obj->coords.x1, y_pos, obj->coords.x2, y_pos, scope->grid_color);
+                draw_dashed_line(surf, &obj->area, obj->coords.x1, y_pos, obj->coords.x2, y_pos, scope->grid_style, scope->grid_color);
             } else {
                 // Draw solid line
                 sgl_draw_fill_hline(surf, &obj->area, y_pos, obj->coords.x1, obj->coords.x2, 1, scope->grid_color, scope->alpha);
