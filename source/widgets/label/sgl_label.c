@@ -238,6 +238,7 @@ sgl_obj_t* sgl_label_create(sgl_obj_t* parent)
     label->text = "";
     label->transform.rotation = 0;
     label->rota = 0;
+    label->font = sgl_get_system_font();
 
     return obj;
 }

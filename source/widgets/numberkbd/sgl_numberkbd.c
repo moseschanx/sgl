@@ -271,5 +271,7 @@ sgl_obj_t* sgl_numberkbd_create(sgl_obj_t* parent)
     numberkbd->btn_desc.border_color = SGL_THEME_BORDER_COLOR;
     numberkbd->btn_desc.pixmap = NULL;
 
+    numberkbd->font = sgl_get_system_font();
+
     return obj;
 }

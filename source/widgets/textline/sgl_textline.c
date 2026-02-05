@@ -82,6 +82,7 @@ sgl_obj_t* sgl_textline_create(sgl_obj_t* parent)
     textline->color = SGL_THEME_TEXT_COLOR;
     textline->line_margin = 1;
     textline->text = "textline";
+    textline->font = sgl_get_system_font();
 
     return obj;
 }

@@ -184,5 +184,7 @@ sgl_obj_t* sgl_checkbox_create(sgl_obj_t* parent)
 
     sgl_obj_set_clickable(obj);
 
+    checkbox->font = sgl_get_system_font();
+    checkbox->text = " ";
     return obj;
 }

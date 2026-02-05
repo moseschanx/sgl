@@ -480,6 +480,7 @@ typedef struct sgl_system {
     void               (*logdev)(const char *str);
     sgl_fbdev_t        fbdev;
     volatile uint32_t  tick_ms;
+    const sgl_font_t   *font;
 #if (CONFIG_SGL_FBDEV_ROTATION != 0)
     sgl_color_t        *rotation;
 #elif (CONFIG_SGL_FBDEV_RUNTIME_ROTATION)
@@ -958,6 +959,29 @@ static inline size_t sgl_obj_get_child_count(sgl_obj_t *obj)
  * @return none
  */
 void sgl_dirty_area_push(sgl_area_t *area);
+
+
+/**
+ * @brief set system font
+ * @param font pointer to font
+ * @return none
+ */
+static inline void sgl_set_system_font(const sgl_font_t *font)
+{
+    SGL_ASSERT(font != NULL);
+    sgl_system.font = font;
+}
+
+
+/**
+ * @brief get system font
+ * @param none
+ * @return pointer to system font
+ */
+static inline const sgl_font_t* sgl_get_system_font(void)
+{
+    return sgl_system.font; 
+}
 
 
 /**
