@@ -2,7 +2,7 @@
 # MIT License
 #
 # Copyright(c) 2023-present All contributors of SGL
-# Document reference link: docs directory
+# Document reference link: https://sgl-docs.readthedocs.io
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -48,4 +48,5 @@ set(SGL_SOURCE
     ${CMAKE_CURRENT_LIST_DIR}/scope/sgl_scope.c
     ${CMAKE_CURRENT_LIST_DIR}/ext_img/sgl_ext_img.c
     ${CMAKE_CURRENT_LIST_DIR}/polygon/sgl_polygon.c
+    ${CMAKE_CURRENT_LIST_DIR}/box/sgl_box.c
 )

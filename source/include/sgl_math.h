@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -56,6 +56,11 @@ extern "C" {
 #define sgl_is_odd(x)                     ((x) & 1)
 
 #define sgl_swap(a, b)                    do { (*a) ^= (*b); (*b) ^= (*a); (*a) ^= (*b); } while (0)
+
+
+#define SGL_FIXED_SHIFT                   (10)
+#define SGL_FIXED_ONE                     (1 << SGL_FIXED_SHIFT)
+#define SGL_FIXED_MASK                    (SGL_FIXED_ONE - 1)
 
 
 /**

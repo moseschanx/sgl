@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-
 /**
  * @brief append a character to the buffer
  * @param buf buffer
@@ -42,7 +41,6 @@ static inline void append_char(char *buf, size_t size, size_t *pos, char c)
     (*pos)++;
 }
 
-
 /**
  * @brief append a string to the buffer
  * @param buf buffer
@@ -56,17 +54,66 @@ static inline void append_str(char *buf, size_t size, size_t *pos, const char* s
 }
 
 /**
- * @brief append an integer to the buffer
+ * @brief pad alignment characters (default: space) to the buffer
+ * @param buf buffer
+ * @param size buffer size
+ * @param pos current position
+ * @param pad_len number of padding characters to append
+ * @param pad_char padding character (default: ' ')
+ */
+static inline void pad_align(char *buf, size_t size, size_t *pos, size_t pad_len, char pad_char)
+{
+    for (size_t i = 0; i < pad_len; i++) {
+        append_char(buf, size, pos, pad_char);
+    }
+}
+
+/**
+ * @brief calculate the length of an integer when converted to string
+ * @param val integer value
+ * @return number of characters of the integer string
+ */
+static inline size_t int_str_len(int val)
+{
+    if (val == 0) return 1; // Special case: 0 has length 1
+
+    size_t len = 0;
+    bool neg = val < 0;
+    
+    if (neg) val = -val;
+
+    do {
+        len++;
+        val /= 10;
+    } while (val);
+
+    return neg ? len + 1 : len; // Add 1 for negative sign
+}
+
+/**
+ * @brief append an integer to the buffer with left/right alignment support
  * @param buf buffer
  * @param size buffer size
  * @param pos current position
  * @param val integer to append
+ * @param width alignment width (0 means no alignment)
+ * @param left_align whether to use left alignment (true: left, false: right)
  */
-static inline void append_int(char *buf, size_t size, size_t *pos, int val)
+static inline void append_int(char *buf, size_t size, size_t *pos, int val, int width, bool left_align)
 {
-    char tmp[32];
+    char tmp[64];
     int i = 0;
     bool neg = val < 0;
+    size_t num_len = int_str_len(val);
+    size_t pad_len = 0;
+
+    if (width > 0 && (size_t)width > num_len) {
+        pad_len = (size_t)width - num_len;
+    }
+
+    if (!left_align && pad_len > 0) {
+        pad_align(buf, size, pos, pad_len, ' ');
+    }
 
     if (neg) val = -val;
 
@@ -78,45 +125,10 @@ static inline void append_int(char *buf, size_t size, size_t *pos, int val)
     if (neg) tmp[i++] = '-';
 
     while (i--) append_char(buf, size, pos, tmp[i]);
-}
 
-/**
- * @brief append an integer to the buffer with optional width/padding
- * @param buf buffer
- * @param size buffer size
- * @param pos current position
- * @param val integer to append
- * @param width minimum field width (-1 for no padding)
- * @param pad padding character (' ' or '0')
- */
-static inline void append_int_width(char *buf, size_t size, size_t *pos, int val, int width, char pad)
-{
-    char digits[32];
-    int di = 0;
-    bool neg = val < 0;
-    if (neg) val = -val;
-
-    do {
-        digits[di++] = (char)('0' + (val % 10));
-        val /= 10;
-    } while (val);
-
-    int len = di + (neg ? 1 : 0);
-
-    if (neg && pad == '0') {
-        append_char(buf, size, pos, '-');
-        // adjust length since '-' already emitted
-        len = di; 
+    if (left_align && pad_len > 0) {
+        pad_align(buf, size, pos, pad_len, ' ');
     }
-
-    int padCount = (width > len) ? (width - len) : 0;
-    while (padCount-- > 0) append_char(buf, size, pos, pad);
-
-    if (neg && pad != '0') {
-        append_char(buf, size, pos, '-');
-    }
-
-    while (di--) append_char(buf, size, pos, digits[di]);
 }
 
 /**
@@ -153,14 +165,14 @@ static void append_float(char *buf, size_t size, size_t *pos, double val, int pr
 {
     int int_part = (int)val;
     double frac = val - int_part;
-
+    
     if (val < 0) {
         append_char(buf, size, pos, '-');
         int_part = -int_part;
         frac = -frac;
     }
 
-    append_int(buf, size, pos, int_part);
+    append_int(buf, size, pos, int_part, 0, false);
     append_char(buf, size, pos, '.');
 
     int prec = (precision >= 0) ? precision : 6;
@@ -173,7 +185,7 @@ static void append_float(char *buf, size_t size, size_t *pos, double val, int pr
 }
 
 /**
- * @brief format a string, a simple version of vsnprintf
+ * @brief format a string, a simple version of vsnprintf (with width alignment support)
  * @param buf buffer
  * @param size buffer size
  * @param fmt format string
@@ -194,11 +206,20 @@ int sgl_vsnprintf(char *buf, size_t size, const char *fmt, va_list ap)
         }
 
         fmt++;
+        bool left_align = false;
+        int width = 0;
         int precision = -1;
-        int width = -1;
-        char pad = ' ';
 
-        // Parse precision (e.g., %.2f)
+        if (*fmt == '-') {
+            left_align = true;
+            fmt++;
+        }
+
+        while (*fmt >= '0' && *fmt <= '9') {
+            width = width * 10 + (*fmt - '0');
+            fmt++;
+        }
+
         if (*fmt == '.') {
             fmt++;
             precision = 0;
@@ -208,21 +229,7 @@ int sgl_vsnprintf(char *buf, size_t size, const char *fmt, va_list ap)
             }
         }
 
-        // Parse padding/width (e.g., %02d or %5d)
-        if (*fmt == '0') {
-            pad = '0';
-            fmt++;
-        }
-        if (*fmt >= '0' && *fmt <= '9') {
-            width = 0;
-            while (*fmt >= '0' && *fmt <= '9') {
-                width = width * 10 + (*fmt - '0');
-                fmt++;
-            }
-        }
-
         char spec = *fmt;
-
         switch (spec) {
         case 's': {
             const char *s = va_arg(ap, const char*);
@@ -232,11 +239,7 @@ int sgl_vsnprintf(char *buf, size_t size, const char *fmt, va_list ap)
 
         case 'd': {
             int d = va_arg(ap, int);
-            if (width >= 0) {
-                append_int_width(buf, size, &pos, d, width, pad);
-            } else {
-                append_int(buf, size, &pos, d);
-            }
+            append_int(buf, size, &pos, d, width, left_align);
             break;
         }
 
@@ -286,7 +289,7 @@ int sgl_vsnprintf(char *buf, size_t size, const char *fmt, va_list ap)
 }
 
 /**
- * @brief format a string, a simple version of snprintf
+ * @brief format a string, a simple version of snprintf (with width alignment support)
  * @param buf buffer
  * @param size buffer size
  * @param fmt format string

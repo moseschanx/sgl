@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -120,7 +120,8 @@ static inline void sgl_textbox_set_bg_color(sgl_obj_t *obj, sgl_color_t color)
 static inline void sgl_textbox_set_radius(sgl_obj_t *obj, uint8_t radius)
 {
     sgl_textbox_t *textbox = (sgl_textbox_t*)obj;
-    textbox->bg.radius = sgl_obj_fix_radius(obj, radius);
+    sgl_obj_set_radius(obj, radius);
+    textbox->bg.radius = obj->radius;
     sgl_obj_set_dirty(obj);
 }
 

@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,11 +36,12 @@
 static void sgl_ring_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
     sgl_ring_t *ring = (sgl_ring_t*)obj;
+    int16_t cx, cy;
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
-        ring->cx = (obj->coords.x2 + obj->coords.x1) / 2;
-        ring->cy = (obj->coords.y2 + obj->coords.y1) / 2;
-        sgl_draw_fill_ring(surf, &obj->area, ring->cx, ring->cy, ring->radius_in, ring->radius_out, ring->color, ring->alpha);
+        cx = (obj->coords.x2 + obj->coords.x1) / 2;
+        cy = (obj->coords.y2 + obj->coords.y1) / 2;
+        sgl_draw_fill_ring(surf, &obj->area, cx, cy, ring->radius_in, ring->radius_out, ring->color, ring->alpha);
     }
     else if(evt->type == SGL_EVENT_DRAW_INIT) {
         if(ring->radius_out == -1) {
@@ -50,10 +51,6 @@ static void sgl_ring_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t 
         if(ring->radius_in == -1) {
             ring->radius_in = ring->radius_out - 2;
         }
-    }
-
-    if(obj->event_fn) {
-        obj->event_fn(evt);
     }
 }
 
@@ -81,8 +78,6 @@ sgl_obj_t* sgl_ring_create(sgl_obj_t* parent)
     obj->needinit = 1;
     ring->radius_in = -1;
     ring->radius_out = -1;
-    ring->cx = -1;
-    ring->cy = -1;
     ring->alpha = SGL_THEME_ALPHA;
     ring->color = SGL_THEME_COLOR;
 

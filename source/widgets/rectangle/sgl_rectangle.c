@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,32 +42,31 @@
  */
 static void sgl_rectangle_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
+    sgl_rectangle_t *rect = (sgl_rectangle_t*)obj;
+    sgl_draw_rect_t desc = {
+        .color = rect->color,
+        .alpha = rect->alpha,
+        .border = obj->border,
+        .border_color = rect->border_color,
+        .pixmap = rect->pixmap,
+        .radius = obj->radius,
+    };
+
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
-        sgl_rectangle_t *rect = (sgl_rectangle_t*)obj;
-        sgl_draw_rect(surf, &obj->area, &obj->coords, &rect->desc);
+
+        sgl_draw_rect(surf, &obj->area, &obj->coords, &desc);
     }
     else if(evt->type == SGL_EVENT_PRESSED) {
         if(sgl_obj_is_flexible(obj)) {
             sgl_obj_size_zoom(obj, 2);
         }
-
-        if(obj->event_fn) {
-            obj->event_fn(evt);
-        }
+        sgl_obj_set_dirty(obj);
     }
     else if(evt->type == SGL_EVENT_RELEASED) {
         if(sgl_obj_is_flexible(obj)) {
-            sgl_obj_dirty_merge(obj);
             sgl_obj_size_zoom(obj, -2);
         }
-        if(obj->event_fn) {
-            obj->event_fn(evt);
-        }
-    }
-    else {
-        if(obj->event_fn) {
-            obj->event_fn(evt);
-        }
+        sgl_obj_set_dirty(obj);
     }
 }
 
@@ -95,11 +94,10 @@ sgl_obj_t* sgl_rect_create(sgl_obj_t* parent)
 
     obj->construct_fn = sgl_rectangle_construct_cb;
 
-    rect->desc.alpha = SGL_THEME_ALPHA;
-    rect->desc.color = SGL_THEME_COLOR;
-    rect->desc.border = SGL_THEME_BORDER_WIDTH;
-    rect->desc.border_color = SGL_THEME_BORDER_COLOR;
-    rect->desc.pixmap = NULL;
+    rect->alpha = SGL_THEME_ALPHA;
+    rect->color = SGL_THEME_COLOR;
+    rect->border_color = SGL_THEME_BORDER_COLOR;
+    rect->pixmap = NULL;
 
     return obj;
 }

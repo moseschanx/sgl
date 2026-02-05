@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,25 +33,15 @@
 #include <sgl_theme.h>
 
 
-/* current context, page pointer, and dirty area */
-sgl_context_t sgl_ctx = {
-    .fb_dev = {
-        .xres = 0,
-        .yres = 0,
-        .xres_virtual = 0,
-        .yres_virtual = 0,
-        .buffer[0] = NULL,
-        .buffer[1] = NULL,
-        .buffer_size = 0,
-    },
-    .log_dev = {
-        .log_puts = NULL,
-    },
-    .page = NULL,
-    .tick_ms = 0,
-    .fb_swap = 0,
-    .fb_ready = 1,
-};
+/* current sgl system variable, do not used it */
+sgl_system_t sgl_system;
+
+
+/**
+ * @brief Alpha blending table for 4 bpp and 2 bpp
+ */
+const uint8_t sgl_opa4_table[16] = {0,  17, 34,  51, 68, 85, 102, 119, 136, 153, 170, 187, 204, 221, 238, 255 };
+const uint8_t sgl_opa2_table[4]  = {0, 85, 170, 255};
 
 
 /**
@@ -62,41 +52,45 @@ static uint8_t sgl_mem_pool[CONFIG_SGL_HEAP_MEMORY_SIZE];
 
 /**
  * @brief register the frame buffer device
- * @param fb_dev the frame buffer device
+ * @param fbinfo the frame buffer device information
  * @return int, 0 if success, -1 if failed
- * @note you must check the return value of this function
+ * @note you must check the result of this function
  */
-int sgl_device_fb_register(sgl_device_fb_t *fb_dev)
+int sgl_fbdev_register(sgl_fbinfo_t *fbinfo)
 {
-    sgl_check_ptr_return(fb_dev, -1);
+    sgl_check_ptr_return(fbinfo, -1);
 
-    if (fb_dev->buffer[0] == NULL) {
+    if (fbinfo->buffer[0] == NULL) {
         SGL_LOG_ERROR("You haven't set up the frame buffer.");
         SGL_ASSERT(0);
         return -1;
     }
 
-    if (fb_dev->flush_area == NULL) {
+    if (fbinfo->flush_area == NULL) {
         SGL_LOG_ERROR("You haven't set up the flush area.");
         SGL_ASSERT(0);
         return -1;
     }
 
-    if (fb_dev->buffer_size == 0) {
+    if (fbinfo->buffer_size == 0) {
         SGL_LOG_ERROR("You haven't set up the frame buffer size.");
         SGL_ASSERT(0);
         return -1;
     }
 
-    sgl_ctx.fb_dev.buffer[0]   = fb_dev->buffer[0];
-    sgl_ctx.fb_dev.buffer[1]   = fb_dev->buffer[1];
-    sgl_ctx.fb_dev.buffer_size = fb_dev->buffer_size;
+    sgl_system.fbdev.fbinfo = *fbinfo;
 
-    sgl_ctx.fb_dev.xres             = fb_dev->xres;
-    sgl_ctx.fb_dev.yres             = fb_dev->yres;
-    sgl_ctx.fb_dev.xres_virtual     = fb_dev->xres_virtual;
-    sgl_ctx.fb_dev.yres_virtual     = fb_dev->yres_virtual;
-    sgl_ctx.fb_dev.flush_area       = fb_dev->flush_area;
+    sgl_system.fbdev.surf.buffer = (sgl_color_t*)fbinfo->buffer[0];
+    sgl_system.fbdev.surf.x1 = 0;
+    sgl_system.fbdev.surf.y1 = 0;
+    sgl_system.fbdev.surf.x2 = fbinfo->xres - 1;
+    sgl_system.fbdev.surf.y2 = fbinfo->yres - 1;
+    sgl_system.fbdev.surf.size = fbinfo->buffer_size;
+    sgl_system.fbdev.surf.w = fbinfo->xres;
+
+    sgl_system.tick_ms = 0;
+    sgl_system.fbdev.fb_status = 3;
+    sgl_system.fbdev.fb_swap = 0;
 
     return 0;
 }
@@ -119,12 +113,15 @@ uint8_t sgl_pixmal_get_bits(const sgl_pixmap_t *pixmap)
     case SGL_PIXMAP_FMT_RLE_RGB332:
         bits = 1; break;
     case SGL_PIXMAP_FMT_RGB565:
+    case SGL_PIXMAP_FMT_ARGB4444:
     case SGL_PIXMAP_FMT_RLE_RGB565:
+    case SGL_PIXMAP_FMT_RLE_ARGB4444:
         bits = 2; break;
     case SGL_PIXMAP_FMT_RGB888:
     case SGL_PIXMAP_FMT_RLE_RGB888:
         bits = 3; break;
-    case SGL_PIXMAP_FMT_RLE_RGBA8888:
+    case SGL_PIXMAP_FMT_ARGB8888:
+    case SGL_PIXMAP_FMT_RLE_ARGB8888:
         bits = 4; break;
     default:
         SGL_LOG_ERROR("pixmap format error");
@@ -163,6 +160,7 @@ void sgl_obj_add_child(sgl_obj_t *parent, sgl_obj_t *obj)
  * @brief remove an object from its parent
  * @param obj object to remove
  * @return none
+ * @note This function will remove the object from its parent, of course, his children will also be removed
  */
 void sgl_obj_remove(sgl_obj_t *obj)
 {
@@ -202,7 +200,6 @@ void sgl_obj_move_child_pos(sgl_obj_t *obj, int16_t ofs_x, int16_t ofs_y)
     if (obj->child == NULL) {
         return;
     }
-    obj->dirty = 1;
     stack[top++] = obj->child;
 
     while (top > 0) {
@@ -354,7 +351,7 @@ void sgl_obj_move_down(sgl_obj_t *obj)
  * @return none
  * @note Only move among sibling objects
  */
-void sgl_obj_move_foreground(sgl_obj_t *obj)
+void sgl_obj_move_top(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL && obj->parent != NULL);
 
@@ -401,7 +398,7 @@ void sgl_obj_move_foreground(sgl_obj_t *obj)
  * @return none
  * @note Only move among sibling objects
  */
-void sgl_obj_move_background(sgl_obj_t *obj)
+void sgl_obj_move_bottom(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
     sgl_obj_t *parent = obj->parent;
@@ -429,10 +426,11 @@ void sgl_obj_move_background(sgl_obj_t *obj)
 /**
  * @brief get fix radius of object
  * @param obj object
- * @return fix radius
+ * @param radius: radius that you want to set
+ * @return none
  * @note if radius is larger than object's width or height, fix radius will be returned
  */
-int16_t sgl_obj_fix_radius(sgl_obj_t *obj, size_t radius)
+void sgl_obj_set_radius(sgl_obj_t *obj, size_t radius)
 {
     int16_t w = (obj->coords.x2 - obj->coords.x1 + 1);
     int16_t h = (obj->coords.y2 - obj->coords.y1 + 1);
@@ -443,7 +441,6 @@ int16_t sgl_obj_fix_radius(sgl_obj_t *obj, size_t radius)
     }
 
     obj->radius = radius & 0xFFF;
-    return radius;
 }
 
 
@@ -558,19 +555,12 @@ static sgl_page_t* sgl_page_create(void)
 
     sgl_obj_t *obj = &page->obj;
 
-    if (sgl_ctx.fb_dev.buffer[0] == NULL) {
+    if (sgl_system.fbdev.fbinfo.buffer[0] == NULL) {
         SGL_LOG_ERROR("sgl_page_create: framebuffer is NULL");
         sgl_free(page);
         return NULL;
     }
 
-    page->surf.buffer = (sgl_color_t*)sgl_ctx.fb_dev.buffer[0];
-    page->surf.x1 = 0;
-    page->surf.y1 = 0;
-    page->surf.x2 = sgl_ctx.fb_dev.xres - 1;
-    page->surf.y2 = sgl_ctx.fb_dev.yres - 1;
-    page->surf.size = sgl_ctx.fb_dev.buffer_size;
-    page->surf.pitch = sgl_ctx.fb_dev.xres;
     page->color = SGL_THEME_DESKTOP;
 
     obj->parent = obj;
@@ -582,8 +572,8 @@ static sgl_page_t* sgl_page_create(void)
     obj->coords = (sgl_area_t) {
         .x1 = 0,
         .y1 = 0,
-        .x2 = sgl_ctx.fb_dev.xres - 1,
-        .y2 = sgl_ctx.fb_dev.yres - 1,
+        .x2 = sgl_system.fbdev.fbinfo.xres - 1,
+        .y2 = sgl_system.fbdev.fbinfo.yres - 1,
     };
 
     obj->area = obj->coords;
@@ -591,8 +581,8 @@ static sgl_page_t* sgl_page_create(void)
     /* init child list */
     sgl_obj_node_init(&page->obj);
 
-    if (sgl_ctx.page == NULL) {
-        sgl_ctx.page = page;
+    if (sgl_system.fbdev.active == NULL) {
+        sgl_system.fbdev.active = &page->obj;
     }
 
     return page;
@@ -650,40 +640,50 @@ sgl_obj_t* sgl_obj_create(sgl_obj_t *parent)
  */
 static inline void sgl_dirty_area_init(void)
 {
-    sgl_ctx.dirty_num = 0;
+    sgl_system.fbdev.dirty_num = 0;
 }
 
 
 /**
  * @brief sgl global initialization
  * @param none
- * @return none
+ * @return int, 0 means success, others means failed
  * @note you should call this function before using sgl and you should call this function after register framebuffer device
  */
-void sgl_init(void)
+int sgl_init(void)
 {
+    sgl_obj_t *obj = NULL;
+
     /* init memory pool */
     sgl_mm_init(sgl_mem_pool, sizeof(sgl_mem_pool));
 
     /* initialize current context */
-    sgl_ctx.page = NULL;
-
-    /* alloc memory for dirty area */
-    sgl_ctx.dirty = sgl_malloc(SGL_DIRTY_AREA_NUM_MAX * sizeof(sgl_area_t));
-    if (sgl_ctx.dirty == NULL) {
-        SGL_LOG_ERROR("sgl dirty area memory alloc failed");
-        SGL_ASSERT(0);
-        return;
-    }
+    sgl_system.fbdev.active = NULL;
 
     /* initialize dirty area */
     sgl_dirty_area_init();
 
     /* create a screen object for drawing */
-    sgl_obj_create(NULL);
+    obj = sgl_obj_create(NULL);
+    if (obj == NULL) {
+        SGL_LOG_ERROR("sgl_init: create screen object failed");
+        return -1;
+    }
+
+    /* if the rotation is not 0 or 180, we need to alloc a buffer for rotation */
+#if ((CONFIG_SGL_FBDEV_ROTATION != 0) || CONFIG_SGL_FBDEV_RUNTIME_ROTATION)
+    sgl_system.rotation = (sgl_color_t*)sgl_malloc(sgl_system.fbdev.fbinfo.buffer_size * sizeof(sgl_color_t));
+    if (sgl_system.rotation == NULL) {
+        SGL_LOG_ERROR("sgl_init: alloc rotation buffer failed");
+        return -1;
+    }
+#if (CONFIG_SGL_FBDEV_RUNTIME_ROTATION)
+    sgl_system.angle = 0;
+#endif
+#endif
 
     /* create event queue */
-    sgl_event_queue_init();
+    return sgl_event_queue_init();
 }
 
 
@@ -695,15 +695,45 @@ void sgl_init(void)
 void sgl_screen_load(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-    sgl_ctx.page = (sgl_page_t*)obj;
-
-    /* initilize framebuffer swap */
-    sgl_ctx.fb_swap = 0;
+    sgl_system.fbdev.active = obj;
 
     /* initialize dirty area */
     sgl_dirty_area_init();
     sgl_obj_set_dirty(obj);
 }
+
+
+#if (CONFIG_SGL_FBDEV_RUNTIME_ROTATION)
+/**
+ * @brief set framebuffer device rotation angle
+ * @param angle [in] rotation angle, that is 0, 90, 180, 270
+ * @return none
+ * @note Rotation angle must be 0, 90, 180, 270
+ */
+void sgl_fbdev_set_angle(uint16_t angle)
+{
+    if (angle == sgl_system.angle) {
+        return;
+    }
+
+    const uint8_t cur_status = (sgl_system.angle == 0 || sgl_system.angle == 180) ? 0 : 
+                               (sgl_system.angle == 90 || sgl_system.angle == 270) ? 1 : 2;
+
+    const uint8_t new_status = (angle == 0 || angle == 180) ? 0 : 
+                               (angle == 90 || angle == 270) ? 1 : 2;
+
+    if (cur_status == 2 || new_status == 2) {
+        SGL_LOG_WARN("sgl_fbdev_set_angle: invalid angle");
+        return;
+    }
+
+    if (cur_status != new_status) {
+        sgl_swap(&sgl_system.fbdev.fbinfo.xres, &sgl_system.fbdev.fbinfo.yres);
+    }
+
+    sgl_system.angle = angle;
+}
+#endif // !CONFIG_SGL_FBDEV_RUNTIME_ROTATION
 
 
 /**
@@ -788,34 +818,38 @@ static inline bool sgl_merge_determines(sgl_area_t* a, sgl_area_t* b)
 
 
 /**
- * @brief merge object area into global dirty area
+ * @brief merge an area into global dirty area
  * 
  * This function calculates how much rectangle 'a' would need to grow in each direction (left, right, top, bottom)
  * to fully enclose both 'a' and 'b'. The result is the sum of the expansions along all four sides.
  * Note: This is not the increase in area, th is a lightweight heuristic for merge cost in bounding-box algorithms.
  * 
- * @param obj [in] Pointer to the object
+ * @param area [in] Pointer to the area
  * @return none
  */
-void sgl_obj_dirty_merge(sgl_obj_t *obj)
+void sgl_dirty_area_push(sgl_area_t *area)
 {
-    SGL_ASSERT(obj != NULL);
+    SGL_ASSERT(area != NULL);
     int32_t best_idx = -1, min_growth = INT32_MAX, growth = INT32_MAX;
     /* skip invalid area */
-    if (obj->area.x1 > obj->area.x2 || obj->area.y1 > obj->area.y2) {
+    if (area->x1 > area->x2 || area->y1 > area->y2) {
         return;
     }
 
-    if (sgl_ctx.dirty_num == 0) {
-        sgl_ctx.dirty[0] = obj->area;
-        sgl_ctx.dirty_num = 1;
+    if (sgl_system.fbdev.dirty_num == 0) {
+        sgl_system.fbdev.dirty[0] = *area;
+        sgl_system.fbdev.dirty_num = 1;
         return;
     }
 
-    for (uint8_t i = 0; i < sgl_ctx.dirty_num; i++) {
-        if (sgl_merge_determines(&sgl_ctx.dirty[i], &obj->area)) {
-            growth = sgl_area_growth(&sgl_ctx.dirty[i], &obj->area);
-            if (growth < min_growth) {
+    for (uint8_t i = 0; i < sgl_system.fbdev.dirty_num; i++) {
+        if (sgl_merge_determines(&sgl_system.fbdev.dirty[i], area)) {
+            growth = sgl_area_growth(&sgl_system.fbdev.dirty[i], area);
+            if (growth == 0) {
+                /* already contains the area */
+                return;
+            }
+            else if (growth < min_growth) {
                 min_growth = growth;
                 best_idx = i;
             }
@@ -824,16 +858,16 @@ void sgl_obj_dirty_merge(sgl_obj_t *obj)
 
     if (best_idx >= 0) {
         /* merge object area into best_idx dirty area */
-        sgl_area_selfmerge(&sgl_ctx.dirty[best_idx], &obj->area);
+        sgl_area_selfmerge(&sgl_system.fbdev.dirty[best_idx], area);
         return;
     }
 
-    if (sgl_ctx.dirty_num < SGL_DIRTY_AREA_NUM_MAX) {
+    if (sgl_system.fbdev.dirty_num < SGL_DIRTY_AREA_NUM_MAX) {
         /* add new dirty area */
-        sgl_ctx.dirty[sgl_ctx.dirty_num++] = obj->area;
+        sgl_system.fbdev.dirty[sgl_system.fbdev.dirty_num++] = *area;
     } else {
         /* merge object area into last dirty area */
-        sgl_area_selfmerge(&sgl_ctx.dirty[SGL_DIRTY_AREA_NUM_MAX - 1], &obj->area);
+        sgl_area_selfmerge(&sgl_system.fbdev.dirty[SGL_DIRTY_AREA_NUM_MAX - 1], area);
     }
 }
 
@@ -879,7 +913,7 @@ int sgl_obj_init(sgl_obj_t *obj, sgl_obj_t *parent)
  * @brief  free an object
  * @param  obj: object to free
  * @retval none
- * @note this function will free all the children of the object
+ * @note this function will free all the itself and children of the object
  */
 void sgl_obj_free(sgl_obj_t *obj)
 {
@@ -917,11 +951,11 @@ void sgl_obj_delete(sgl_obj_t *obj)
 {
     if (obj == NULL || obj == sgl_screen_act()) {
         obj = sgl_screen_act();
-        sgl_obj_dirty_merge(obj);
         if (obj->child) {
             sgl_obj_free(obj->child);
         }
         sgl_obj_node_init(obj);
+        sgl_obj_set_dirty(obj);
         return;
     }
     else if (obj->page == 1) {
@@ -930,7 +964,6 @@ void sgl_obj_delete(sgl_obj_t *obj)
     }
 
     sgl_obj_set_destroyed(obj);
-    sgl_obj_set_dirty(obj);
 }
 
 
@@ -1091,53 +1124,54 @@ sgl_pos_t sgl_get_align_pos(sgl_size_t *parent_size, sgl_size_t *size, sgl_align
 {
     SGL_ASSERT(parent_size != NULL && size != NULL);
     sgl_pos_t ret = {.x = 0, .y = 0};
+
     switch (type) {
-        case SGL_ALIGN_CENTER:
-            ret.x = (parent_size->w - size->w) / 2;
-            ret.y = (parent_size->h - size->h) / 2;
-        break;
+    case SGL_ALIGN_CENTER:
+        ret.x = (parent_size->w - size->w) / 2;
+        ret.y = (parent_size->h - size->h) / 2;
+    break;
 
-        case SGL_ALIGN_TOP_MID:
-            ret.x = (parent_size->w - size->w) / 2;
-            ret.y = 0;
-        break;
+    case SGL_ALIGN_TOP_MID:
+        ret.x = (parent_size->w - size->w) / 2;
+        ret.y = 0;
+    break;
 
-        case SGL_ALIGN_TOP_LEFT:
-            ret.x = 0;
-            ret.y = 0;
-        break;
+    case SGL_ALIGN_TOP_LEFT:
+        ret.x = 0;
+        ret.y = 0;
+    break;
 
-        case SGL_ALIGN_TOP_RIGHT:
-            ret.x = parent_size->w - size->w;
-            ret.y = 0;
-        break;
+    case SGL_ALIGN_TOP_RIGHT:
+        ret.x = parent_size->w - size->w;
+        ret.y = 0;
+    break;
 
-        case SGL_ALIGN_BOT_MID:
-            ret.x = (parent_size->w - size->w) / 2;
-            ret.y = parent_size->h - size->h;
-        break;
+    case SGL_ALIGN_BOT_MID:
+        ret.x = (parent_size->w - size->w) / 2;
+        ret.y = parent_size->h - size->h;
+    break;
 
-        case SGL_ALIGN_BOT_LEFT:
-            ret.x = 0;
-            ret.y = parent_size->h - size->h;
-        break;
+    case SGL_ALIGN_BOT_LEFT:
+        ret.x = 0;
+        ret.y = parent_size->h - size->h;
+    break;
 
-        case SGL_ALIGN_BOT_RIGHT:
-            ret.x = parent_size->w - size->w;
-            ret.y = parent_size->h - size->h;
-        break;
+    case SGL_ALIGN_BOT_RIGHT:
+        ret.x = parent_size->w - size->w;
+        ret.y = parent_size->h - size->h;
+    break;
 
-        case SGL_ALIGN_LEFT_MID:
-            ret.x = 0;
-            ret.y = (parent_size->h - size->h) / 2;
-        break;
+    case SGL_ALIGN_LEFT_MID:
+        ret.x = 0;
+        ret.y = (parent_size->h - size->h) / 2;
+    break;
 
-        case SGL_ALIGN_RIGHT_MID:
-            ret.x = parent_size->w - size->w;
-            ret.y = (parent_size->h - size->h) / 2;
-        break;
+    case SGL_ALIGN_RIGHT_MID:
+        ret.x = parent_size->w - size->w;
+        ret.y = (parent_size->h - size->h) / 2;
+    break;
 
-        default: break;
+    default: break;
     }
     return ret;
 }
@@ -1278,36 +1312,36 @@ void sgl_obj_set_pos_align_ref(sgl_obj_t *ref, sgl_obj_t *obj, sgl_align_type_t 
     case SGL_ALIGN_VERT_MID:
         obj->coords.x1 = ref->coords.x1 + (ref_w - obj_w) / 2;
         obj->coords.x2 = obj->coords.x1 + obj_w - 1;
-        break;
+    break;
 
     case SGL_ALIGN_VERT_LEFT:
         obj->coords.x1 = ref->coords.x1;
         obj->coords.x2 = obj->coords.x1 + obj_w - 1;
-        break;
+    break;
 
     case SGL_ALIGN_VERT_RIGHT:
         obj->coords.x1 = ref->coords.x2 - obj_w;
         obj->coords.x2 = obj->coords.x1 + obj_w - 1;
-        break;
+    break;
 
     case SGL_ALIGN_HORIZ_MID:
         obj->coords.y1 = ref->coords.y1 + (ref_h - obj_h) / 2;
         obj->coords.y2 = obj->coords.y1 + obj_h - 1;
-        break;
+    break;
 
     case SGL_ALIGN_HORIZ_TOP:
         obj->coords.y1 = ref->coords.y1;
         obj->coords.y2 = obj->coords.y1 + obj_h - 1;
-        break;
+    break;
 
     case SGL_ALIGN_HORIZ_BOT:
         obj->coords.y1 = ref->coords.y2 - obj_h;
         obj->coords.y2 = obj->coords.y1 + obj_h - 1;
-        break;
+    break;
 
     default:
         SGL_LOG_WARN("invalid align type");
-        break;
+    break;
     }
 }
 
@@ -1322,7 +1356,6 @@ void sgl_obj_set_pos_align_ref(sgl_obj_t *ref, sgl_obj_t *obj, sgl_align_type_t 
 static inline void draw_obj_slice(sgl_obj_t *obj, sgl_surf_t *surf)
 {
     int top = 0;
-    bool flush_flag = false;
 	sgl_event_t evt;
 	sgl_obj_t *stack[SGL_OBJ_DEPTH_MAX];
 
@@ -1353,8 +1386,7 @@ static inline void draw_obj_slice(sgl_obj_t *obj, sgl_surf_t *surf)
 	}
 
     /* flush dirty area into screen */
-    flush_flag = sgl_panel_flush_area(surf->x1, surf->y1, surf->x2, surf->y2, surf->buffer);
-    sgl_ctx.fb_ready = (sgl_ctx.fb_ready & (1 << sgl_ctx.fb_swap)) | (((uint8_t)flush_flag) << (sgl_ctx.fb_swap ^ 1));
+    sgl_fbdev_flush_area((sgl_area_t*)surf, surf->buffer);
 }
 
 
@@ -1388,7 +1420,7 @@ static inline void sgl_dirty_area_calculate(sgl_obj_t *obj)
         /* check if obj is destroyed */
         if (unlikely(sgl_obj_is_destroyed(obj))) {
             /* merge destroy area */
-            sgl_obj_dirty_merge(obj);
+            sgl_dirty_area_push(&obj->area);
 
             /* remove obj from parent */
             sgl_obj_remove(obj);
@@ -1416,17 +1448,18 @@ static inline void sgl_dirty_area_calculate(sgl_obj_t *obj)
         /* check child dirty and merge all dirty area */
         if (sgl_obj_is_dirty(obj)) {
             /* merge dirty area */
-            sgl_obj_dirty_merge(obj);
+            sgl_dirty_area_push(&obj->area);
 
             sgl_area_t fill_area = sgl_obj_get_fill_rect(obj->parent);
             /* update obj area */
             if (unlikely(!sgl_area_clip(&fill_area, &obj->coords, &obj->area))) {
                 sgl_area_init(&obj->area);
+                sgl_obj_clear_dirty(obj);
                 continue;
             }
 
             /* merge dirty area */
-            sgl_obj_dirty_merge(obj);
+            sgl_dirty_area_push(&obj->area);
 
             /* clear dirty flag */
             sgl_obj_clear_dirty(obj);
@@ -1441,45 +1474,66 @@ static inline void sgl_dirty_area_calculate(sgl_obj_t *obj)
 
 /**
  * @brief sgl to draw complete frame
- * @param dirty the dirty area that need to upate
+ * @param fbdev point to  frame buffer device
  * @return none
  * @note this function should be called in deamon thread or cyclic thread
  */
-static inline void sgl_draw_task(sgl_area_t *dirty)
+static inline void sgl_draw_task(sgl_fbdev_t *fbdev)
 {
-    sgl_surf_t *surf = &sgl_ctx.page->surf;
-    sgl_obj_t  *head = &sgl_ctx.page->obj;
+    sgl_surf_t *surf = &fbdev->surf;
+    sgl_obj_t  *head = fbdev->active;
+    sgl_area_t *dirty = NULL;
 
-    /* check dirty area, ensure it is valid */
-    SGL_ASSERT(dirty != NULL && dirty->x1 >= 0 && dirty->y1 >= 0 && dirty->x2 < SGL_SCREEN_WIDTH && dirty->y2 < SGL_SCREEN_HEIGHT);
+    /* dirty area number must less than SGL_DIRTY_AREA_MAX */
+    for (int i = 0; i < fbdev->dirty_num; i++) {
+        dirty = &fbdev->dirty[i];
+        surf->dirty = dirty;
 
-#if (!CONFIG_SGL_USE_FB_VRAM)
-    uint16_t dirty_h = 0, draw_h = 0;
-    dirty_h = dirty->y2 - dirty->y1 + 1;
-
-    surf->x1 = dirty->x1;
-    surf->y1 = dirty->y1;
-    surf->x2 = dirty->x2;
-    surf->pitch = surf->x2 - surf->x1 + 1;
-    dirty_h = sgl_min(surf->size / surf->pitch, (uint32_t)(dirty->y2 - dirty->y1 + 1));
-
-    SGL_LOG_TRACE("[fb:%d]sgl_draw_task: dirty area  x1:%d y1:%d x2:%d y2:%d", sgl_ctx.fb_swap, dirty->x1, dirty->y1, dirty->x2, dirty->y2);
-
-    while (surf->y1 <= dirty->y2) {
-        draw_h = sgl_min(dirty->y2 - surf->y1 + 1, dirty_h);
-
-        surf->y2 = surf->y1 + draw_h - 1;
-        draw_obj_slice(head, surf);
-        surf->y1 += draw_h;
-
-        /* swap the double buffer */
-        sgl_surf_buffer_swap(surf);
-    }
-#else
-    SGL_LOG_TRACE("[fb:%d]sgl_draw_task: dirty area  x1:%d y1:%d x2:%d y2:%d", sgl_ctx.fb_swap, dirty->x1, dirty->y1, dirty->x2, dirty->y2);
-    draw_obj_slice(head, surf);
-    sgl_surf_buffer_swap(surf);
+#if (CONFIG_SGL_FBDEV_RUNTIME_ROTATION)
+        sgl_area_t screen = { .x1 = 0, .y1 = 0, .x2 = SGL_SCREEN_WIDTH - 1, .y2 = SGL_SCREEN_HEIGHT - 1 };
+        sgl_area_selfclip(dirty, &screen);
 #endif
+
+        /* check dirty area, ensure it is valid */
+        SGL_ASSERT(dirty != NULL && dirty->x1 >= 0 && dirty->y1 >= 0 && dirty->x2 < SGL_SCREEN_WIDTH && dirty->y2 < SGL_SCREEN_HEIGHT);
+
+#if (!CONFIG_SGL_USE_FBDEV_VRAM)
+
+        uint16_t draw_h = 0;
+        surf->h = dirty->y2 - dirty->y1 + 1;
+
+        surf->x1 = dirty->x1;
+        surf->y1 = dirty->y1;
+        surf->x2 = dirty->x2;
+        surf->w  = surf->x2 - surf->x1 + 1;
+        surf->h  = sgl_min(surf->size / surf->w, (uint32_t)(dirty->y2 - dirty->y1 + 1));
+
+        SGL_LOG_TRACE("[fb:%d]sgl_draw_task: dirty area  x1:%d y1:%d x2:%d y2:%d", fbdev->fb_swap, dirty->x1, dirty->y1, dirty->x2, dirty->y2);
+
+        while (surf->y1 <= dirty->y2) {
+            draw_h = sgl_min(dirty->y2 - surf->y1 + 1, surf->h);
+            surf->y2 = surf->y1 + draw_h - 1;
+
+            /* wait current framebuffer for ready */
+            while (sgl_fbdev_flush_wait_ready(fbdev));
+
+            /* reset current framebuffer ready flag */
+            fbdev->fb_status = (fbdev->fb_status & (2 - fbdev->fb_swap));
+
+            /* draw object slice until the dirty area is finished */
+            draw_obj_slice(head, surf);
+            surf->y1 += draw_h;
+        }
+#else
+        /* check dirty area, ensure it is valid */
+        SGL_ASSERT(dirty != NULL && dirty->x1 >= 0 && dirty->y1 >= 0 && dirty->x2 < SGL_SCREEN_WIDTH && dirty->y2 < SGL_SCREEN_HEIGHT);
+
+        SGL_LOG_TRACE("[fb:%d]sgl_draw_task: dirty area  x1:%d y1:%d x2:%d y2:%d", fbdev->fb_swap, dirty->x1, dirty->y1, dirty->x2, dirty->y2);
+        draw_obj_slice(head, surf);
+#endif
+    }
+    /* clear dirty area */
+    fbdev->dirty_num = 0;
 }
 
 
@@ -1491,12 +1545,6 @@ static inline void sgl_draw_task(sgl_area_t *dirty)
  */
 void sgl_task_handle_sync(void)
 {
-    /* if framebufffer is not ready, return directly */
-    const uint8_t fb_ready_mask = 1 << sgl_ctx.fb_swap;
-    if (unlikely((sgl_ctx.fb_ready & fb_ready_mask) == 0)) {
-        return;
-    }
-
     /* event task */
     sgl_event_task();
 
@@ -1505,16 +1553,9 @@ void sgl_task_handle_sync(void)
 #endif // !CONFIG_SGL_ANIMATION
     sgl_tick_reset();
 
-    /* calculate dirty area, if no dirty area, return directly */
-    sgl_dirty_area_calculate(&sgl_ctx.page->obj);
+    /* foreach all object tree and calculate dirty area */
+    sgl_dirty_area_calculate(sgl_system.fbdev.active);
 
-    /**
-     * draw task for complete frame
-     * dirty area number must less than SGL_DIRTY_AREA_MAX
-     */
-    for (uint8_t i = 0; i < sgl_ctx.dirty_num; i++) {
-        sgl_draw_task(&sgl_ctx.dirty[i]);
-    }
-
-    sgl_dirty_area_init();
+    /* draw all object into screen */
+    sgl_draw_task(&sgl_system.fbdev);
 }

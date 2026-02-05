@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,47 +44,39 @@
 static void sgl_button_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
     sgl_button_t *button = (sgl_button_t*)obj;
-    sgl_pos_t   align_pos;
-    int text_x = 0, icon_y = 0;
+    sgl_pos_t align_pos;
+    sgl_rect_t fill_area;
+    sgl_draw_rect_t rect = {
+        .alpha = button->alpha,
+        .color = button->color,
+        .border = obj->border,
+        .border_color = button->border_color,
+        .pixmap = button->pixmap,
+        .radius = obj->radius,
+    };
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
-        sgl_draw_rect(surf, &obj->area, &obj->coords, &button->rect);
+        sgl_draw_rect(surf, &obj->area, &obj->coords, &rect);
 
         if(button->text) {
             SGL_ASSERT(button->font != NULL);
+            fill_area = sgl_obj_get_fill_rect(obj);
+            align_pos = sgl_get_text_pos(&fill_area, button->font, button->text, 0, (sgl_align_type_t)button->align);
 
-            if (button->icon) {
-                text_x = button->icon->width + 2;
-            }
-
-            align_pos = sgl_get_text_pos(&obj->coords, button->font, button->text, text_x, (sgl_align_type_t)button->align);
-
-            if (button->icon) {
-                icon_y = ((obj->coords.y2 - obj->coords.y1) - (button->icon->height)) / 2;
-                sgl_draw_icon(surf, &obj->area, align_pos.x, obj->coords.y1 + icon_y, button->text_color, button->rect.alpha, button->icon);
-            }
-
-            sgl_draw_string(surf, &obj->area, align_pos.x + text_x, align_pos.y, button->text, button->text_color, button->rect.alpha, button->font);
+            sgl_draw_string(surf, &obj->area, align_pos.x, align_pos.y, button->text, button->text_color, button->alpha, button->font);
         }
     }
     else if(evt->type == SGL_EVENT_PRESSED) {
         if(sgl_obj_is_flexible(obj)) {
             sgl_obj_size_zoom(obj, 2);
         }
-
-        if(obj->event_fn) {
-            obj->event_fn(evt);
-        }
+        sgl_obj_set_dirty(obj);
     }
     else if(evt->type == SGL_EVENT_RELEASED) {
         if(sgl_obj_is_flexible(obj)) {
-            sgl_obj_dirty_merge(obj);
             sgl_obj_size_zoom(obj, -2);
         }
-
-        if(obj->event_fn) {
-            obj->event_fn(evt);
-        }
+        sgl_obj_set_dirty(obj);
     }
 }
 
@@ -111,20 +103,18 @@ sgl_obj_t* sgl_button_create(sgl_obj_t* parent)
     sgl_obj_set_clickable(obj);
     sgl_obj_set_flexible(obj);
     sgl_obj_set_border_width(obj, SGL_THEME_BORDER_WIDTH);
+    sgl_obj_set_radius(obj, SGL_THEME_RADIUS);
 
     obj->construct_fn = sgl_button_construct_cb;
 
-    button->rect.alpha = SGL_THEME_ALPHA;
-    button->rect.color = SGL_THEME_COLOR;
-    button->rect.border = SGL_THEME_BORDER_WIDTH;
-    button->rect.border_color = SGL_THEME_BORDER_COLOR;
-    button->rect.pixmap = NULL;
-    button->rect.radius = 0;
+    button->alpha = SGL_THEME_ALPHA;
+    button->color = SGL_THEME_COLOR;
+    button->border_color = SGL_THEME_BORDER_COLOR;
+    button->pixmap = NULL;
 
     button->text = NULL;
     button->text_color = SGL_THEME_TEXT_COLOR;
     button->font = NULL;
-    button->icon = NULL;
     button->align = SGL_ALIGN_CENTER;
 
     return obj;

@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,9 +30,10 @@
 #define CONFIG_SGL_DEBUG 1
 #define CONFIG_SGL_LOG_COLOR 1
 #define CONFIG_SGL_OBJ_USE_NAME 1
-#define CONFIG_SGL_BOOT_LOGO 1
-#define CONFIG_SGL_BOOT_ANIMATION 1
+#define CONFIG_SGL_BOOT_LOGO 0
+#define CONFIG_SGL_BOOT_ANIMATION 0
 #define CONFIG_SGL_FONT_COMPRESSED 0
+#define CONFIG_SGL_FONT_SMALL_TABLE 0
 #define CONFIG_SGL_FONT_SONG23 0
 #define CONFIG_SGL_FONT_CONSOLAS14 1
 #define CONFIG_SGL_FONT_CONSOLAS23 0
@@ -44,8 +45,8 @@
 #define CONFIG_SGL_FONT_HARMONY_16 1
 
 
-#define CONFIG_SGL_LOG_LEVEL 2
-#define CONFIG_SGL_PANEL_PIXEL_DEPTH 16
+#define CONFIG_SGL_LOG_LEVEL 1
+#define CONFIG_SGL_FBDEV_PIXEL_DEPTH 16
 #define CONFIG_SGL_EVENT_QUEUE_SIZE 16
 #define CONFIG_SGL_SYSTICK_MS 10
 #define CONFIG_SGL_DIRTY_AREA_THRESHOLD 64

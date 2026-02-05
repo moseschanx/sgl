@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -94,7 +94,8 @@ static inline void sgl_numberkbd_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 static inline void sgl_numberkbd_set_radius(sgl_obj_t *obj, uint8_t radius)
 {
     sgl_numberkbd_t *numberkbd = (sgl_numberkbd_t *)obj;
-    numberkbd->body_desc.radius = sgl_obj_fix_radius(obj, radius);
+    sgl_obj_set_radius(obj, radius);
+    numberkbd->body_desc.radius = obj->radius;
     numberkbd->btn_desc.radius = numberkbd->body_desc.radius;
     sgl_obj_set_dirty(obj);
 }
@@ -226,7 +227,8 @@ static inline void sgl_numberkbd_set_btn_border_color(sgl_obj_t *obj, sgl_color_
 static inline void sgl_numberkbd_set_btn_radius(sgl_obj_t *obj, uint8_t radius)
 {
     sgl_numberkbd_t *numberkbd = (sgl_numberkbd_t *)obj;
-    numberkbd->btn_desc.radius = sgl_obj_fix_radius(obj, radius);
+    sgl_obj_set_radius(obj, radius);
+    numberkbd->btn_desc.radius = obj->radius;
     sgl_obj_set_dirty(obj);
 }
 

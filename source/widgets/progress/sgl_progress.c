@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,9 +40,9 @@ static void sgl_progress_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
     knob.x1 = obj->coords.x1 + obj->radius / 2 + 2;
     sgl_area_t rect = {
         .x1 = obj->coords.x1 - progress->interval * 2 + progress->shift,
-        .y1 = obj->coords.y1 + 1,
+        .y1 = obj->coords.y1 + obj->border,
         .x2 = 0,
-        .y2 = obj->coords.y2 - 1,
+        .y2 = obj->coords.y2 - obj->border,
     };
 
     if (progress->shift > (progress->interval + progress->knob_width)) {

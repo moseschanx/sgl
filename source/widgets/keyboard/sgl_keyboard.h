@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,7 +43,7 @@ typedef struct sgl_keyboard {
     sgl_obj_t        obj;
     sgl_draw_rect_t  body_desc;
     sgl_draw_rect_t  btn_desc;
-    const sgl_font_t       *font;
+    const sgl_font_t *font;
     char             *edit;
     sgl_color_t      text_color;
     uint8_t          opcode;
@@ -97,7 +97,8 @@ static inline void sgl_keyboard_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 static inline void sgl_keyboard_set_radius(sgl_obj_t *obj, uint8_t radius)
 {
     sgl_keyboard_t *keyboard = (sgl_keyboard_t*)obj;
-    keyboard->body_desc.radius = sgl_obj_fix_radius(obj, radius);
+    sgl_obj_set_radius(obj, radius);
+    keyboard->body_desc.radius = obj->radius;
     sgl_obj_set_dirty(obj);
 }
 

@@ -3,7 +3,7 @@
  * MIT License
  *
  * Copyright(c) 2023-present All contributors of SGL  
- * Document reference link: docs directory
+ * Document reference link: https://sgl-docs.readthedocs.io
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -98,8 +98,9 @@ static inline void sgl_arc_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 static inline void sgl_arc_set_radius(sgl_obj_t *obj, int16_t radius_in, int16_t radius_out)
 {
     sgl_arc_t *arc = (sgl_arc_t *)obj;
+    sgl_obj_set_radius(obj, radius_out);
     arc->desc.radius_in = radius_in;
-    arc->desc.radius_out = sgl_obj_fix_radius(obj, radius_out);
+    arc->desc.radius_out = obj->radius;
     sgl_obj_set_dirty(obj);
 }
 
