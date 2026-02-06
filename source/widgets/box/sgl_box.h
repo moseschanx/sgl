@@ -1,4 +1,4 @@
-/* source/widgets/sgl_textbox.h
+/* source/widgets/sgl_box.h
  *
  * MIT License
  *
