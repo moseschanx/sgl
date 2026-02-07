@@ -158,8 +158,8 @@ void sgl_assert_handler(const char *file, const char *func, int line);
                                         } while(0)
 
 #define SGL_ASSERT_INFO(cond, info)     do {                                                          \
-                                             SGL_LOG_ERROR("ASSERT: %s", info);                       \
                                             if (!(cond)) {                                            \
+                                                SGL_LOG_ERROR("ASSERT: %s", info);                    \
                                                 sgl_assert_handler(__FILE__, __FUNCTION__, __LINE__); \
                                             }                                                         \
                                         } while(0)
