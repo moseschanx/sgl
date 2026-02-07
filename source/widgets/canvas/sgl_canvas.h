@@ -33,6 +33,20 @@
 #include <sgl_cfgfix.h>
 #include <string.h>
 
+/**
+ * @brief For example, you can use this canvas:
+ *        void painter_func(sgl_surf_t *surf, sgl_area_t *area, sgl_obj_t *obj)
+ *        {
+ *            for (int i = obj->area.y1; i < obj->area.y2; i += 10) {
+ *                sgl_draw_fill_hline(surf, area, i, obj->area.x1, obj->area.x2, 5, SGL_COLOR_BLACK, 255);
+ *            }
+ *        }
+ * 
+ *        sgl_obj_t *canvas = sgl_canvas_create(NULL);
+ *        sgl_obj_set_size(canvas, 800, 600);
+ *        sgl_obj_set_pos_align(canvas, SGL_ALIGN_CENTER);
+ *        sgl_canvas_set_painter_cb(canvas, painter_func);
+ */
 
 typedef void (*painter_cb)(sgl_surf_t *surf, sgl_area_t *area, sgl_obj_t* obj); 
 
