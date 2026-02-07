@@ -139,6 +139,7 @@ sgl_obj_t* sgl_textbox_create(sgl_obj_t* parent)
     textbox->bg.radius = 10;
     textbox->bg.border = 1;
     textbox->bg.border_color = SGL_THEME_BORDER_COLOR;
+    textbox->font = sgl_get_system_font();
 
     textbox->scroll.alpha = SGL_THEME_ALPHA;
     textbox->scroll.color = SGL_THEME_SCROLL_FG_COLOR;

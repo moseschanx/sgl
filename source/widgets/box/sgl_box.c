@@ -1,4 +1,3 @@
-//sgl_box.c
 /* source/widgets/sgl_box.c
  *
  * MIT License

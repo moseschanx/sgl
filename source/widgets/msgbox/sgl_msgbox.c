@@ -208,7 +208,7 @@ sgl_obj_t* sgl_msgbox_create(sgl_obj_t* parent)
     msgbox->body_desc.border_color = SGL_THEME_BORDER_COLOR;
     msgbox->body_desc.pixmap = NULL;
 
-    msgbox->font = NULL;
+    msgbox->font = sgl_get_system_font();
     msgbox->msg_color = SGL_THEME_TEXT_COLOR;
     msgbox->title_text = "Message Box";
     msgbox->msg_line_margin = 1;
