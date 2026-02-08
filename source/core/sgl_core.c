@@ -686,8 +686,10 @@ int sgl_init(void)
         return -1;
     }
 
+    sgl_obj_delete_sync(NULL);
 #if (CONFIG_SGL_BOOT_LOGO)
-    sgl_boot_logo();
+    // sgl_boot_logo();
+    vispect_boot_logo();
 #endif
     return 0;
 }

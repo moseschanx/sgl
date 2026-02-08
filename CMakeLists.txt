@@ -43,7 +43,7 @@ set(SGL_FBDEV_ROTATION   0)
 
 set(CONFIG_SGL_COLOR16_SWAP     ON)
 set(CONFIG_SGL_DEBUG            ON)
-set(SGL_LOG_LEVEL               0)
+set(SGL_LOG_LEVEL               1)
 set(CONFIG_SGL_LOG_COLOR        ON)
 set(CONFIG_SGL_ANIMATION        ON)
 set(SGL_PANEL_PIXEL_DEPTH    "16")
