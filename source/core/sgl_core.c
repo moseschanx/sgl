@@ -738,6 +738,7 @@ void sgl_fbdev_set_angle(uint16_t angle)
     }
 
     sgl_system.angle = angle;
+    sgl_obj_set_dirty(sgl_system.fbdev.active);
 }
 #endif // !CONFIG_SGL_FBDEV_RUNTIME_ROTATION
 
