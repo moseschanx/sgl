@@ -38,7 +38,7 @@
  * @param fy y coordinate of point
  * @return point color
  */
-sgl_color_t sgl_draw_get_biln_color(const sgl_color_t *buffer, int16_t w, int16_t h, int32_t fx, int32_t fy)
+sgl_color_t sgl_draw_biln_color(const sgl_color_t *buffer, int16_t w, int16_t h, int32_t fx, int32_t fy)
 {
     sgl_color_t ret;
     int32_t max_x = (((int32_t)w) - 1) << SGL_FIXED_SHIFT;

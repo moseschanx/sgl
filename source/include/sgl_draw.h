@@ -484,7 +484,7 @@ void sgl_draw_fill_arc(sgl_surf_t *surf, sgl_area_t *area, sgl_draw_arc_t *desc)
  * @param fy y coordinate of point
  * @return point color
  */
-sgl_color_t sgl_draw_get_biln_color(const sgl_color_t *buffer, int16_t w, int16_t h, int32_t fx, int32_t fy);
+sgl_color_t sgl_draw_biln_color(const sgl_color_t *buffer, int16_t w, int16_t h, int32_t fx, int32_t fy);
 
 
 /**
