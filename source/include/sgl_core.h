@@ -480,6 +480,7 @@ typedef struct sgl_system {
     void               (*logdev)(const char *str);
     sgl_fbdev_t        fbdev;
     volatile uint32_t  tick_ms;
+    const sgl_font_t   *font;
 #if (CONFIG_SGL_FBDEV_ROTATION != 0)
     sgl_color_t        *rotation;
 #elif (CONFIG_SGL_FBDEV_RUNTIME_ROTATION)
@@ -689,6 +690,9 @@ static inline void sgl_fbdev_flush_area(sgl_area_t *area, sgl_color_t *src)
     sgl_area_t area_dst = *area;
 
     switch (sgl_system.angle) {
+    case 0:
+        sgl_system.fbdev.fbinfo.flush_area(area, src);
+        return;
     case 90:
         sgl_fbdev_rotate_90(area_dst, area, sgl_system.rotation, src);
         break;
@@ -745,11 +749,11 @@ static inline void sgl_log_stdout(const char *str)
 
 
 /**
- * @brief get pixmap format bits
+ * @brief get pixmap bytes of per pixel
  * @param pixmap pointer to pixmap
- * @return pixmap bits
+ * @return pixmap bytes of per pixel
  */
-uint8_t sgl_pixmal_get_bits(const sgl_pixmap_t *pixmap);
+uint8_t sgl_pixmal_get_bytes_per_pixel(const sgl_pixmap_t *pixmap);
 
 
 /**
@@ -955,6 +959,29 @@ static inline size_t sgl_obj_get_child_count(sgl_obj_t *obj)
  * @return none
  */
 void sgl_dirty_area_push(sgl_area_t *area);
+
+
+/**
+ * @brief set system font
+ * @param font pointer to font
+ * @return none
+ */
+static inline void sgl_set_system_font(const sgl_font_t *font)
+{
+    SGL_ASSERT(font != NULL);
+    sgl_system.font = font;
+}
+
+
+/**
+ * @brief get system font
+ * @param none
+ * @return pointer to system font
+ */
+static inline const sgl_font_t* sgl_get_system_font(void)
+{
+    return sgl_system.font; 
+}
 
 
 /**

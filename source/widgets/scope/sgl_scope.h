@@ -57,7 +57,7 @@ typedef struct {
     uint8_t display_count;             // data count that has been displayed
     uint32_t max_display_points;       // max display points
     uint8_t alpha;                     // aplha of waveform
-    uint8_t grid_style;                // grid line style（0-solid line，1-dashed line）
+    uint8_t grid_style;                // grid line style（0-solid line，other: dashed line
     const sgl_font_t *y_label_font;    // font of Y axis labels
     sgl_color_t y_label_color;         // color of Y axis labels
     uint32_t current_index;            // current data index
@@ -284,15 +284,15 @@ static inline void sgl_scope_set_border_width(sgl_obj_t* obj, uint8_t width)
 }
 
 /**
- * @brief set scope grid style
+ * @brief set scope grid line
  * @param obj scope object
- * @param style grid style, 0-solid line，1-dashed line
+ * @param style grid size, 0: solid line，other: dashed line
  * @return none
  */
-static inline void sgl_scope_set_grid_style(sgl_obj_t* obj, uint8_t style)
+static inline void sgl_scope_set_grid_line(sgl_obj_t* obj, uint8_t grid)
 {
     sgl_scope_t *scope = (sgl_scope_t*)obj;
-    scope->grid_style = style;
+    scope->grid_style = grid;
     sgl_obj_set_dirty(obj);
 }
 

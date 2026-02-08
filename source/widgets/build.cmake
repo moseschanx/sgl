@@ -49,4 +49,5 @@ set(SGL_SOURCE
     ${CMAKE_CURRENT_LIST_DIR}/ext_img/sgl_ext_img.c
     ${CMAKE_CURRENT_LIST_DIR}/polygon/sgl_polygon.c
     ${CMAKE_CURRENT_LIST_DIR}/box/sgl_box.c
+    ${CMAKE_CURRENT_LIST_DIR}/canvas/sgl_canvas.c
 )

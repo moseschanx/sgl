@@ -544,6 +544,7 @@ sgl_obj_t* sgl_keyboard_create(sgl_obj_t* parent)
     keyboard->key_mode = KEYBOARD_KEYMODE_LOWER;
 
     keyboard->key_margin = 0;
+    keyboard->font = sgl_get_system_font();
 
     return obj;
 }

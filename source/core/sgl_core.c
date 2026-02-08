@@ -31,6 +31,7 @@
 #include <sgl_draw.h>
 #include <sgl_font.h>
 #include <sgl_theme.h>
+#include <sgl_misc.h>
 
 
 /* current sgl system variable, do not used it */
@@ -97,37 +98,34 @@ int sgl_fbdev_register(sgl_fbinfo_t *fbinfo)
 
 
 /**
- * @brief get pixmap format bits
+ * @brief get pixmap bytes of per pixel
  * @param pixmap pointer to pixmap
- * @return pixmap bits of per pixel
+ * @return pixmap bytes of per pixel
  */
-uint8_t sgl_pixmal_get_bits(const sgl_pixmap_t *pixmap)
+uint8_t sgl_pixmal_get_bytes_per_pixel(const sgl_pixmap_t *pixmap)
 {
+    static const uint8_t s_bytes_per_pixel[] = {
+        [SGL_PIXMAP_FMT_NONE]         = sizeof(sgl_color_t),
+        [SGL_PIXMAP_FMT_RGB332]       = 1,
+        [SGL_PIXMAP_FMT_ARGB2222]     = 1,
+        [SGL_PIXMAP_FMT_RLE_RGB332]   = 1,
+        [SGL_PIXMAP_FMT_RLE_ARGB2222] = 1,
+        [SGL_PIXMAP_FMT_RGB565]       = 2,
+        [SGL_PIXMAP_FMT_ARGB4444]     = 2,
+        [SGL_PIXMAP_FMT_RLE_RGB565]   = 2,
+        [SGL_PIXMAP_FMT_RLE_ARGB4444] = 2,
+        [SGL_PIXMAP_FMT_RGB888]       = 3,
+        [SGL_PIXMAP_FMT_RLE_RGB888]   = 3,
+        [SGL_PIXMAP_FMT_ARGB8888]     = 4,
+        [SGL_PIXMAP_FMT_RLE_ARGB8888] = 4,
+    };
+
     SGL_ASSERT(pixmap != NULL);
-    uint8_t bits = 0;
-    switch (pixmap->format)
-    {
-    case SGL_PIXMAP_FMT_NONE:
-        bits = sizeof(sgl_color_t); break;
-    case SGL_PIXMAP_FMT_RGB332:
-    case SGL_PIXMAP_FMT_RLE_RGB332:
-        bits = 1; break;
-    case SGL_PIXMAP_FMT_RGB565:
-    case SGL_PIXMAP_FMT_ARGB4444:
-    case SGL_PIXMAP_FMT_RLE_RGB565:
-    case SGL_PIXMAP_FMT_RLE_ARGB4444:
-        bits = 2; break;
-    case SGL_PIXMAP_FMT_RGB888:
-    case SGL_PIXMAP_FMT_RLE_RGB888:
-        bits = 3; break;
-    case SGL_PIXMAP_FMT_ARGB8888:
-    case SGL_PIXMAP_FMT_RLE_ARGB8888:
-        bits = 4; break;
-    default:
+    if (pixmap->format >= sizeof(s_bytes_per_pixel)) {
         SGL_LOG_ERROR("pixmap format error");
-        break;
+        return 0;
     }
-    return bits;
+    return s_bytes_per_pixel[pixmap->format];
 }
 
 
@@ -681,9 +679,17 @@ int sgl_init(void)
     sgl_system.angle = 0;
 #endif
 #endif
-
     /* create event queue */
-    return sgl_event_queue_init();
+    if (sgl_event_queue_init()) {
+        SGL_LOG_ERROR("sgl_init: event queue init failed");
+        sgl_free(obj);
+        return -1;
+    }
+
+#if (CONFIG_SGL_BOOT_LOGO)
+    sgl_boot_logo();
+#endif
+    return 0;
 }
 
 

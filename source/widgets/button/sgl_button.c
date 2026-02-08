@@ -112,9 +112,9 @@ sgl_obj_t* sgl_button_create(sgl_obj_t* parent)
     button->border_color = SGL_THEME_BORDER_COLOR;
     button->pixmap = NULL;
 
-    button->text = NULL;
+    button->text = " ";
     button->text_color = SGL_THEME_TEXT_COLOR;
-    button->font = NULL;
+    button->font = sgl_get_system_font();
     button->align = SGL_ALIGN_CENTER;
 
     return obj;
