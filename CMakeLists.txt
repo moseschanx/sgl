@@ -35,12 +35,15 @@ set(SGL_EXPORT_PATH ${PROJECT_BINARY_DIR}/export)
 
 ###################### SGL Configuration ######################
 
-set(CONFIG_SGL_BOOT_LOGO        OFF)
-set(CONFIG_SGL_BOOT_ANIMATION   OFF)
+set(CONFIG_SGL_BOOT_LOGO        ON)
+set(CONFIG_SGL_BOOT_ANIMATION   ON)
+
+set(CONFIG_SGL_FBDEV_RUNTIME_ROTATION ON)
+set(SGL_FBDEV_ROTATION   0)
 
 set(CONFIG_SGL_COLOR16_SWAP     ON)
 set(CONFIG_SGL_DEBUG            ON)
-set(SGL_LOG_LEVEL               1)
+set(SGL_LOG_LEVEL               0)
 set(CONFIG_SGL_LOG_COLOR        ON)
 set(CONFIG_SGL_ANIMATION        ON)
 set(SGL_PANEL_PIXEL_DEPTH    "16")
