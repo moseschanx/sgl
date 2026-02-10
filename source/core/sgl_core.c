@@ -642,6 +642,7 @@ static inline void sgl_dirty_area_init(void)
 }
 
 
+void vispect_boot_logo(void);
 /**
  * @brief sgl global initialization
  * @param none
