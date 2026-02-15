@@ -61,7 +61,7 @@ sgl_obj_t* sgl_line_create(sgl_obj_t* parent);
  */
 static inline void sgl_line_set_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_line_t *line = (sgl_line_t*)obj;
+    sgl_line_t *line = sgl_container_of(obj, sgl_line_t, obj);
     line->desc.color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -75,7 +75,7 @@ static inline void sgl_line_set_color(sgl_obj_t *obj, sgl_color_t color)
 static inline void sgl_line_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 {
     SGL_ASSERT(obj != NULL);
-    sgl_line_t *line = (sgl_line_t*)obj;
+    sgl_line_t *line = sgl_container_of(obj, sgl_line_t, obj);
     line->desc.alpha = alpha;
     sgl_obj_set_dirty(obj);
 }
@@ -98,7 +98,7 @@ void sgl_line_set_pos(sgl_obj_t *obj, int16_t x1, int16_t y1, int16_t x2, int16_
 static inline void sgl_line_set_width(sgl_obj_t *obj, uint8_t width)
 {
 	SGL_ASSERT(obj != NULL);
-	sgl_line_t *line = (sgl_line_t*)obj;
+	sgl_line_t *line = sgl_container_of(obj, sgl_line_t, obj);
 	line->desc.width = width << 1;
 	sgl_obj_set_dirty(obj);
 }

@@ -35,14 +35,13 @@
 
 static void sgl_canvas_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_canvas_t *canvas = (sgl_canvas_t*)obj;
+    sgl_canvas_t *canvas = sgl_container_of(obj, sgl_canvas_t, obj);
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
         SGL_ASSERT_INFO(canvas->painter != NULL, "you must set painter function");
         canvas->painter(surf, &obj->area, obj);
     }
 }
-
 
 /**
  * @brief create a canvas object

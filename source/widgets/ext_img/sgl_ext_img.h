@@ -199,7 +199,7 @@ static inline void sgl_ext_img_set_pixmap_num(sgl_obj_t *obj, uint8_t num, bool 
 static inline void sgl_ext_img_set_pixmap_next(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-    sgl_ext_img_t *ext_img = (sgl_ext_img_t*)obj;
+    sgl_ext_img_t *ext_img = sgl_container_of(obj, sgl_ext_img_t, obj);
     uint32_t pixmap_idx = ext_img->pixmap_idx + 1;
     ext_img->pixmap_idx = pixmap_idx >= ext_img->pixmap_num ? 0 : pixmap_idx;
     sgl_obj_set_dirty(obj);
@@ -214,7 +214,7 @@ static inline void sgl_ext_img_set_pixmap_next(sgl_obj_t *obj)
 static inline void sgl_ext_img_set_pixmap_index(sgl_obj_t *obj, uint8_t index)
 {
     SGL_ASSERT(obj != NULL);
-    sgl_ext_img_t *ext_img = (sgl_ext_img_t*)obj;
+    sgl_ext_img_t *ext_img = sgl_container_of(obj, sgl_ext_img_t, obj);
     ext_img->pixmap_idx = sgl_min(index, ext_img->pixmap_num - 1);
     sgl_obj_set_dirty(obj);
 }

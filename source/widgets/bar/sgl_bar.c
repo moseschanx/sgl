@@ -35,7 +35,7 @@
 
 static void sgl_bar_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_bar_t *bar = (sgl_bar_t*)obj;
+    sgl_bar_t *bar = sgl_container_of(obj, sgl_bar_t, obj);
 
     sgl_draw_rect_t desc = {
         .alpha = bar->alpha,

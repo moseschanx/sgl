@@ -43,7 +43,7 @@
  */
 static void sgl_button_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_button_t *button = (sgl_button_t*)obj;
+    sgl_button_t *button = sgl_container_of(obj, sgl_button_t, obj);
     sgl_pos_t align_pos;
     sgl_rect_t fill_area;
     sgl_draw_rect_t rect = {

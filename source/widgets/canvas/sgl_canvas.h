@@ -77,7 +77,7 @@ sgl_obj_t* sgl_canvas_create(sgl_obj_t* parent);
 static inline void sgl_canvas_set_painter_cb(sgl_obj_t *obj, sgl_painter_cb_t painter)
 {
     SGL_ASSERT(obj != NULL);
-    sgl_canvas_t *canvas = (sgl_canvas_t *)obj;
+    sgl_canvas_t *canvas = sgl_container_of(obj, sgl_canvas_t, obj);
     canvas->painter = painter;
 }
 
@@ -89,7 +89,7 @@ static inline void sgl_canvas_set_painter_cb(sgl_obj_t *obj, sgl_painter_cb_t pa
 static inline void sgl_canvas_set_private(sgl_obj_t *obj, void *private)
 {
     SGL_ASSERT(obj != NULL);
-    sgl_canvas_t *canvas = (sgl_canvas_t *)obj;
+    sgl_canvas_t *canvas = sgl_container_of(obj, sgl_canvas_t, obj);
     canvas->private = private;
 }
 

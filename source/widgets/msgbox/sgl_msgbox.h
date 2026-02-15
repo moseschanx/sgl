@@ -84,7 +84,7 @@ sgl_obj_t* sgl_msgbox_create(sgl_obj_t* parent);
  */
 static inline void sgl_msgbox_set_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     msgbox->body_desc.color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -97,7 +97,7 @@ static inline void sgl_msgbox_set_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_msgbox_set_alpha(sgl_obj_t *obj, uint8_t alpha)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     msgbox->body_desc.alpha = alpha;
     sgl_obj_set_dirty(obj);
 }
@@ -110,7 +110,7 @@ static inline void sgl_msgbox_set_alpha(sgl_obj_t *obj, uint8_t alpha)
  */
 static inline void sgl_msgbox_set_radius(sgl_obj_t *obj, uint8_t radius)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     msgbox->body_desc.radius = radius;
     sgl_obj_set_radius(obj, radius);
     sgl_obj_set_dirty(obj);
@@ -124,7 +124,7 @@ static inline void sgl_msgbox_set_radius(sgl_obj_t *obj, uint8_t radius)
  */
 static inline void sgl_msgbox_set_border_width(sgl_obj_t *obj, uint8_t width)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     msgbox->body_desc.border = width;
     sgl_obj_set_border_width(obj, width);
     sgl_obj_set_dirty(obj);
@@ -138,7 +138,7 @@ static inline void sgl_msgbox_set_border_width(sgl_obj_t *obj, uint8_t width)
  */
 static inline void sgl_msgbox_set_border_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     msgbox->body_desc.border_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -151,7 +151,7 @@ static inline void sgl_msgbox_set_border_color(sgl_obj_t *obj, sgl_color_t color
  */
 static inline void sgl_msgbox_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pixmap)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     msgbox->body_desc.pixmap = pixmap;
     sgl_obj_set_dirty(obj);
 }
@@ -164,7 +164,7 @@ static inline void sgl_msgbox_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pix
  */
 static inline void sgl_msgbox_set_font(sgl_obj_t *obj, const sgl_font_t *font)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     msgbox->font = font;
     sgl_obj_set_dirty(obj);
 }
@@ -177,7 +177,7 @@ static inline void sgl_msgbox_set_font(sgl_obj_t *obj, const sgl_font_t *font)
  */
 static inline void sgl_msgbox_set_title_text(sgl_obj_t *obj, const char *text)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     msgbox->title_text = text;
     sgl_obj_set_dirty(obj);
 }
@@ -190,7 +190,7 @@ static inline void sgl_msgbox_set_title_text(sgl_obj_t *obj, const char *text)
  */
 static inline void sgl_msgbox_set_title_text_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     msgbox->title_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -203,7 +203,7 @@ static inline void sgl_msgbox_set_title_text_color(sgl_obj_t *obj, sgl_color_t c
  */
 static inline void sgl_msgbox_set_msg_text(sgl_obj_t *obj, const char *text)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     msgbox->msg_text = text;
     sgl_obj_set_dirty(obj);
 }
@@ -216,7 +216,7 @@ static inline void sgl_msgbox_set_msg_text(sgl_obj_t *obj, const char *text)
  */
 static inline void sgl_msgbox_set_msg_text_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     msgbox->msg_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -229,7 +229,7 @@ static inline void sgl_msgbox_set_msg_text_color(sgl_obj_t *obj, sgl_color_t col
  */
 static inline void sgl_msgbox_set_msg_line_margin(sgl_obj_t *obj, uint8_t margin)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     msgbox->msg_line_margin = margin;
     sgl_obj_set_dirty(obj);
 }
@@ -242,7 +242,7 @@ static inline void sgl_msgbox_set_msg_line_margin(sgl_obj_t *obj, uint8_t margin
  */
 static inline void sgl_msgbox_set_left_btn_text(sgl_obj_t *obj, const char *text)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     msgbox->lbtn_text = text;
     sgl_obj_set_dirty(obj);
 }
@@ -255,7 +255,7 @@ static inline void sgl_msgbox_set_left_btn_text(sgl_obj_t *obj, const char *text
  */
 static inline void sgl_msgbox_set_left_btn_text_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     msgbox->lbtn_text_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -268,7 +268,7 @@ static inline void sgl_msgbox_set_left_btn_text_color(sgl_obj_t *obj, sgl_color_
  */
 static inline void sgl_msgbox_set_left_btn_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     msgbox->lbtn_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -281,7 +281,7 @@ static inline void sgl_msgbox_set_left_btn_color(sgl_obj_t *obj, sgl_color_t col
  */
 static inline void sgl_msgbox_set_right_btn_text(sgl_obj_t *obj, const char *text)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     msgbox->rbtn_text = text;
     sgl_obj_set_dirty(obj);
 }
@@ -294,7 +294,7 @@ static inline void sgl_msgbox_set_right_btn_text(sgl_obj_t *obj, const char *tex
  */
 static inline void sgl_msgbox_set_right_btn_text_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     msgbox->rbtn_text_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -307,7 +307,7 @@ static inline void sgl_msgbox_set_right_btn_text_color(sgl_obj_t *obj, sgl_color
  */
 static inline void sgl_msgbox_set_right_btn_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     msgbox->rbtn_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -321,7 +321,7 @@ static inline void sgl_msgbox_set_right_btn_color(sgl_obj_t *obj, sgl_color_t co
  */
 static inline void sgl_msgbox_set_exit_answer(sgl_obj_t *obj, const char **answer)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     msgbox->exit_btn = answer;
 }
 
@@ -332,7 +332,7 @@ static inline void sgl_msgbox_set_exit_answer(sgl_obj_t *obj, const char **answe
  */
 static inline const char* sgl_msgbox_get_current_btn(sgl_obj_t *obj)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     return msgbox->status & SGL_MSGBOX_STATUS_LEFT ? msgbox->lbtn_text : msgbox->rbtn_text;
 }
 
@@ -344,7 +344,7 @@ static inline const char* sgl_msgbox_get_current_btn(sgl_obj_t *obj)
  */
 static inline void sgl_msgbox_set_title_height(sgl_obj_t *obj, uint8_t height)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     msgbox->title_height = height;
     sgl_obj_set_dirty(obj);
 }
@@ -357,7 +357,7 @@ static inline void sgl_msgbox_set_title_height(sgl_obj_t *obj, uint8_t height)
  */
 static inline void sgl_msgbox_set_msg_x_offset(sgl_obj_t *obj, uint8_t offset)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     msgbox->text_x_offset = offset;
     sgl_obj_set_dirty(obj);
 }
@@ -370,7 +370,7 @@ static inline void sgl_msgbox_set_msg_x_offset(sgl_obj_t *obj, uint8_t offset)
  */
 static inline void sgl_msgbox_set_msg_y_offset(sgl_obj_t *obj, uint8_t offset)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     msgbox->text_y_offset = offset;
     sgl_obj_set_dirty(obj);
 }

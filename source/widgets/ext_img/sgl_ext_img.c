@@ -116,7 +116,7 @@ static inline void rle_decompress_line(sgl_ext_img_t *img, sgl_area_t *coords, s
 static void sgl_ext_img_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
     sgl_area_t clip = SGL_AREA_INVALID;
-    sgl_ext_img_t *ext_img = (sgl_ext_img_t*)obj;
+    sgl_ext_img_t *ext_img = sgl_container_of(obj, sgl_ext_img_t, obj);
     const sgl_pixmap_t *pixmap = &ext_img->pixmap[ext_img->pixmap_idx];
     uintptr_t read_addr = pixmap->bitmap.addr;
     uint8_t pix_byte = sgl_pixmal_get_bytes_per_pixel(pixmap);

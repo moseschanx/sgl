@@ -54,7 +54,7 @@ static const sgl_icon_pixmap_t dropdown_icon = {
 
 static void sgl_dropdown_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_dropdown_t *dropdown = (sgl_dropdown_t*)obj;
+    sgl_dropdown_t *dropdown = sgl_container_of(obj, sgl_dropdown_t, obj);
     int16_t icon_h = dropdown->option_h;
     int16_t pos_x = 0, pos_y = 0, icon_y = 0;
     sgl_dropdown_option_t *option = dropdown->head;

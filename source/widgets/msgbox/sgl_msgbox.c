@@ -36,7 +36,7 @@ static void msgbox_draw_text(sgl_surf_t *surf, sgl_area_t *area, sgl_rect_t *coo
 
 static void sgl_msgbox_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_msgbox_t *msgbox = (sgl_msgbox_t *)obj;
+    sgl_msgbox_t *msgbox = sgl_container_of(obj, sgl_msgbox_t, obj);
     const sgl_font_t *font = msgbox->font;
     int32_t font_height = sgl_font_get_height(font) + 8;
     int16_t border = msgbox->body_desc.border;

@@ -35,7 +35,7 @@
 
 static void sgl_slider_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_slider_t *slider = (sgl_slider_t*)obj;
+    sgl_slider_t *slider = sgl_container_of(obj, sgl_slider_t, obj);
     int16_t w = obj->coords.x2 - obj->coords.x1 + 1;
     int16_t h = obj->coords.y2 - obj->coords.y1 + 1;
     int16_t knob_r, fill_pos, thickness, radius;

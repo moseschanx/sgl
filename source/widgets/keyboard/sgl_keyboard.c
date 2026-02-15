@@ -373,7 +373,7 @@ static int8_t keyboard_pos_to_index(int16_t x, int16_t y, sgl_keyboard_t *keyboa
  */
 static void sgl_keyboard_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_keyboard_t *keyboard = (sgl_keyboard_t*)obj;
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
     int16_t body_w = obj->coords.x2 - obj->coords.x1 + 1;
     int16_t body_h = obj->coords.y2 - obj->coords.y1 + 1;
 
