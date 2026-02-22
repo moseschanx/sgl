@@ -311,34 +311,32 @@ void sgl_obj_move_down(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
     sgl_obj_t *parent = obj->parent;
+    sgl_obj_t *prev_prev = NULL;
     sgl_obj_t *prev = NULL;
-    sgl_obj_t *gprev = NULL;
 
-    /* if the object is the first child, do not move it */
-    if (parent->child == obj || obj->sibling == NULL) {
-        return;
-    }
-    else if (parent->child->sibling == obj) {
-        parent->child->sibling = obj->sibling;
-        obj->sibling = parent->child;
-        parent->child = obj;
-        /* mark object as dirty */
-        sgl_obj_set_dirty(obj);
+    if (parent->child == obj) {
         return;
     }
 
-    /* move the object to its prev sibling */
-    sgl_obj_for_each_child(gprev, parent) {
-        prev = gprev->sibling;
-
+    // Find the previous sibling node (prev) and the node before it (prev_prev)
+    sgl_obj_for_each_child(prev, parent) {
         if (prev->sibling == obj) {
-            prev->sibling = obj->sibling;
-            gprev->sibling = obj;
-            obj->sibling = prev;
-            /* mark object as dirty */
-            sgl_obj_set_dirty(obj);
-            return;
+            break;
         }
+        prev_prev = prev;
+    }
+
+    if (prev != NULL) {
+        if (prev_prev != NULL) {
+            prev_prev->sibling = obj;
+        }
+        else {
+            parent->child = obj;
+        }
+
+        prev->sibling = obj->sibling;
+        obj->sibling = prev;
+        sgl_obj_set_dirty(obj);
     }
 }
 
