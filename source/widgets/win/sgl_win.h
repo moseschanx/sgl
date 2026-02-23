@@ -41,7 +41,6 @@
 typedef struct sgl_win {
     sgl_obj_t       obj;
     sgl_obj_t       *body;
-    sgl_obj_t       *exit;
     sgl_draw_rect_t bg;
     const char      *title_text;
     const sgl_font_t *title_font;

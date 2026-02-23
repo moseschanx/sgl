@@ -38,7 +38,6 @@ static void sgl_win_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *
     sgl_win_t *win = sgl_container_of(obj, sgl_win_t, obj);
     sgl_rect_t bg = obj->coords;
     sgl_obj_t *body = win->body;
-    sgl_obj_t *exit = win->exit;
     int16_t exit_cx, exit_cy, exit_r;
 
     win->title_h = sgl_max(obj->radius, win->title_h);
@@ -62,6 +61,10 @@ static void sgl_win_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *
         sgl_rect_set_color(body, win->title_bg_color);
 
         sgl_obj_t *title_text = sgl_label_create(body);
+        if (title_text == NULL) {
+            SGL_LOG_ERROR("sgl_win_create: sgl_label_create failed");
+            return;
+        }
         sgl_obj_set_size(title_text, sgl_obj_get_width(obj) - win->title_h, win->title_h);
         sgl_obj_set_pos(title_text, 0, 0);
         sgl_label_set_text(title_text, win->title_text);
@@ -70,6 +73,11 @@ static void sgl_win_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *
         sgl_label_set_text_align(title_text, win->title_align);
         sgl_label_set_text_offset(title_text, obj->radius, 0);
 
+        sgl_obj_t *exit = sgl_circle_create(body);
+        if (exit == NULL) {
+            SGL_LOG_ERROR("sgl_win_create: sgl_icon_create failed");
+            return;
+        }
         sgl_obj_set_size(exit, exit_r, exit_r);
         sgl_obj_set_pos(exit, exit_cx, exit_cy);
         sgl_circle_set_radius(exit, exit_r);
@@ -119,12 +127,5 @@ sgl_obj_t* sgl_win_create(sgl_obj_t* parent)
     }
     win->body = body;
     sgl_obj_move_down(body);
-
-    sgl_obj_t *exit = sgl_circle_create(body);
-    if (exit == NULL) {
-        SGL_LOG_ERROR("sgl_win_create: sgl_icon_create failed");
-        return NULL;
-    }
-    win->exit = exit;
     return obj;
 }
