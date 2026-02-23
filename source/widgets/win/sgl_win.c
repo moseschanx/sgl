@@ -75,7 +75,7 @@ static void sgl_win_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *
 
         sgl_obj_t *exit = sgl_circle_create(body);
         if (exit == NULL) {
-            SGL_LOG_ERROR("sgl_win_create: sgl_icon_create failed");
+            SGL_LOG_ERROR("sgl_win_create: sgl_circle_create failed");
             return;
         }
         sgl_obj_set_size(exit, exit_r, exit_r);
