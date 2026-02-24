@@ -59,7 +59,7 @@ typedef void (*sgl_painter_cb_t)(sgl_surf_t *surf, sgl_area_t *area, sgl_obj_t* 
 typedef struct sgl_canvas {
     sgl_obj_t  obj;
     sgl_painter_cb_t painter;
-    void       *private;
+    void       *priv;
 } sgl_canvas_t;
 
 /**
@@ -84,13 +84,14 @@ static inline void sgl_canvas_set_painter_cb(sgl_obj_t *obj, sgl_painter_cb_t pa
 /**
  * @brief set canvas private data
  * @param obj canvas object
- * @param private private data
+ * @param priv private data
+ * @param none
  */
-static inline void sgl_canvas_set_private(sgl_obj_t *obj, void *private)
+static inline void sgl_canvas_set_private(sgl_obj_t *obj, void *priv)
 {
     SGL_ASSERT(obj != NULL);
-    sgl_canvas_t *canvas = sgl_container_of(obj, sgl_canvas_t, obj);
-    canvas->private = private;
+    sgl_canvas_t *canvas = (sgl_canvas_t *)obj;
+    canvas->priv = priv;
 }
 
 #endif // !__SGL_CANVAS_H__
