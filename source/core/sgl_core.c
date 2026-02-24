@@ -311,34 +311,32 @@ void sgl_obj_move_down(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
     sgl_obj_t *parent = obj->parent;
+    sgl_obj_t *prev_prev = NULL;
     sgl_obj_t *prev = NULL;
-    sgl_obj_t *gprev = NULL;
 
-    /* if the object is the first child, do not move it */
-    if (parent->child == obj || obj->sibling == NULL) {
-        return;
-    }
-    else if (parent->child->sibling == obj) {
-        parent->child->sibling = obj->sibling;
-        obj->sibling = parent->child;
-        parent->child = obj;
-        /* mark object as dirty */
-        sgl_obj_set_dirty(obj);
+    if (parent->child == obj) {
         return;
     }
 
-    /* move the object to its prev sibling */
-    sgl_obj_for_each_child(gprev, parent) {
-        prev = gprev->sibling;
-
+    // Find the previous sibling node (prev) and the node before it (prev_prev)
+    sgl_obj_for_each_child(prev, parent) {
         if (prev->sibling == obj) {
-            prev->sibling = obj->sibling;
-            gprev->sibling = obj;
-            obj->sibling = prev;
-            /* mark object as dirty */
-            sgl_obj_set_dirty(obj);
-            return;
+            break;
         }
+        prev_prev = prev;
+    }
+
+    if (prev != NULL) {
+        if (prev_prev != NULL) {
+            prev_prev->sibling = obj;
+        }
+        else {
+            parent->child = obj;
+        }
+
+        prev->sibling = obj->sibling;
+        obj->sibling = prev;
+        sgl_obj_set_dirty(obj);
     }
 }
 
@@ -947,6 +945,35 @@ void sgl_obj_free(sgl_obj_t *obj)
 
 
 /**
+ * @brief  Clear all dirty areas of the object and its children.
+ * @param[in] obj  The object to clear.
+ * @return  None
+ * @note   This function is used to clear all dirty areas of the object and its children.
+ */
+void sgl_obj_clear_all_dirty(sgl_obj_t *obj)
+{
+    SGL_ASSERT(obj != NULL);
+	sgl_obj_t *stack[SGL_OBJ_DEPTH_MAX];
+    int top = 0;
+    stack[top++] = obj;
+
+    while (top > 0) {
+		SGL_ASSERT(top < SGL_OBJ_DEPTH_MAX);
+		obj = stack[--top];
+        obj->dirty = 0;
+
+		if (obj->sibling != NULL) {
+			stack[top++] = obj->sibling;
+		}
+
+		if (obj->child != NULL) {
+			stack[top++] = obj->child;
+		}
+    }
+}
+
+
+/**
  * @brief delete object
  * @param obj point to object
  * @return none
@@ -1422,6 +1449,14 @@ static inline void sgl_dirty_area_calculate(sgl_obj_t *obj)
         if (unlikely(sgl_obj_is_destroyed(obj))) {
             /* merge destroy area */
             sgl_dirty_area_push(&obj->area);
+
+            sgl_event_t evt = {
+                .type = SGL_EVENT_DESTROYED,
+            };
+
+            /* check construct function */
+            SGL_ASSERT(obj->construct_fn != NULL);
+            obj->construct_fn(NULL, obj, &evt);
 
             /* remove obj from parent */
             sgl_obj_remove(obj);

@@ -35,7 +35,7 @@
 
 static void sgl_line_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_line_t *line = (sgl_line_t*)obj;
+    sgl_line_t *line = sgl_container_of(obj, sgl_line_t, obj);
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
         sgl_draw_line(surf, &obj->parent->area, &obj->coords, &line->desc);
@@ -82,7 +82,7 @@ void sgl_line_set_pos(sgl_obj_t *obj, int16_t x1, int16_t y1, int16_t x2, int16_
 {
 	SGL_ASSERT(obj != NULL);
     int16_t _x1, _y1, _x2, _y2;
-	sgl_line_t *line = (sgl_line_t*)obj;
+	sgl_line_t *line = sgl_container_of(obj, sgl_line_t, obj);
 
     _x1 = obj->parent->coords.x1 + x1;
     _x2 = obj->parent->coords.x1 + x2;

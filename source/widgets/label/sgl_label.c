@@ -42,7 +42,7 @@
  */
 static void sgl_label_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_label_t *label = (sgl_label_t*)obj;
+    sgl_label_t *label = sgl_container_of(obj, sgl_label_t, obj);
     sgl_pos_t align_pos;
 
     SGL_ASSERT(label->font != NULL);

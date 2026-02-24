@@ -345,4 +345,41 @@ int32_t sgl_anim_path_ease_in(uint32_t elaps, uint32_t duration, int32_t start, 
 }
 
 
+/**
+ * sgl_anim_path_overshoot - Overshoot animation path
+ *
+ * This function creates an animation curve that overshoots the target end value
+ * slightly before settling back to it, creating a natural "bounce" or "spring-like"
+ * effect for a more dynamic and realistic animation.
+ *
+ * @param elaps     Elapsed time (ms) since the animation started
+ * @param duration  Total animation duration (ms)
+ * @param start     Initial value of the animated property at the start of the animation
+ * @param end       Target end value of the animated property
+ * @return          Interpolated value of the animated property at the current elapsed time
+ */
+int32_t sgl_anim_path_overshoot(uint32_t elaps, uint32_t duration, int32_t start, int32_t end)
+{
+    int64_t t, t1, t2, inv_t2, ease_back, diff, progress;
+    if (elaps >= duration)
+        return end;
+
+    t = (int64_t)elaps * 16384 / duration;
+    diff = end - start;
+
+    if (t < 11468) {
+        t1 = t * 16384 / 11468;
+        progress = (t1 * (32768 - t1)) >> 14; 
+        progress = (progress * 18841) >> 14; 
+    }
+    else {
+        t2 = (t - 11468) * 16384 / (16384 - 11468);
+        inv_t2 = 16384 - t2;
+        ease_back = (inv_t2 * inv_t2) >> 14;
+        progress = 16384 + (ease_back * (18841 - 16384) >> 14);
+    }
+
+    return start + (int32_t)((diff * progress) >> 14);
+}
+
 #endif // !CONFIG_SGL_ANIMATION

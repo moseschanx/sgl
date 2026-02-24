@@ -25,7 +25,6 @@
 #ifndef  __SGL_H__
 #define  __SGL_H__ 
 
-
 #include <sgl_list.h>
 #include <sgl_core.h>
 #include <sgl_anim.h>
@@ -61,5 +60,6 @@
 #include "widgets/box/sgl_box.h"
 #include "widgets/canvas/sgl_canvas.h"
 #include "widgets/bar/sgl_bar.h"
+#include "widgets/win/sgl_win.h"
 
 #endif // __SGL_H__

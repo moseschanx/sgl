@@ -37,8 +37,13 @@
 /**
  * @brief sgl bar struct
  * @obj: sgl general object
- * @value: bar value
- * @desc: bar description
+ * @param track_color track color
+ * @param border_color border color
+ * @param pixmap pixmap
+ * @param fill_color fill color
+ * @param direct bar direction
+ * @param value bar value
+ * @param alpha alpha
  */
 typedef struct sgl_bar {
     sgl_obj_t          obj;
@@ -67,7 +72,7 @@ sgl_obj_t* sgl_bar_create(sgl_obj_t* parent);
  */
 static inline void sgl_bar_set_fill_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_bar_t *bar = (sgl_bar_t *)obj;
+    sgl_bar_t *bar = sgl_container_of(obj, sgl_bar_t, obj);
     bar->fill_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -80,7 +85,7 @@ static inline void sgl_bar_set_fill_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_bar_set_fill_alpha(sgl_obj_t *obj, uint8_t alpha)
 {
-    sgl_bar_t *bar = (sgl_bar_t *)obj;
+    sgl_bar_t *bar = sgl_container_of(obj, sgl_bar_t, obj);
     bar->alpha = alpha;
     sgl_obj_set_dirty(obj);
 }
@@ -93,7 +98,7 @@ static inline void sgl_bar_set_fill_alpha(sgl_obj_t *obj, uint8_t alpha)
  */
 static inline void sgl_bar_set_track_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_bar_t *bar = (sgl_bar_t *)obj;
+    sgl_bar_t *bar = sgl_container_of(obj, sgl_bar_t, obj);
     bar->track_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -106,7 +111,7 @@ static inline void sgl_bar_set_track_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_bar_set_track_alpha(sgl_obj_t *obj, uint8_t alpha)
 {
-    sgl_bar_t *bar = (sgl_bar_t *)obj;
+    sgl_bar_t *bar = sgl_container_of(obj, sgl_bar_t, obj);
     bar->alpha = alpha;
     sgl_obj_set_dirty(obj);
 }
@@ -120,7 +125,7 @@ static inline void sgl_bar_set_track_alpha(sgl_obj_t *obj, uint8_t alpha)
  */
 static inline void sgl_bar_set_direct(sgl_obj_t *obj, uint8_t direct)
 {
-    sgl_bar_t *bar = (sgl_bar_t *)obj;
+    sgl_bar_t *bar = sgl_container_of(obj, sgl_bar_t, obj);
     bar->direct = direct;
     sgl_obj_set_dirty(obj);
 }
@@ -145,7 +150,7 @@ static inline void sgl_bar_set_radius(sgl_obj_t *obj, uint8_t radius)
  */
 static inline void sgl_bar_set_value(sgl_obj_t *obj, uint8_t value)
 {
-    sgl_bar_t *bar = (sgl_bar_t *)obj;
+    sgl_bar_t *bar = sgl_container_of(obj, sgl_bar_t, obj);
     bar->value = value;
     sgl_obj_set_dirty(obj);
 }
@@ -157,7 +162,7 @@ static inline void sgl_bar_set_value(sgl_obj_t *obj, uint8_t value)
  */
 static inline uint8_t sgl_bar_get_value(sgl_obj_t *obj)
 {
-    sgl_bar_t *bar = (sgl_bar_t *)obj;
+    sgl_bar_t *bar = sgl_container_of(obj, sgl_bar_t, obj);
     return bar->value;
 }
 
@@ -179,7 +184,7 @@ static inline void sgl_bar_set_border_width(sgl_obj_t *obj, uint8_t width)
  */
 static inline void sgl_bar_set_border_color(sgl_obj_t *obj, sgl_color_t color)
 {
-    sgl_bar_t *bar = (sgl_bar_t *)obj;
+    sgl_bar_t *bar = sgl_container_of(obj, sgl_bar_t, obj);
     bar->border_color = color;
     sgl_obj_set_dirty(obj);
 }
@@ -191,7 +196,7 @@ static inline void sgl_bar_set_border_color(sgl_obj_t *obj, sgl_color_t color)
  */
 static inline void sgl_bar_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pixmap)
 {
-    sgl_bar_t *bar = (sgl_bar_t *)obj;
+    sgl_bar_t *bar = sgl_container_of(obj, sgl_bar_t, obj);
     bar->pixmap = pixmap;
     sgl_obj_set_dirty(obj);
 }

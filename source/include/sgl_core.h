@@ -1038,6 +1038,15 @@ static inline void sgl_obj_clear_dirty(sgl_obj_t *obj)
 
 
 /**
+ * @brief  Clear all dirty areas of the object and its children.
+ * @param[in] obj  The object to clear.
+ * @return  None
+ * @note   This function is used to clear all dirty areas of the object and its children.
+ */
+void sgl_obj_clear_all_dirty(sgl_obj_t *obj);
+
+
+/**
  * @brief check object dirty flag
  * @param obj point to object
  * @return flag, false - clear, true - dirty
@@ -1770,23 +1779,6 @@ static inline sgl_color_t sgl_color_mixer(sgl_color_t fg_color, sgl_color_t bg_c
 #endif
     return ret;
 }
-
-
-/**
- * @brief Blends foreground and background colors using a specified alpha blending factor, applied to multiple pixels.
- *
- * This function performs per-pixel linear interpolation between foreground and background colors over a buffer of `len` pixels:
- *     result = (fg_color * factor + bg_color * (255 - factor)) / 255
- * The blending factor `factor` ranges from 0 to 255:
- *   - 0 means fully transparent (output = background),
- *   - 255 means fully opaque (output = foreground).
- * 
- * @param[in,out] fg_color   Pointer to the foreground color(s) (input); receives blended output (in-place update)
- * @param[in]     bg_color   Pointer to the background color buffer.
- * @param[in]     factor     Blending factor: 0 = fully transparent, 255 = fully opaque
- * @param[in]     len        Number of color elements (pixels) to process
- */
-void sgl_color_blend(sgl_color_t *fg_color, sgl_color_t *bg_color, uint8_t factor, uint32_t len);
 
 
 /**

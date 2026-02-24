@@ -42,7 +42,7 @@
  */
 static void sgl_icon_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_icon_t *icon = (sgl_icon_t*)obj;
+    sgl_icon_t *icon = sgl_container_of(obj, sgl_icon_t, obj);
     sgl_pos_t icon_pos;
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {

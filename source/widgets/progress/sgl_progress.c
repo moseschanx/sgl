@@ -35,7 +35,7 @@
 
 static void sgl_progress_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_progress_t *progress = (sgl_progress_t*)obj;
+    sgl_progress_t *progress = sgl_container_of(obj, sgl_progress_t, obj);
     sgl_area_t knob = obj->coords;
     knob.x1 = obj->coords.x1 + obj->radius / 2 + 2;
     sgl_area_t rect = {

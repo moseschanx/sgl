@@ -65,6 +65,7 @@ struct sgl_page;
 #define  SGL_EVENT_DRAW_MAIN            (15)
 #define  SGL_EVENT_FOCUSED              (16)
 #define  SGL_EVENT_UNFOCUSED            (17)
+#define  SGL_EVENT_DESTROYED            (18)
 #define  sgl_event_type_t               uint8_t
 
 
