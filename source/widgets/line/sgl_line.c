@@ -93,10 +93,17 @@ void sgl_line_set_pos(sgl_obj_t *obj, int16_t x1, int16_t y1, int16_t x2, int16_
 		sgl_swap(&_x1, &_x2);
         line->desc.x_swap = 1;
 	}
+    else {
+        line->desc.x_swap = 0;
+    }
+
 	if (_y1 > _y2) {
 		sgl_swap(&_y1, &_y2);
         line->desc.y_swap = 1;
 	}
+    else {
+        line->desc.y_swap = 0;
+    }
 
 	/* default thinckness is 1 */
 	obj->coords.x1 = _x1;

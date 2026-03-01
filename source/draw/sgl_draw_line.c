@@ -136,11 +136,6 @@ void draw_line_fill_slanted(sgl_surf_t *surf, sgl_area_t *area, int16_t x1, int1
     sgl_color_t *buf = NULL, *blend = NULL;
     int16_t thick_half = (thickness >> 1);
 
-    if (x1 > x2 || y1 > y2) {
-        sgl_swap(&x1, &x2);
-        sgl_swap(&y1, &y2);
-    }
-
     sgl_area_t c_rect = {
         .x1 = (x1 < x2 ? x1 : x2) - thick_half,
         .x2 = (x1 > x2 ? x1 : x2) + thick_half,
