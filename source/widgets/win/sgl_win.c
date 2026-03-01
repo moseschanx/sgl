@@ -52,7 +52,7 @@ static void sgl_win_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *
     else if (evt->type == SGL_EVENT_DRAW_INIT) {
         win->title_h = sgl_max(win->title_h, sgl_font_get_height(win->title_font) + obj->border);
         SGL_LOG_INFO("sgl_win_construct_cb: win->title_h = %d", win->title_h);
-        exit_r  = win->title_h * 6 / 8;
+        exit_r  = win->title_h * 6 / 8 - obj->border;
         exit_cx = sgl_obj_get_width(obj) - exit_r - obj->radius / 2;
         exit_cy = (win->title_h - exit_r + 1) / 2;
 
