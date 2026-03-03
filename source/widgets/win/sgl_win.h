@@ -197,4 +197,16 @@ static inline void sgl_win_set_title_bg_color(sgl_obj_t *obj, sgl_color_t color)
     sgl_obj_set_dirty(obj);
 }
 
+/**
+ * @brief set window close button color
+ * @param obj window object
+ * @param color close button color
+ */
+static inline void sgl_win_set_close_btn_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_win_t *win = sgl_container_of(obj, sgl_win_t, obj);
+    win->close_color = color;
+    sgl_obj_set_dirty(obj);
+}
+
 #endif // !__SGL_LED_H__
