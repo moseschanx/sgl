@@ -41,16 +41,16 @@ static void sgl_win_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *
     close_cx = obj->coords.x2 - close_r - obj->radius / 2;
     close_cy = title_bg.y1 + title_h / 2 + obj->border / 2;
 
-    if (evt->type == SGL_EVENT_DRAW_MAIN) {
-        if (obj->area.y1 == obj->coords.y1) {
-            obj->area.y1 -= title_h;
-        }
+    if (obj->area.y1 == obj->coords.y1) {
+        obj->area.y1 -= title_h;
+    }
 
+    if (evt->type == SGL_EVENT_DRAW_MAIN) {
         sgl_draw_rect(surf, &obj->area, &bg, &win->bg);
         sgl_draw_fill_rect_with_border(surf, &title_bg, &bg, obj->radius, win->title_bg_color, 
                                              win->bg.border_color, win->bg.border, win->bg.alpha
                                       );
-        
+
         align_pos = sgl_get_text_pos(&title_bg, win->title_font, win->title_text, 0, (sgl_align_type_t)win->title_align);
         if (win->title_align == SGL_ALIGN_LEFT_MID) {
             align_pos.x += obj->radius;
@@ -61,7 +61,7 @@ static void sgl_win_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *
         
         sgl_draw_fill_circle(surf, &title_bg, close_cx, close_cy, close_r, win->close_color, win->bg.alpha);
     }
-    if (evt->type == SGL_EVENT_PRESSED || evt->type == SGL_EVENT_CLICKED) {
+    else if (evt->type == SGL_EVENT_PRESSED || evt->type == SGL_EVENT_CLICKED) {
         if (evt->pos.x >= (close_cx - close_r) && evt->pos.x <= (close_cx + close_r) 
              && evt->pos.y >= (close_cy - close_r) && evt->pos.y <= (close_cy + close_r)) {
             sgl_obj_set_destroyed(obj);
@@ -100,5 +100,6 @@ sgl_obj_t* sgl_win_create(sgl_obj_t* parent)
     win->title_bg_color = SGL_THEME_COLOR;
     win->title_font = sgl_get_system_font();
     win->close_color = sgl_rgb(255, 90, 80);
+
     return obj;
 }
