@@ -133,7 +133,7 @@ typedef struct sgl_anim_ctx {
 
 
 /* Animation context it will be used internally */
-extern sgl_anim_ctx_t anim_ctx;
+extern sgl_anim_ctx_t sgl_anim_ctx;
 
 
 /**
@@ -191,13 +191,16 @@ static inline void sgl_anim_stop(sgl_anim_t *anim)
 
 
 /**
- * @brief free animation object
- * @param  anim animation object
+ * @brief delete animation object
+ * @param anim animation object
  * @return none
 */
-static inline void sgl_anim_free(sgl_anim_t *anim)
+static inline void sgl_anim_delete(sgl_anim_t *anim)
 {
     SGL_ASSERT(anim != NULL);
+    if (!anim->finished) {
+        sgl_anim_stop(anim);
+    } 
     sgl_free(anim);
 }
 

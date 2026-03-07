@@ -159,7 +159,7 @@ void sgl_boot_logo(void)
         sgl_task_handle();
     }
 
-    sgl_anim_free(anim);
+    sgl_anim_delete(anim);
     sgl_obj_delete(logo);
 }
 

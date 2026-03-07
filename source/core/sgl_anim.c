@@ -31,7 +31,7 @@
 
 #if (CONFIG_SGL_ANIMATION)
 
-sgl_anim_ctx_t anim_ctx = {
+sgl_anim_ctx_t sgl_anim_ctx = {
     .anim_list_head = NULL,
     .anim_list_tail = NULL,
     .anim_cnt = 0,
@@ -87,18 +87,18 @@ sgl_anim_t* sgl_anim_create(void)
 */
 void sgl_anim_add(sgl_anim_t *anim)
 {
-    if (anim_ctx.anim_list_tail != NULL) {
-        anim_ctx.anim_list_tail->next = anim;
-        anim_ctx.anim_list_tail = anim;
+    if (sgl_anim_ctx.anim_list_tail != NULL) {
+        sgl_anim_ctx.anim_list_tail->next = anim;
+        sgl_anim_ctx.anim_list_tail = anim;
     }
     else {
-        anim_ctx.anim_list_head = anim;
-        anim_ctx.anim_list_tail = anim;
+        sgl_anim_ctx.anim_list_head = anim;
+        sgl_anim_ctx.anim_list_tail = anim;
     }
 
     anim->next = NULL;
     anim->finished = 0;
-    anim_ctx.anim_cnt++;
+    sgl_anim_ctx.anim_cnt++;
 }
 
 
@@ -112,16 +112,16 @@ void sgl_anim_remove(sgl_anim_t *anim)
     SGL_ASSERT(anim != NULL);
     sgl_anim_t *prev = NULL;
 
-    if (anim_ctx.anim_list_head == anim) {
-        anim_ctx.anim_list_head = anim->next;
-        if (anim_ctx.anim_list_head == NULL) {
-            anim_ctx.anim_list_tail = NULL;
+    if (sgl_anim_ctx.anim_list_head == anim) {
+        sgl_anim_ctx.anim_list_head = anim->next;
+        if (sgl_anim_ctx.anim_list_head == NULL) {
+            sgl_anim_ctx.anim_list_tail = NULL;
         }
-        anim_ctx.anim_cnt--;
+        sgl_anim_ctx.anim_cnt--;
         return;
     }
 
-    prev = anim_ctx.anim_list_head;
+    prev = sgl_anim_ctx.anim_list_head;
     while (prev != NULL && prev->next != anim) {
         prev = prev->next;
     }
@@ -131,11 +131,11 @@ void sgl_anim_remove(sgl_anim_t *anim)
     }
     prev->next = anim->next;
 
-    if (anim == anim_ctx.anim_list_tail) {
-        anim_ctx.anim_list_tail = prev;
+    if (anim == sgl_anim_ctx.anim_list_tail) {
+        sgl_anim_ctx.anim_list_tail = prev;
     }
 
-    anim_ctx.anim_cnt--;
+    sgl_anim_ctx.anim_cnt--;
 }
 
 
@@ -149,10 +149,10 @@ void sgl_anim_task(void)
 {
     int32_t value = 0;
     uint32_t elaps_time = 0;
-    sgl_anim_t *anim = anim_ctx.anim_list_head, *next = NULL;
+    sgl_anim_t *anim = sgl_anim_ctx.anim_list_head, *next = NULL;
 
     /* if no anim object, do nothing */
-    if (unlikely(anim_ctx.anim_cnt == 0)) {
+    if (unlikely(sgl_anim_ctx.anim_cnt == 0)) {
         return;
     }
 
