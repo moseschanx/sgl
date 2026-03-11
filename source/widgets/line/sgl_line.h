@@ -44,10 +44,10 @@
  */
 typedef struct sgl_line {
     sgl_obj_t     obj;
-    sgl_color_t   color;
+    uint8_t       alpha;
     uint8_t       x_swap : 4;
     uint8_t       y_swap : 4;
-    uint8_t       alpha;
+    sgl_color_t   color;
 }sgl_line_t;
 
 

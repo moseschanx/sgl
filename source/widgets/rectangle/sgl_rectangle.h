@@ -41,11 +41,11 @@
  */
 typedef struct sgl_rectangle {  
     sgl_obj_t       obj;
+    uint8_t         alpha;
     sgl_color_t     color;
     sgl_color_t     border_color;
     const sgl_pixmap_t *pixmap;
-    uint8_t         alpha;
-}sgl_rectangle_t;
+} sgl_rectangle_t;
 
 
 /**

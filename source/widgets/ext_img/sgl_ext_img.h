@@ -117,12 +117,12 @@
  */
 typedef struct sgl_ext_img {
     sgl_obj_t       obj;
-    const sgl_pixmap_t *pixmap;
-    void            (*read)(const size_t addr, uint8_t *buf, uint32_t len_bytes);
     uint8_t         alpha;
     uint8_t         pixmap_auto;
     uint8_t         pixmap_idx;
     uint8_t         pixmap_num;
+    const sgl_pixmap_t *pixmap;
+    void            (*read)(const size_t addr, uint8_t *buf, uint32_t len_bytes);
     /* RLE compress context */
     sgl_color_t     color;
     uint8_t         remainder;

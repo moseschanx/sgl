@@ -40,6 +40,14 @@ extern "C" {
 
 typedef struct {
     sgl_obj_t obj;
+    uint8_t alpha;                     // aplha of waveform
+    uint8_t grid_style;                // grid line style（0-solid line，other: dashed line
+    uint8_t auto_scale : 1;            // whether to automatically scale
+    uint8_t show_y_labels : 1;         // whether to show Y axis labels
+    uint8_t border_width;              // outer border width
+    uint8_t line_width;                // width of waveform line
+    uint8_t display_count;             // data count that has been displayed
+    sgl_color_t y_label_color;         // color of Y axis labels
     int16_t  *data_buffer;             // channel data buffer
     uint32_t  data_len;                // data length
     sgl_color_t waveform_color;        // waveform color
@@ -50,16 +58,8 @@ typedef struct {
     int16_t max_value;                 // max value of data
     int16_t running_min;               // min value of runtime
     int16_t running_max;               // max value of runtime
-    uint8_t auto_scale : 1;            // whether to automatically scale
-    uint8_t show_y_labels : 1;         // whether to show Y axis labels
-    uint8_t border_width;              // outer border width
-    uint8_t line_width;                // width of waveform line
-    uint8_t display_count;             // data count that has been displayed
     uint32_t max_display_points;       // max display points
-    uint8_t alpha;                     // aplha of waveform
-    uint8_t grid_style;                // grid line style（0-solid line，other: dashed line
     const sgl_font_t *y_label_font;    // font of Y axis labels
-    sgl_color_t y_label_color;         // color of Y axis labels
     uint32_t current_index;            // current data index
 } sgl_scope_t;
 
