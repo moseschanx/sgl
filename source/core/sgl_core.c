@@ -1296,6 +1296,8 @@ sgl_pos_t sgl_get_icon_pos(sgl_area_t *area, const sgl_icon_pixmap_t *icon, int1
  *       - SGL_ALIGN_BOT_RIGHT : Align the object at the bottom right of the parent object.
  *       - SGL_ALIGN_LEFT_MID  : Align the object at the left middle of the parent object.
  *       - SGL_ALIGN_RIGHT_MID : Align the object at the right middle of the parent object.
+ * 
+ * @warning You must set the size of object before calling this function.
  */
 void sgl_obj_set_pos_align(sgl_obj_t *obj, sgl_align_type_t type)
 {
@@ -1337,6 +1339,8 @@ void sgl_obj_set_pos_align(sgl_obj_t *obj, sgl_align_type_t type)
  *       - SGL_ALIGN_HORIZ_TOP  : Align the object at the top side of the reference object.
  *       - SGL_ALIGN_HORIZ_BOT  : Align the object at the bottom side of the reference object.
  *       - SGL_ALIGN_HORIZ_MID  : Align the object at the middle of the reference object.
+ * 
+ * @warning You must set the size of object before calling this function.
  */
 void sgl_obj_set_pos_align_ref(sgl_obj_t *ref, sgl_obj_t *obj, sgl_align_type_t type)
 {
