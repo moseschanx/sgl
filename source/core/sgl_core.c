@@ -1417,9 +1417,6 @@ void sgl_obj_set_layout(sgl_obj_t *obj, sgl_layout_desc_t *desc)
     size_t child_num = sgl_obj_get_child_count(obj);
     int16_t child_span_x[64] = {0}, child_span_y[64] = {0}, x = 0, y = 0, child_pos_x = 0, child_pos_y = 0;
 
-    /* set object to dirty flag for layout change */
-    sgl_obj_set_dirty(obj);
-
     switch (desc->type ) {
     case SGL_LAYOUT_HORIZONTAL:
         sgl_split_len_avg((obj->coords.x2 - obj->coords.x1 + 1 - obj->border * 2 - desc->left_space - desc->right_space), 
@@ -1433,6 +1430,7 @@ void sgl_obj_set_layout(sgl_obj_t *obj, sgl_layout_desc_t *desc)
             child->coords.y1 = obj->coords.y1 + desc->top_space;
             child->coords.y2 = obj->coords.y2 - desc->bottom_space;
             child_pos_x += (child_span_x[x++] + desc->col_space);
+            child->area = child->coords;
         }
         break;
 
@@ -1448,6 +1446,7 @@ void sgl_obj_set_layout(sgl_obj_t *obj, sgl_layout_desc_t *desc)
             child->coords.y1 = child_pos_y;
             child->coords.y2 = child_pos_y + child_span_y[y] - 1;
             child_pos_y += (child_span_y[y++] + desc->row_space);
+            child->area = child->coords;
         }
         break;
 
@@ -1482,6 +1481,7 @@ void sgl_obj_set_layout(sgl_obj_t *obj, sgl_layout_desc_t *desc)
             child->coords.x2 = child_pos_x + child_span_x[x] - 1;
             child->coords.y1 = child_pos_y;
             child->coords.y2 = child->coords.y1 + child_span_y[y] - 1;
+            child->area = child->coords;
 
             x++;
             if (x >= desc->col_num) {
@@ -1490,6 +1490,7 @@ void sgl_obj_set_layout(sgl_obj_t *obj, sgl_layout_desc_t *desc)
             }
         }
         break;
+
     default:
         SGL_LOG_WARN("invalid layout type");
         return;
