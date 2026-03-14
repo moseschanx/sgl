@@ -63,8 +63,8 @@ extern "C" {
 #define SGL_FIXED_ONE                     (1 << SGL_FIXED_SHIFT)
 #define SGL_FIXED_MASK                    (SGL_FIXED_ONE - 1)
 
-#define SGL_SIN_FIXED_ONE                 (32767)
-#define SGL_COS_FIXED_ONE                 (32767)
+#define SGL_SIN_FIXED_ONE                 (32768)
+#define SGL_COS_FIXED_ONE                 (32768)
 
 /**
  * @brief Calculate the sine of an angle

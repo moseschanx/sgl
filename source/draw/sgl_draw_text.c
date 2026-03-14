@@ -355,3 +355,82 @@ void sgl_draw_string_mult_line(sgl_surf_t *surf, sgl_area_t *area, int16_t x, in
         x_off += ch_width;
     }
 }
+
+
+/**
+ * @brief generate mask for an character
+ * @param mask Pointer to the mask buffer
+ * @param area Pointer to the area where the character will be drawn
+ * @param ch_index Index of the character
+ * @param font Pointer to the font structure containing character data
+ * @return none
+ */
+void sgl_draw_label_mask(uint8_t *mask, sgl_area_t *area,  int16_t x, int16_t y, uint32_t ch_index, const sgl_font_t *font)
+{
+    int offset_y2 = font->font_height - font->table[ch_index].ofs_y - font->base_line;
+    const uint8_t *dot = &font->bitmap[font->table[ch_index].bitmap_index];
+    const uint8_t font_w = font->table[ch_index].box_w;
+    const uint8_t font_h = font->table[ch_index].box_h;
+    const int16_t buf_w = area->x2 - area->x1 + 1;
+    uint8_t *alpha, *alpha_buf;
+
+    uint8_t shift = 0;
+    uint32_t pixel_index, rel_x, rel_y;
+    uint16_t byte_index, alpha_dot = 0;
+
+    sgl_area_t clip = {
+        .x1 = x + font->table[ch_index].ofs_x,
+        .x2 = x + font->table[ch_index].ofs_x + font_w - 1,
+        .y1 = y + offset_y2 - font_h,
+        .y2 = y + offset_y2 - 1,
+    };
+
+    if (!sgl_area_selfclip(&clip, area)) {
+        return;
+    }
+
+    alpha_buf = mask + buf_w * area->y1 + area->x1;
+    for (int y = clip.y1; y <= clip.y2; y++) {
+        rel_y = y - clip.y1;
+        alpha = alpha_buf;
+
+        for (int x = clip.x1; x <= clip.x2; x++) {
+            rel_x = x - clip.x1;
+            pixel_index = rel_y * font_w + rel_x;
+
+            if  (font->bpp == 4) {
+                byte_index = pixel_index >> 1;
+                alpha_dot = sgl_opa4_table[(pixel_index & 1) ? (dot[byte_index] & 0x0F) : (dot[byte_index] >> 4)];
+            }
+            else if (font->bpp == 2) {
+                byte_index = pixel_index >> 2;
+                shift = (3 - (pixel_index & 0x3)) * 2;
+                alpha_dot = sgl_opa2_table[(dot[byte_index] >> shift) & 0x03];
+            }
+            else if (font->bpp == 1) {
+                byte_index = pixel_index >> 3;
+                shift = 7 - (pixel_index & 0x7);
+                alpha_dot = ((dot[byte_index] >> shift) & 0x01) ? SGL_ALPHA_MAX : SGL_ALPHA_MIN;
+            }
+
+            *alpha = alpha_dot;
+            alpha ++;
+        }
+
+        alpha_buf += buf_w;
+    }
+}
+
+
+void sgl_draw_string_mask(uint8_t *mask, sgl_area_t *area, int16_t x, int16_t y, const char *str, const sgl_font_t *font)
+{
+    uint32_t ch_index;
+    uint32_t unicode = 0;
+
+    while (*str) {
+        str += sgl_utf8_to_unicode(str, &unicode);
+        ch_index = sgl_search_unicode_ch_index(font, unicode);
+        sgl_draw_label_mask(mask, area,x, y, ch_index, font);
+        x += (font->table[ch_index].adv_w >> 4);
+    }
+}
