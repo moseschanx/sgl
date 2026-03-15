@@ -68,6 +68,8 @@ typedef int32_t (*sgl_anim_path_algo_t)(uint32_t elaps, uint32_t duration, int32
  * 
  * @act_duration: Total duration (in ms) of the animation from start_value to end_value.
  * 
+ * @last_value: The last computed value of the animation.
+ * 
  * @start_value: The initial value at the beginning of the animation (after delay).
  * 
  * @end_value: The target value at the end of the animation.
