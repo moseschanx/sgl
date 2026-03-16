@@ -144,8 +144,13 @@ extern "C" {
 #define sgl_section(sec)                        __attribute__((section(#sec)))
 #elif defined(__ICCARM__)  /* IAR compiler    */
 #ifndef likely
-#  define likely(x)                             __iar_builtin_expect(!!(x), 1)
-#  define unlikely(x)                           __iar_builtin_expect(!!(x), 0)
+#  if __VER__ >= 91000
+#    define likely(x)                           __iar_builtin_expect(!!(x), 1)
+#    define unlikely(x)                         __iar_builtin_expect(!!(x), 0)
+#  else
+#    define likely(x)                           (x)
+#    define unlikely(x)                         (x)
+#  endif
 #endif
 #define sgl_weak_fn                             __weak
 #define sgl_section(sec)                        __section(#sec)
