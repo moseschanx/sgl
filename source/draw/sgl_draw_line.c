@@ -98,21 +98,6 @@ void sgl_draw_fill_vline(sgl_surf_t *surf, sgl_area_t *area, int16_t x, int16_t 
     }
 }
 
-/**
- * SDF draw anti-aliased line
- * @param thickness line thickness (in pixels)
- */
-static int32_t sgl_capsule_sdf_optimized(int16_t px, int16_t py, int16_t ax, int16_t ay, int16_t bx, int16_t by)
-{
-	int64_t pax = px - ax, pay = py - ay, bax = bx - ax, bay = by - ay;
-	int64_t b_sqd = bax * bax + bay * bay;
-	int64_t h = (sgl_max(sgl_min((pax * bax + pay * bay), b_sqd), 0)) << 8;
-	int64_t dx = (pax << 8) - bax * h / b_sqd;
-	int64_t dy = (pay << 8) - bay * h / b_sqd;
-
-	return sgl_sqrt(dx * dx + dy * dy);
-}
-
 
 /**
  * @brief draw a slanted line with alpha
@@ -130,12 +115,14 @@ static int32_t sgl_capsule_sdf_optimized(int16_t px, int16_t py, int16_t ax, int
  */
 void draw_line_fill_slanted(sgl_surf_t *surf, sgl_area_t *area, int16_t x1, int16_t y1, int16_t x2, int16_t y2, int16_t thickness, sgl_color_t color, uint8_t alpha)
 {
-    uint8_t c;
-    int64_t len;
-    sgl_area_t clip = SGL_AREA_MAX;
-    sgl_color_t *buf = NULL, *blend = NULL;
-    int16_t thick_half = (thickness >> 1);
+    const int64_t bax = (int64_t)x2 - x1, bay = (int64_t)y2 - y1;
+    const int64_t b_sqd = bax * bax + bay * bay;
+    const int64_t inv_b_sqd = (1LL << 32) / b_sqd;
+    const int16_t thick_half = (thickness >> 2);
+    const int32_t inner_limit = (thick_half - 1) << 8;
+    const int32_t outer_limit = thick_half << 8;
 
+    sgl_area_t clip = SGL_AREA_MAX;
     sgl_area_t c_rect = {
         .x1 = (x1 < x2 ? x1 : x2) - thick_half,
         .x2 = (x1 > x2 ? x1 : x2) + thick_half,
@@ -144,32 +131,43 @@ void draw_line_fill_slanted(sgl_surf_t *surf, sgl_area_t *area, int16_t x1, int1
     };
 
     sgl_surf_clip_area_return(surf, area, &clip);
-    if (!sgl_area_selfclip(&clip, &c_rect)) {
-        return;
-    }
+    if (!sgl_area_selfclip(&clip, &c_rect)) return;
 
-    buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, clip.y1 - surf->y1);
+    sgl_color_t *buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, clip.y1 - surf->y1);
+    const int32_t stride = surf->w;
+
     for (int y = clip.y1; y <= clip.y2; y++) {
-        blend = buf;
-
+        sgl_color_t *blend = buf;
+        const int64_t pay = (int64_t)y - y1;
+        
         for (int x = clip.x1; x <= clip.x2; x++, blend++) {
-            len = sgl_capsule_sdf_optimized(x, y, x1, y1, x2, y2);
+            const int64_t pax = (int64_t)x - x1;
+            int64_t dot = pax * bax + pay * bay;
 
-            if (len <= (thick_half - 1) << 8) {
+            if (dot < 0)
+                dot = 0; 
+            else if (dot > b_sqd)
+                dot = b_sqd;
+
+            const int64_t h = dot << 8; 
+            const int64_t dx = (pax << 8) - ((bax * h * inv_b_sqd) >> 32);
+            const int64_t dy = (pay << 8) - ((bay * h * inv_b_sqd) >> 32);
+            const int32_t len = sgl_sqrt(dx * dx + dy * dy);
+
+            if (len < inner_limit) {
                 *blend = (alpha == SGL_ALPHA_MAX ? color : sgl_color_mixer(color, *blend, alpha));
-                continue;
             }
-
-            if (len > ((thick_half - 1) << 8) && len < (thick_half << 8)) {
-                c = len - ((thick_half - 1) << 8);
-
-                if (alpha == SGL_ALPHA_MAX)
+            else if (len < outer_limit) {
+                const uint8_t c = (uint8_t)(len - inner_limit);
+                if (alpha == SGL_ALPHA_MAX) {
                     *blend = sgl_color_mixer(*blend, color, c);
-                else
-                    *blend = sgl_color_mixer(sgl_color_mixer(*blend, color, c), *blend, alpha);
+                } else {
+                    uint8_t final_a = (uint8_t)(((uint16_t)c * alpha) >> 8);
+                    *blend = sgl_color_mixer(color, *blend, final_a);
+                }
             }
         }
-        buf += surf->w;
+        buf += stride;
     }
 }
 
