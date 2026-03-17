@@ -59,6 +59,18 @@ sgl_obj_t* sgl_led_create(sgl_obj_t* parent);
 
 
 /**
+ * @brief set the radius of the led
+ * @param obj led object
+ * @param radius radius of the led
+ * @return none
+ */
+static inline void sgl_led_set_radius(sgl_obj_t *obj, uint8_t radius)
+{
+    sgl_obj_set_radius(obj, radius);
+    sgl_obj_set_dirty(obj);
+}
+
+/**
  * @brief set the color of the led
  * @param obj led object
  * @param color color of the led

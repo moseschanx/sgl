@@ -39,9 +39,10 @@ static void sgl_led_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *
     int16_t cx = 0, cy = 0;
     sgl_color_t color = led->status ? led->on_color : led->off_color;
     sgl_color_t *buf = NULL, *blend = NULL;
+    const uint16_t radius = sgl_min(obj->radius, sgl_min(obj->area.x2 - obj->area.x1, obj->area.y2 - obj->area.y1) / 2);
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
-        sgl_area_t clip;
+        sgl_area_t clip; 
 
         cx = (led->obj.coords.x1 + led->obj.coords.x2) / 2;
         cy = (led->obj.coords.y1 + led->obj.coords.y2) / 2;
@@ -51,18 +52,18 @@ static void sgl_led_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *
         }
 
         sgl_area_t c_rect = {
-            .x1 = cx - obj->radius,
-            .x2 = cx + obj->radius,
-            .y1 = cy - obj->radius,
-            .y2 = cy + obj->radius
+            .x1 = cx - radius,
+            .x2 = cx + radius,
+            .y1 = cy - radius,
+            .y2 = cy + radius
         };
         if (!sgl_area_selfclip(&clip, &c_rect)) {
             return;
         }
 
         int y2 = 0, real_r2 = 0, edge_alpha = 0;
-        int r2 = sgl_pow2(obj->radius);
-        int r2_edge = sgl_pow2(obj->radius + 1);
+        int r2 = sgl_pow2(radius);
+        int r2_edge = sgl_pow2(radius + 1);
         int ds_alpha = SGL_ALPHA_MIN;
 
         buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, clip.y1 - surf->y1);
@@ -120,7 +121,7 @@ sgl_obj_t* sgl_led_create(sgl_obj_t* parent)
     led->on_color = SGL_THEME_COLOR;
     led->off_color = SGL_THEME_BG_COLOR;
     led->bg_color = SGL_THEME_BG_COLOR;
-    obj->radius = 0;
+    obj->radius = SGL_RADIUS_INVALID;
 
     return obj;
 }
