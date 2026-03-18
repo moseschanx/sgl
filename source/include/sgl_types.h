@@ -228,7 +228,7 @@ extern "C" {
                                                                .ch.red     = ((((rgb222) >> 4) & 0x03) << 3),}
 
 #define sgl_rgb332_to_color(rgb332)             (sgl_color_t){ .ch.blue    = ((((rgb332) >> 0) & 0x03) << 3),         \
-                                                               .ch.green   = ((((rgb332) >> 2) & 0x03) << 2),         \
+                                                               .ch.green   = ((((rgb332) >> 2) & 0x03) << 3),         \
                                                                .ch.red     = ((((rgb332) >> 5) & 0x03) << 2),}
 
 #define sgl_rgb444_to_color(rgb444)             (sgl_color_t){ .ch.blue    = ((((rgb444) >> 0) & 0xF) << 1),          \
