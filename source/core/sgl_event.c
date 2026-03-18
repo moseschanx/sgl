@@ -202,7 +202,7 @@ static struct sgl_obj* click_detect_object(sgl_event_pos_t *pos)
 
     while (top > 0) {
         SGL_ASSERT(top < SGL_OBJ_DEPTH_MAX);
-		obj = stack[--top];
+        obj = stack[--top];
         if (sgl_obj_has_sibling(obj)) {
             stack[top++] = obj->sibling;
         }

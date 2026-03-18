@@ -40,12 +40,12 @@ extern "C" {
  * @next: next node of the list.
  */
 typedef struct sgl_list_node {
-	struct sgl_list_node *prev;
-	struct sgl_list_node *next;
+    struct sgl_list_node *prev;
+    struct sgl_list_node *next;
 }sgl_list_node_t;
 
 #define SGL_LIST_HEAD(name) \
-	sgl_list_node_t name = {.prev = &(name), .next = &(name)}
+    sgl_list_node_t name = {.prev = &(name), .next = &(name)}
 
 
 /**
@@ -57,7 +57,7 @@ typedef struct sgl_list_node {
  * @return none
  */
 #define sgl_list_for_each(pos, list_head) \
-	for (pos = (list_head)->next; pos != (list_head); pos = pos->next)
+    for (pos = (list_head)->next; pos != (list_head); pos = pos->next)
 
 
 /**
@@ -68,7 +68,7 @@ typedef struct sgl_list_node {
  * @return entry_type: next entry of specific entry.
  */
 #define sgl_list_next_entry(entry, entry_type, list_node_member) \
-	sgl_container_of(entry->list_node_member.next, entry_type, list_node_member)
+    sgl_container_of(entry->list_node_member.next, entry_type, list_node_member)
 
 
 /**
@@ -79,7 +79,7 @@ typedef struct sgl_list_node {
  * @return entry_type: previous entry of specific entry.
  */
 #define sgl_list_prev_entry(entry, entry_type, list_node_member) \
-	sgl_container_of(entry->list_node_member.prev, entry_type, list_node_member)
+    sgl_container_of(entry->list_node_member.prev, entry_type, list_node_member)
 
 
 /**
@@ -93,9 +93,9 @@ typedef struct sgl_list_node {
  * @return none
  */
 #define sgl_list_for_each_entry(pos, list_head, entry_type, list_node_member) \
-	for (pos = sgl_container_of((list_head)->next, entry_type, list_node_member); \
-	     &pos->list_node_member != (list_head); \
-	     pos = sgl_container_of(pos->list_node_member.next, entry_type, list_node_member))
+    for (pos = sgl_container_of((list_head)->next, entry_type, list_node_member); \
+         &pos->list_node_member != (list_head); \
+         pos = sgl_container_of(pos->list_node_member.next, entry_type, list_node_member))
 
 
 /**
@@ -127,9 +127,9 @@ typedef struct sgl_list_node {
  * @return none
  */
 #define sgl_list_for_each_entry_reverse(pos, list_head, entry_type, list_node_member) \
-	for (pos = sgl_container_of((list_head)->prev, entry_type, list_node_member); \
-	     &pos->list_node_member != (list_head); \
-	     pos = sgl_container_of(pos->list_node_member.prev, entry_type, list_node_member))
+    for (pos = sgl_container_of((list_head)->prev, entry_type, list_node_member); \
+         &pos->list_node_member != (list_head); \
+         pos = sgl_container_of(pos->list_node_member.prev, entry_type, list_node_member))
 
 
 /**
@@ -141,8 +141,8 @@ typedef struct sgl_list_node {
  */
 static inline void sgl_list_init(sgl_list_node_t *node) 
 {
-	node->next = node;
-	node->prev = node;
+    node->next = node;
+    node->prev = node;
 }
 
 
@@ -156,12 +156,12 @@ static inline void sgl_list_init(sgl_list_node_t *node)
  */
 static inline void sgl_list_add_node_at_tail(sgl_list_node_t *head, sgl_list_node_t *node)
 {
-	sgl_list_node_t *tail = head->prev;
+    sgl_list_node_t *tail = head->prev;
 
-	node->prev = tail;
-	node->next = head;
-	tail->next = node;
-	head->prev = node;
+    node->prev = tail;
+    node->next = head;
+    tail->next = node;
+    head->prev = node;
 }
 
 
@@ -175,12 +175,12 @@ static inline void sgl_list_add_node_at_tail(sgl_list_node_t *head, sgl_list_nod
  */
 static inline void sgl_list_add_node_at_front(sgl_list_node_t *head, sgl_list_node_t *node)
 {
-	sgl_list_node_t *front = head->next;
+    sgl_list_node_t *front = head->next;
 
-	node->prev = head;
-	node->next = front;
-	front->prev = node;
-	head->next = node;
+    node->prev = head;
+    node->next = front;
+    front->prev = node;
+    head->next = node;
 }
 
 
@@ -223,10 +223,10 @@ static inline void sgl_list_add_node_at_after(sgl_list_node_t *pos, sgl_list_nod
  */
 static inline void sgl_list_del_tail_node(sgl_list_node_t *head)
 {
-	sgl_list_node_t *tail_prev = head->prev->prev;
+    sgl_list_node_t *tail_prev = head->prev->prev;
 
-	tail_prev->next = head;
-	head->prev = tail_prev;
+    tail_prev->next = head;
+    head->prev = tail_prev;
 }
 
 
@@ -239,10 +239,10 @@ static inline void sgl_list_del_tail_node(sgl_list_node_t *head)
  */
 static inline void sgl_list_del_front_node(sgl_list_node_t *head)
 {
-	sgl_list_node_t *front_next = head->next->next;
+    sgl_list_node_t *front_next = head->next->next;
 
-	front_next->prev = head;
-	head->next = front_next;
+    front_next->prev = head;
+    head->next = front_next;
 }
 
 
@@ -255,8 +255,8 @@ static inline void sgl_list_del_front_node(sgl_list_node_t *head)
  */
 static inline void sgl_list_del_node(sgl_list_node_t *node)
 {
-	node->prev->next = node->next;
-	node->next->prev = node->prev;
+    node->prev->next = node->next;
+    node->next->prev = node->prev;
 }
 
 
@@ -269,7 +269,7 @@ static inline void sgl_list_del_node(sgl_list_node_t *node)
  */
 static inline bool sgl_list_is_empty(sgl_list_node_t *head)
 {
-	return head->next == head;
+    return head->next == head;
 }
 
 
@@ -282,7 +282,7 @@ static inline bool sgl_list_is_empty(sgl_list_node_t *head)
  */
 static inline sgl_list_node_t* sgl_list_next_node(sgl_list_node_t *node)
 {
-	return node->next;
+    return node->next;
 }
 
 
@@ -295,7 +295,7 @@ static inline sgl_list_node_t* sgl_list_next_node(sgl_list_node_t *node)
  */
 static inline sgl_list_node_t* sgl_list_prev_node(sgl_list_node_t *node)
 {
-	return node->prev;
+    return node->prev;
 }
 
 

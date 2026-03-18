@@ -192,7 +192,7 @@ void sgl_obj_remove(sgl_obj_t *obj)
 void sgl_obj_move_child_pos(sgl_obj_t *obj, int16_t ofs_x, int16_t ofs_y)
 {
     SGL_ASSERT(obj != NULL);
-	sgl_obj_t *stack[SGL_OBJ_DEPTH_MAX];
+    sgl_obj_t *stack[SGL_OBJ_DEPTH_MAX];
     int top = 0;
 
     if (obj->child == NULL) {
@@ -201,8 +201,8 @@ void sgl_obj_move_child_pos(sgl_obj_t *obj, int16_t ofs_x, int16_t ofs_y)
     stack[top++] = obj->child;
 
     while (top > 0) {
-		SGL_ASSERT(top < SGL_OBJ_DEPTH_MAX);
-		obj = stack[--top];
+        SGL_ASSERT(top < SGL_OBJ_DEPTH_MAX);
+        obj = stack[--top];
 
         obj->dirty = 1;
         obj->coords.x1 += ofs_x;
@@ -210,13 +210,13 @@ void sgl_obj_move_child_pos(sgl_obj_t *obj, int16_t ofs_x, int16_t ofs_y)
         obj->coords.y1 += ofs_y;
         obj->coords.y2 += ofs_y;
 
-		if (obj->sibling != NULL) {
-			stack[top++] = obj->sibling;
-		}
+        if (obj->sibling != NULL) {
+            stack[top++] = obj->sibling;
+        }
 
-		if (obj->child != NULL) {
-			stack[top++] = obj->child;
-		}
+        if (obj->child != NULL) {
+            stack[top++] = obj->child;
+        }
     }
 }
 
@@ -449,12 +449,12 @@ void sgl_obj_set_radius(sgl_obj_t *obj, size_t radius)
 void sgl_obj_print_name(sgl_obj_t *obj)
 {
     int top = 0;
-	sgl_obj_t *stack[SGL_OBJ_DEPTH_MAX];
+    sgl_obj_t *stack[SGL_OBJ_DEPTH_MAX];
     stack[top++] = obj;
 
     while (top > 0) {
-		SGL_ASSERT(top < SGL_OBJ_DEPTH_MAX);
-		obj = stack[--top];
+        SGL_ASSERT(top < SGL_OBJ_DEPTH_MAX);
+        obj = stack[--top];
 
         if (obj->name == NULL) {
             SGL_LOG_INFO("[OBJ NAME]: %s", "NULL");
@@ -463,13 +463,13 @@ void sgl_obj_print_name(sgl_obj_t *obj)
             SGL_LOG_INFO("[OBJ NAME]: %s", obj->name);
         }
 
-		if (obj->sibling != NULL) {
-			stack[top++] = obj->sibling;
-		}
+        if (obj->sibling != NULL) {
+            stack[top++] = obj->sibling;
+        }
 
-		if (obj->child != NULL) {
-			stack[top++] = obj->child;
-		}
+        if (obj->child != NULL) {
+            stack[top++] = obj->child;
+        }
     }
 }
 
@@ -939,21 +939,21 @@ int sgl_obj_init(sgl_obj_t *obj, sgl_obj_t *parent)
 void sgl_obj_free(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-	sgl_obj_t *stack[SGL_OBJ_DEPTH_MAX];
+    sgl_obj_t *stack[SGL_OBJ_DEPTH_MAX];
     int top = 0;
     stack[top++] = obj;
 
     while (top > 0) {
-		SGL_ASSERT(top < SGL_OBJ_DEPTH_MAX);
-		obj = stack[--top];
+        SGL_ASSERT(top < SGL_OBJ_DEPTH_MAX);
+        obj = stack[--top];
 
-		if (obj->sibling != NULL) {
-			stack[top++] = obj->sibling;
-		}
+        if (obj->sibling != NULL) {
+            stack[top++] = obj->sibling;
+        }
 
-		if (obj->child != NULL) {
-			stack[top++] = obj->child;
-		}
+        if (obj->child != NULL) {
+            stack[top++] = obj->child;
+        }
 
         sgl_free(obj);
     }
@@ -969,22 +969,22 @@ void sgl_obj_free(sgl_obj_t *obj)
 void sgl_obj_clear_all_dirty(sgl_obj_t *obj)
 {
     SGL_ASSERT(obj != NULL);
-	sgl_obj_t *stack[SGL_OBJ_DEPTH_MAX];
+    sgl_obj_t *stack[SGL_OBJ_DEPTH_MAX];
     int top = 0;
     stack[top++] = obj;
 
     while (top > 0) {
-		SGL_ASSERT(top < SGL_OBJ_DEPTH_MAX);
-		obj = stack[--top];
+        SGL_ASSERT(top < SGL_OBJ_DEPTH_MAX);
+        obj = stack[--top];
         obj->dirty = 0;
 
-		if (obj->sibling != NULL) {
-			stack[top++] = obj->sibling;
-		}
+        if (obj->sibling != NULL) {
+            stack[top++] = obj->sibling;
+        }
 
-		if (obj->child != NULL) {
-			stack[top++] = obj->child;
-		}
+        if (obj->child != NULL) {
+            stack[top++] = obj->child;
+        }
     }
 }
 
@@ -1510,19 +1510,19 @@ void sgl_obj_set_layout(sgl_obj_t *obj, sgl_layout_desc_t *desc)
 static inline void draw_obj_slice(sgl_obj_t *obj, sgl_surf_t *surf)
 {
     int top = 0;
-	sgl_event_t evt;
-	sgl_obj_t *stack[SGL_OBJ_DEPTH_MAX];
+    sgl_event_t evt;
+    sgl_obj_t *stack[SGL_OBJ_DEPTH_MAX];
 
-	SGL_ASSERT(obj != NULL);
-	stack[top++] = obj;
+    SGL_ASSERT(obj != NULL);
+    stack[top++] = obj;
 
-	while (top > 0) {
-		SGL_ASSERT(top < SGL_OBJ_DEPTH_MAX);
-		obj = stack[--top];
+    while (top > 0) {
+        SGL_ASSERT(top < SGL_OBJ_DEPTH_MAX);
+        obj = stack[--top];
 
-		if (obj->sibling != NULL) {
-			stack[top++] = obj->sibling;
-		}
+        if (obj->sibling != NULL) {
+            stack[top++] = obj->sibling;
+        }
 
         if (sgl_obj_is_hidden(obj)) {
             continue;
@@ -1535,7 +1535,7 @@ static inline void draw_obj_slice(sgl_obj_t *obj, sgl_surf_t *surf)
         if (obj->child != NULL) {
             stack[top++] = obj->child;
         }
-	}
+    }
 
     /* flush dirty area into screen */
     sgl_fbdev_flush_area((sgl_area_t*)surf, surf->buffer);
@@ -1550,19 +1550,19 @@ static inline void draw_obj_slice(sgl_obj_t *obj, sgl_surf_t *surf)
  */
 static inline void sgl_dirty_area_calculate(sgl_obj_t *obj)
 {
-	sgl_obj_t *stack[SGL_OBJ_DEPTH_MAX];
+    sgl_obj_t *stack[SGL_OBJ_DEPTH_MAX];
     int top = 0;
     stack[top++] = obj;
 
     /* for each all object from the first task of page */
-	while (top > 0) {
+    while (top > 0) {
         SGL_ASSERT(top < SGL_OBJ_DEPTH_MAX);
-		obj = stack[--top];
+        obj = stack[--top];
 
         /* if sibling exists, push it to stack, it will be pop in next loop */
-		if (obj->sibling != NULL) {
-			stack[top++] = obj->sibling;
-		}
+        if (obj->sibling != NULL) {
+            stack[top++] = obj->sibling;
+        }
 
         /* if object is hidden, skip it */
         if (unlikely(sgl_obj_is_hidden(obj))) {
@@ -1625,9 +1625,9 @@ static inline void sgl_dirty_area_calculate(sgl_obj_t *obj)
             sgl_obj_clear_dirty(obj);
         }
 
-		if (obj->child != NULL) {
-			stack[top++] = obj->child;
-		}
+        if (obj->child != NULL) {
+            stack[top++] = obj->child;
+        }
     }
 }
 
