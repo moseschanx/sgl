@@ -59,20 +59,32 @@ extern const sgl_font_t consolas32;
 extern const sgl_font_t kai33;
 #endif
 
-#if CONFIG_SGL_FONT_OPPOSANS_MEDIUM_24
-extern const sgl_font_t OPPOSans_Medium_24;
-#endif
-
-#if CONFIG_SGL_FONT_OPPOSANS_MEDIUM_16
-extern const sgl_font_t OPPOSans_Medium_16;
-#endif
-
-#if CONFIG_SGL_FONT_HARMONY_16
-extern const sgl_font_t Harmony_16;
-#endif 
-
 #if CONFIG_SGL_FONT_CONSOLAS24_COMPRESS
 extern const sgl_font_t consolas24_compress;
 #endif
+
+
+/* Project specific */
+#if CONFIG_SGL_FONT_HARMONY_11
+extern const sgl_font_t Harmony_11;
+#endif 
+
+#if CONFIG_SGL_FONT_HARMONY_9
+extern const sgl_font_t Harmony_9;
+#endif 
+
+#if CONFIG_SGL_FONT_HARMONY_14
+extern const sgl_font_t Harmony_14;
+#endif
+
+#if CONFIG_SGL_FONT_SPECS_ICONS_12
+extern const sgl_font_t Specs_Icons_12;
+#endif
+
+#if CONFIG_SGL_FONT_BATTERY_ICONS_12
+extern const sgl_font_t battery_icons_12;
+#endif
+
+
 
 #endif // !__SGL_FONT_H__
