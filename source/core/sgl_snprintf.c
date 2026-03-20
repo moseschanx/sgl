@@ -185,6 +185,44 @@ static void append_float(char *buf, size_t size, size_t *pos, double val, int pr
 }
 
 /**
+ * @brief convert a string to a float, a lightweight version of atof
+ * @param s string to convert
+ * @return the converted float value
+ */
+double sgl_atof(const char *s)
+{
+    double val = 0.0;
+    double frac = 0.0;
+    double div = 1.0;
+    bool neg = false;
+    bool in_frac = false;
+
+    while (*s == ' ') s++;
+
+    if (*s == '-') { neg = true; s++; }
+    else if (*s == '+') { s++; }
+
+    while (*s) {
+        if (*s == '.') {
+            in_frac = true;
+            s++;
+            continue;
+        }
+        if (*s < '0' || *s > '9') break;
+        if (in_frac) {
+            frac = frac * 10.0 + (*s - '0');
+            div *= 10.0;
+        } else {
+            val = val * 10.0 + (*s - '0');
+        }
+        s++;
+    }
+
+    val += frac / div;
+    return neg ? -val : val;
+}
+
+/**
  * @brief format a string, a simple version of vsnprintf (with width alignment support)
  * @param buf buffer
  * @param size buffer size
@@ -304,3 +342,4 @@ int sgl_snprintf(char *buf, size_t size, const char *fmt, ...)
     va_end(ap);
     return ret;
 }
+
