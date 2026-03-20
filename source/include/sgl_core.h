@@ -2164,6 +2164,13 @@ int sgl_vsnprintf(char *buf, size_t size, const char *fmt, va_list ap);
  */
 int sgl_snprintf(char *buf, size_t size, const char *fmt, ...);
 
+/**
+ * @brief convert a string to a float, a lightweight version of atof
+ * @param s string to convert
+ * @return the converted float value
+ */
+double sgl_atof(const char *s);
+
 
 #if (CONFIG_SGL_OBJ_USE_NAME && CONFIG_SGL_DEBUG)
 /**
