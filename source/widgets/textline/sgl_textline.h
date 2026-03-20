@@ -113,6 +113,18 @@ static inline void sgl_textline_set_bg_color(sgl_obj_t *obj, sgl_color_t color)
 }
 
 /**
+ * @brief set textline background transparent
+ * @param obj textline object
+ * @return none
+ */
+static inline void sgl_textline_set_bg_transparent(sgl_obj_t *obj)
+{
+    sgl_textline_t *textline = sgl_container_of(obj, sgl_textline_t, obj);
+    textline->bg_flag = false;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
  * @brief set textline radius
  * @param obj textline object
  * @param radius radius of textline
