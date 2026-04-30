@@ -2078,7 +2078,10 @@ int sgl_snprintf(char *buf, size_t size, const char *fmt, ...);
  */
 double sgl_atof(const char *s);
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> cbee6c1b1933a52700f8a0318e5221e2bc6e5859
 #if (CONFIG_SGL_OBJ_USE_NAME && CONFIG_SGL_DEBUG)
 /**
  * @brief set object name
