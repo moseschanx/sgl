@@ -61,8 +61,8 @@ static void sgl_unzip_img_dec_init(sgl_unzip_img_dec_t *dec, const sgl_unzip_img
     dec->x = 0;
     dec->y = 0;
     dec->rep_cnt = 0;
-    dec->out = sgl_int2color(0);
-    dec->unzip = sgl_int2color(0);
+    dec->out = sgl_color_hex(0);
+    dec->unzip = sgl_color_hex(0);
     dec->p = unzip_img->map;
 }
 
@@ -76,8 +76,8 @@ static void sgl_unzip_img_incremental(sgl_unzip_img_dec_t *dec)
         dec->rep_cnt = 1;
         if (dec->p[dec->n] & 0x20) {
             sgl_color_t dat16;
-            dat16 = sgl_int2color(dec->p[dec->n] | (dec->p[dec->n + 1] << 8));
-            if (sgl_color2int(dec->unzip) == sgl_color2int(dat16)) {
+            dat16 = sgl_color_hex(dec->p[dec->n] | (dec->p[dec->n + 1] << 8));
+            if (sgl_color_value(dec->unzip) == sgl_color_value(dat16)) {
                 dec->n += 2;
                 dec->rep_cnt = (dec->p[dec->n] << 8) | dec->p[dec->n + 1];
             } else {
@@ -89,7 +89,7 @@ static void sgl_unzip_img_incremental(sgl_unzip_img_dec_t *dec)
             uint8_t b = dec->p[dec->n];
             uint16_t r = (b << 5) & 0x1800;
             uint16_t g = (b << 3) & 0x00e3;
-            dec->out =  sgl_int2color((sgl_color2int(dec->unzip) ^ (r + g + (b & 0x03))));
+            dec->out =  sgl_color_hex((sgl_color_value(dec->unzip) ^ (r + g + (b & 0x03))));
             dec->n++;
         }
     }
@@ -230,8 +230,63 @@ sgl_obj_t* sgl_unzip_img_create(sgl_obj_t* parent)
 
     unzip_img->desc.alpha = 255;
     unzip_img->desc.unzip_img = NULL;
-    unzip_img->desc.color = sgl_int2color(0);
+    unzip_img->desc.color = sgl_color_hex(0);
     unzip_img->desc.align = SGL_ALIGN_CENTER;
 
     return obj;
+}
+
+/**
+ * @brief Set image color
+ * @param obj Image object pointer
+ * @param color Image color
+ * @return none
+ */
+void sgl_unzip_img_set_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_unzip_img_t *img = sgl_container_of(obj, sgl_unzip_img_t, obj);
+    img->desc.color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief Set image alpha value
+ * @param obj Image object pointer
+ * @param alpha Image alpha value
+ * @return none
+ */
+void sgl_unzip_img_set_alpha(sgl_obj_t *obj, uint8_t alpha)
+{
+    sgl_unzip_img_t *img = sgl_container_of(obj, sgl_unzip_img_t, obj);
+    img->desc.alpha = alpha;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief Set image alignment type
+ * @param obj Image object pointer
+ * @param align Image alignment type
+ * @return none
+ */
+void sgl_unzip_img_set_align(sgl_obj_t *obj, sgl_align_type_t align)
+{
+    sgl_unzip_img_t *img = sgl_container_of(obj, sgl_unzip_img_t, obj);
+    img->desc.align = align;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief Set image compressed image data
+ * @param obj Image object pointer
+ * @param unzip_img Compressed image data
+ * @return none
+ */
+void sgl_unzip_img_set_img(sgl_obj_t *obj, const sgl_unzip_img_pixmap_t *unzip_img)
+{
+    sgl_unzip_img_t *img = sgl_container_of(obj, sgl_unzip_img_t, obj);
+    img->desc.unzip_img = unzip_img;
+    if (img->desc.unzip_img != NULL) {
+        sgl_obj_set_size(obj, img->desc.unzip_img->width, img->desc.unzip_img->height);
+    }
+    sgl_obj_set_dirty(obj);
 }

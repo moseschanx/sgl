@@ -114,7 +114,7 @@ static sgl_icon_pixmap_t backspace_icon = {
  */
 static void sgl_numberkbd_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_numberkbd_t *numberkbd = (sgl_numberkbd_t*)obj;
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
     int16_t body_w = obj->coords.x2 - obj->coords.x1 + 1;
     int16_t body_h = obj->coords.y2 - obj->coords.y1 + 1;
     sgl_color_t btn_color = numberkbd->btn_desc.color;
@@ -165,7 +165,7 @@ static void sgl_numberkbd_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_eve
                 else {
                     sgl_draw_rect(surf, &btn, &btn, &numberkbd->btn_desc);
                     text_x = btn.x1 + ((box_w -  sgl_font_get_string_width("0", numberkbd->font)) / 2);
-                    sgl_draw_character(surf, &obj->area, text_x, text_y, kbd_digits[btn_row][btn_col] - 32, numberkbd->text_color, numberkbd->btn_desc.alpha, numberkbd->font);
+                    sgl_draw_character(surf, &obj->area, text_x, text_y, kbd_digits[btn_row][btn_col] - 31, numberkbd->text_color, numberkbd->btn_desc.alpha, numberkbd->font);
                 }
                 btn_col ++;
             }
@@ -274,4 +274,201 @@ sgl_obj_t* sgl_numberkbd_create(sgl_obj_t* parent)
     numberkbd->font = sgl_get_system_font();
 
     return obj;
+}
+
+/**
+ * @brief set numberkbd color
+ * @param obj numberkbd object
+ * @param color color
+ * @return none
+ */
+void sgl_numberkbd_set_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
+    numberkbd->body_desc.color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set numberkbd alpha
+ * @param obj numberkbd object
+ * @param alpha alpha [0 ~ 255]
+ * @return none
+ */
+void sgl_numberkbd_set_alpha(sgl_obj_t *obj, uint8_t alpha)
+{
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
+    numberkbd->body_desc.alpha = alpha;
+    numberkbd->btn_desc.alpha = alpha;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set numberkbd radius
+ * @param obj numberkbd object
+ * @param radius radius [0 ~ 255]
+ * @return none
+ */
+void sgl_numberkbd_set_radius(sgl_obj_t *obj, uint8_t radius)
+{
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
+    sgl_obj_set_radius(obj, radius);
+    numberkbd->body_desc.radius = obj->radius;
+    numberkbd->btn_desc.radius = numberkbd->body_desc.radius;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set numberkbd border width
+ * @param obj numberkbd object
+ * @param width border width [0 ~ 255]
+ * @return none
+ */
+void sgl_numberkbd_set_border_width(sgl_obj_t *obj, uint8_t width)
+{
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
+    numberkbd->body_desc.border = width;
+    sgl_obj_set_border_width(obj, width);
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set numberkbd border color
+ * @param obj numberkbd object
+ * @param color border color
+ * @return none
+ */
+void sgl_numberkbd_set_border_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
+    numberkbd->body_desc.border_color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set numberkbd text font
+ * @param obj numberkbd object
+ * @param font font
+ * @return none
+ */
+void sgl_numberkbd_set_text_font(sgl_obj_t *obj, const sgl_font_t *font)
+{
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
+    numberkbd->font = font;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set numberkbd text color
+ * @param obj numberkbd object
+ * @param color text color
+ * @return none
+ */
+void sgl_numberkbd_set_text_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
+    numberkbd->text_color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set numberkbd pixmap
+ * @param obj numberkbd object
+ * @param pixmap pixmap of numberkbd
+ * @return none
+ */
+void sgl_numberkbd_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pixmap)
+{
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
+    numberkbd->btn_desc.pixmap = pixmap;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set numberkbd button margin
+ * @param obj numberkbd object
+ * @param margin margin [0 ~ 255]
+ * @return none
+ */
+void sgl_numberkbd_set_btn_margin(sgl_obj_t *obj, uint8_t margin)
+{
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
+    numberkbd->margin = margin;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set numberkbd button color
+ * @param obj numberkbd object
+ * @param color button color
+ * @return none
+ */
+void sgl_numberkbd_set_btn_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
+    numberkbd->btn_desc.color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set numberkbd button border width
+ * @param obj numberkbd object
+ * @param width button border width [0 ~ 255]
+ * @return none
+ */
+void sgl_numberkbd_set_btn_border_width(sgl_obj_t *obj, uint8_t width)
+{
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
+    numberkbd->btn_desc.border = width;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set numberkbd button border color
+ * @param obj numberkbd object
+ * @param color button border color
+ * @return none
+ */
+void sgl_numberkbd_set_btn_border_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
+    numberkbd->btn_desc.border_color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set numberkbd button radius
+ * @param obj numberkbd object
+ * @param radius button radius [0 ~ 255]
+ * @return none
+ */
+void sgl_numberkbd_set_btn_radius(sgl_obj_t *obj, uint8_t radius)
+{
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
+    sgl_obj_set_radius(obj, radius);
+    numberkbd->btn_desc.radius = obj->radius;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set numberkbd button pixmap
+ * @param obj numberkbd object
+ * @param pixmap button pixmap
+ * @return none
+ */
+void sgl_numberkbd_set_btn_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pixmap)
+{
+    sgl_numberkbd_t *numberkbd = sgl_container_of(obj, sgl_numberkbd_t, obj);
+    numberkbd->btn_desc.pixmap = pixmap;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief get numberkbd opcode
+ * @param obj numberkbd object
+ * @return opcode [0 ~ 255]
+ */
+uint8_t sgl_numberkbd_get_opcode(sgl_obj_t *obj)
+{
+    return ((sgl_numberkbd_t*)obj)->opcode;
 }

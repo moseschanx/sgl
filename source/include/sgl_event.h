@@ -65,10 +65,12 @@ struct sgl_page;
 #define  SGL_EVENT_DRAW_MAIN            (15)
 #define  SGL_EVENT_FOCUSED              (16)
 #define  SGL_EVENT_UNFOCUSED            (17)
+#define  SGL_EVENT_DESTROYED            (18)
 #define  sgl_event_type_t               uint8_t
 
 
-#define  SGL_EVENT_CLICK_INTERVAL       (CONFIG_SGL_EVENT_CLICK_INTERVAL)
+#define  SGL_EVENT_MOVE_THRESHOLD       (2)
+#define  SGL_EVENT_CLICK_INTERVAL       (500)
 
 /**
 * @brief Event location structure, Used to represent the coordinates of an event, 
@@ -77,7 +79,6 @@ struct sgl_page;
 *
 * @x: x coordinate
 * @y: y coordinate
-* @sgl_event_type_t: event type
 */
 typedef struct sgl_event_pos {
     int16_t x;
@@ -87,7 +88,7 @@ typedef struct sgl_event_pos {
 
 typedef struct sgl_event {
     struct sgl_obj   *obj;
-    size_t           param;
+    void             *param;
     sgl_event_pos_t  pos;
     uint16_t         type;
     uint16_t         distance;

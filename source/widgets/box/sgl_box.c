@@ -36,7 +36,7 @@
 
 static void sgl_box_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_box_t *box = (sgl_box_t*)obj;
+    sgl_box_t *box = sgl_container_of(obj, sgl_box_t, obj);
     int16_t height = obj->coords.y2 - obj->coords.y1 - 2 * box->bg.radius;
     int16_t width = obj->coords.x2 - obj->coords.x1 - 2 * box->bg.radius;
     int16_t scroll_height = sgl_max(height / 8, SGL_BOX_SCROLL_WIDTH);
@@ -225,7 +225,8 @@ sgl_obj_t* sgl_box_create(sgl_obj_t* parent)
 
     box->bg.alpha = SGL_THEME_ALPHA;
     box->bg.color = SGL_THEME_COLOR;
-    box->bg.radius = 10;
+    box->bg.border_alpha = SGL_THEME_ALPHA;
+    box->bg.radius = 0;
     box->bg.border = 1;
     sgl_obj_set_border_width(obj, 1);
     box->bg.border_color = SGL_THEME_BORDER_COLOR;
@@ -243,6 +244,115 @@ sgl_obj_t* sgl_box_create(sgl_obj_t* parent)
     box->elastic_scroll_right = 0; // Default: unlimited scrolling right
 
     return obj;
+}
+
+
+/**
+ * @brief set background color of the box
+ * @param obj box object
+ * @param color background color to be set
+ * @return none
+ */
+void sgl_box_set_bg_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_box_t *box = sgl_container_of(obj, sgl_box_t, obj);
+    box->bg.color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set radius of the box
+ * @param obj box object
+ * @param radius radius to be set
+ * @return none
+ */
+void sgl_box_set_radius(sgl_obj_t *obj, uint8_t radius)
+{
+    sgl_box_t *box = sgl_container_of(obj, sgl_box_t, obj);
+    sgl_obj_set_radius(obj, radius);
+    box->bg.radius = obj->radius;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set border color of the box
+ * @param obj box object
+ * @param color border color to be set
+ * @return none
+ */
+void sgl_box_set_border_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_box_t *box = sgl_container_of(obj, sgl_box_t, obj);
+    box->bg.border_color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set border width of the box
+ * @param obj box object
+ * @param width border width to be set
+ * @return none
+ */
+void sgl_box_set_border_width(sgl_obj_t *obj, uint8_t width)
+{
+    sgl_box_t *box = sgl_container_of(obj, sgl_box_t, obj);
+    box->bg.border = width;
+    sgl_obj_set_border_width(obj, width);
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set box pixmap
+ * @param obj box object
+ * @param pixmap pixmap to be set
+ * @return none
+ */
+void sgl_box_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pixmap)
+{
+    sgl_box_t *box = sgl_container_of(obj, sgl_box_t, obj);
+    box->bg.pixmap = pixmap;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set scrollbar color of the box
+ * @param obj box object
+ * @param color scrollbar color to be set
+ * @return none
+ */
+void sgl_box_set_scrollbar_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_box_t *box = sgl_container_of(obj, sgl_box_t, obj);
+    box->scroll_color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set whether to show scrollbars
+ * @param obj box object
+ * @param show_vertical whether to show vertical scrollbar (1 to show, 0 to hide)
+ * @param show_horizontal whether to show horizontal scrollbar (1 to show, 0 to hide)
+ * @return none
+ */
+void sgl_box_set_show_scrollbar(sgl_obj_t *obj, uint8_t show_vertical, uint8_t show_horizontal)
+{
+    sgl_box_t *box = sgl_container_of(obj, sgl_box_t, obj);
+    box->show_v_scrollbar = show_vertical;
+    box->show_h_scrollbar = show_horizontal;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set alpha (transparency) of the box
+ * @param obj box object
+ * @param alpha alpha value to be set (0-255, where 0 is fully transparent and 255 is fully opaque)
+ * @return none
+ */
+void sgl_box_set_alpha(sgl_obj_t *obj, uint8_t alpha)
+{
+    sgl_box_t *box = sgl_container_of(obj, sgl_box_t, obj);
+    box->bg.alpha = alpha;
+    sgl_obj_set_dirty(obj);
 }
 
 /**

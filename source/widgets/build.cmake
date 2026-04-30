@@ -50,4 +50,9 @@ set(SGL_SOURCE
     ${CMAKE_CURRENT_LIST_DIR}/polygon/sgl_polygon.c
     ${CMAKE_CURRENT_LIST_DIR}/box/sgl_box.c
     ${CMAKE_CURRENT_LIST_DIR}/canvas/sgl_canvas.c
+    ${CMAKE_CURRENT_LIST_DIR}/bar/sgl_bar.c
+    ${CMAKE_CURRENT_LIST_DIR}/chart/piechart/sgl_piechart.c
+    ${CMAKE_CURRENT_LIST_DIR}/chart/linechart/sgl_linechart.c
+    ${CMAKE_CURRENT_LIST_DIR}/chart/barchart/sgl_barchart.c
+    ${CMAKE_CURRENT_LIST_DIR}/win/sgl_win.c
 )

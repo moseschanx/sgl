@@ -34,11 +34,11 @@
 #include <string.h>
 
 /**
- * @brief For example, you can use this canvas:
+ * @brief For example, you can use the canvas widget:
  *        void painter_func(sgl_surf_t *surf, sgl_area_t *area, sgl_obj_t *obj)
  *        {
- *            for (int i = obj->area.y1; i < obj->area.y2; i += 10) {
- *                sgl_draw_fill_hline(surf, area, i, obj->area.x1, obj->area.x2, 5, SGL_COLOR_BLACK, 255);
+ *            for (int i = obj->coords.y1; i < obj->coords.y2; i += 10) {
+ *                sgl_draw_fill_hline(surf, area, i, obj->coords.x1, obj->coords.x2, 5, SGL_COLOR_BLACK, 255);
  *            }
  *        }
  * 
@@ -48,17 +48,18 @@
  *        sgl_canvas_set_painter_cb(canvas, painter_func);
  */
 
-typedef void (*painter_cb)(sgl_surf_t *surf, sgl_area_t *area, sgl_obj_t* obj); 
+typedef void (*sgl_painter_cb_t)(sgl_surf_t *surf, sgl_area_t *area, sgl_obj_t* obj); 
 
 /**
  * @brief sgl canvas struct
  * @obj: sgl general object
  * @painter: pointer to canvas painter function
- * @desc: pointer to canvas draw descriptor
+ * @priv: pointer to canvas private data
  */
 typedef struct sgl_canvas {
     sgl_obj_t  obj;
-    painter_cb painter;
+    sgl_painter_cb_t painter;
+    void       *priv;
 } sgl_canvas_t;
 
 /**
@@ -73,10 +74,14 @@ sgl_obj_t* sgl_canvas_create(sgl_obj_t* parent);
  * @param obj canvas object
  * @param painter painter function
  */
-static inline void sgl_canvas_set_painter_cb(sgl_obj_t *obj, painter_cb painter)
-{
-    sgl_canvas_t *canvas = (sgl_canvas_t *)obj;
-    canvas->painter = painter;
-}
+void sgl_canvas_set_painter_cb(sgl_obj_t *obj, sgl_painter_cb_t painter);
+
+/**
+ * @brief set canvas private data
+ * @param obj canvas object
+ * @param priv private data
+ * @param none
+ */
+void sgl_canvas_set_private(sgl_obj_t *obj, void *priv);
 
 #endif // !__SGL_CANVAS_H__

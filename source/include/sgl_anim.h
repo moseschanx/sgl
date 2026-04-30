@@ -45,7 +45,7 @@ struct sgl_anim;
 
 /* Anim path callback */
 typedef void (*sgl_anim_path_cb_t)(struct sgl_anim *anim, int32_t value);
-typedef int32_t (*sgl_anim_path_algo_t)(uint32_t elaps, uint32_t duration, int32_t start, int32_t end);
+typedef int32_t (*sgl_anim_path_algo_t)(uint16_t elaps, uint16_t duration, int32_t start, int32_t end);
 
 
 /**
@@ -53,7 +53,7 @@ typedef int32_t (*sgl_anim_path_algo_t)(uint32_t elaps, uint32_t duration, int32
  *
  * This structure holds all the necessary state and configuration for an animation,
  * including timing parameters, value interpolation, callbacks, and linkage in a list.
- * All time values (act_time, act_delay, act_duration) are in milliseconds.
+ * All time values (act_delay, act_duration) are in milliseconds.
  *
  * @data:      Pointer to user-defined private data associated with this animation.
  *             Not used internally by the animation engine; intended for application use.
@@ -61,13 +61,14 @@ typedef int32_t (*sgl_anim_path_algo_t)(uint32_t elaps, uint32_t duration, int32
  * @next:      Pointer to the next animation in a singly-linked list.
  *             Used internally by the animation scheduler to chain active animations.
  * 
- * @act_time:  The current elapsed time (in ms) since the animation started (excluding delay).
- *             Updated automatically during each animation tick.
+ * @act_time:  Current time (in ms) of the animation.
  * 
  * @act_delay: Delay time (in ms) before the animation starts after being added to the system.
  *             The animation will not progress until this delay has elapsed.
  * 
  * @act_duration: Total duration (in ms) of the animation from start_value to end_value.
+ * 
+ * @last_value: The last computed value of the animation.
  * 
  * @start_value: The initial value at the beginning of the animation (after delay).
  * 
@@ -83,10 +84,10 @@ typedef int32_t (*sgl_anim_path_algo_t)(uint32_t elaps, uint32_t duration, int32
  *             May be NULL if no cleanup or notification is needed.
  *
  * @repeat_cnt: Number of times the animation should repeat.
- *              - 0: play once (no repeat)
- *              - n: repeat n times (total plays = n + 1)
- *              - -1: repeat indefinitely
- *              @note Only 30 bits are allocated; max value is 0x3FFFFFFE.
+ *              - -1: play indefinitely, you can use SGL_ANIM_REPEAT_LOOP
+ *              - 1: play once (no repeat), you can use SGL_ANIM_REPEAT_ONCE
+ *              - n: repeat n times (total plays = n)
+ *              @note Only 30 bits are allocated; max value is 0x3FFF.
  *
  * @finished: Flag indicating whether the animation has completed (including all repeats).
  *            Set to 1 when the animation ends naturally or is stopped.
@@ -97,17 +98,18 @@ typedef int32_t (*sgl_anim_path_algo_t)(uint32_t elaps, uint32_t duration, int32
 typedef struct sgl_anim {
     void                  *data;
     struct sgl_anim       *next;
-    uint32_t              act_time;
-    uint32_t              act_delay;
-    uint32_t              act_duration;
+    uint16_t              act_time;
+    uint16_t              act_delay;
+    uint16_t              act_duration;
+    uint16_t              repeat_cnt : 14;
+    uint16_t              finished : 1;
+    uint16_t              auto_free : 1;
+    int32_t               last_value;
     int32_t               start_value;
     int32_t               end_value;
     sgl_anim_path_cb_t    path_cb;
     sgl_anim_path_algo_t  path_algo;
     void                  (*finish_cb)(struct sgl_anim *anim);
-    uint32_t              repeat_cnt : 30;
-    uint32_t              finished : 1;
-    uint32_t              auto_free : 1;
 } sgl_anim_t;
 
 
@@ -115,25 +117,22 @@ typedef struct sgl_anim {
  * @brief animation context, it will be used to store status of animation
  * @anim_list_head: animation list head
  * @anim_list_tail: animation list tail
- * @anim_cnt:       animation count
- * @tick_ms:        animation tick, ms
  */
 typedef struct sgl_anim_ctx {
     sgl_anim_t *anim_list_head;
     sgl_anim_t *anim_list_tail;
-    uint32_t    anim_cnt;
 } sgl_anim_ctx_t;
 
 
 #define  sgl_anim_for_each(anim, head)                 for ((anim) = (head)->anim_list_head; (anim) != NULL; (anim) = (anim)->next)
 #define  sgl_anim_for_each_safe(anim, n, head)         for (anim = (head)->anim_list_head, n = (anim) ? (anim)->next : NULL; anim != NULL; anim = n, n = (anim) ? (anim)->next : NULL)
 
-#define  SGL_ANIM_REPEAT_LOOP                          (0x3FFFFFFF)
+#define  SGL_ANIM_REPEAT_LOOP                          (0x3FFF)
 #define  SGL_ANIM_REPEAT_ONCE                          (1)
 
 
 /* Animation context it will be used internally */
-extern sgl_anim_ctx_t anim_ctx;
+extern sgl_anim_ctx_t sgl_anim_ctx;
 
 
 /**
@@ -153,30 +152,12 @@ sgl_anim_t* sgl_anim_create(void);
 
 
 /**
- * @brief add animation object to animation list
- * @param  anim animation object
- * @return none
-*/
-void sgl_anim_add(sgl_anim_t *anim);
-
-
-/**
- * @brief remove animation object from animation list
- * @param  anim animation object
- * @return none
-*/
-void sgl_anim_remove(sgl_anim_t *anim);
-
-
-/**
  * @brief start animation
  * @param  anim animation object
+ * @para  repeat_cnt repeat count of animation
  * @return none
 */
-static inline void sgl_anim_start(sgl_anim_t *anim)
-{
-    sgl_anim_add(anim);
-}
+void sgl_anim_start(sgl_anim_t *anim, uint32_t repeat_cnt);
 
 
 /**
@@ -184,22 +165,15 @@ static inline void sgl_anim_start(sgl_anim_t *anim)
  * @param  anim animation object
  * @return none
 */
-static inline void sgl_anim_stop(sgl_anim_t *anim)
-{
-    sgl_anim_remove(anim);
-}
+void sgl_anim_stop(sgl_anim_t *anim);
 
 
 /**
- * @brief free animation object
- * @param  anim animation object
+ * @brief delete animation object
+ * @param anim animation object
  * @return none
 */
-static inline void sgl_anim_free(sgl_anim_t *anim)
-{
-    SGL_ASSERT(anim != NULL);
-    sgl_free(anim);
-}
+void sgl_anim_delete(sgl_anim_t *anim);
 
 
 /**
@@ -283,24 +257,6 @@ static inline void sgl_anim_set_act_duration(sgl_anim_t *anim, uint32_t duration
 
 
 /**
- * @brief set animation repeat count
- * @param  anim animation object
- * @param  repeat_cnt repeat count
- * @return none
- * @note the repeat count can be set to SGL_ANIM_REPEAT_LOOP or SGL_ANIM_REPEAT_ONCE
- *       - SGL_ANIM_REPEAT_ONCE: repeat once, it same as repeat count 1
- *       - SGL_ANIM_REPEAT_LOOP: repeat loop, it same as repeat count -1
- *       - otherwise: repeat count
- *       max value: 0x3FFFFFFE
- */
-static inline void sgl_anim_set_repeat_cnt(sgl_anim_t *anim, int32_t repeat_cnt)
-{
-    SGL_ASSERT(anim != NULL);
-    anim->repeat_cnt = ((uint32_t)repeat_cnt) & SGL_ANIM_REPEAT_LOOP;
-}
-
-
-/**
  * @brief set finish callback for animation
  * @param  anim animation object
  * @param  finish_cb finish callback
@@ -321,7 +277,7 @@ static inline void sgl_anim_set_finish_cb(sgl_anim_t *anim, void (*finish_cb)(sg
 static inline bool sgl_anim_is_finished(sgl_anim_t *anim)
 {
     SGL_ASSERT(anim != NULL);
-    return anim->finished == 1;
+    return (bool)anim->finished;
 }
 
 
@@ -364,7 +320,7 @@ void sgl_anim_task(void);
  *                  Uses 32-bit integer arithmetic to avoid floating-point operations
  *                  for better performance on embedded systems
  */
-int32_t sgl_anim_path_linear(uint32_t elaps, uint32_t duration, int32_t start, int32_t end);
+int32_t sgl_anim_path_linear(uint16_t elaps, uint16_t duration, int32_t start, int32_t end);
 #define SGL_ANIM_PATH_LINEAR  sgl_anim_path_linear
 
 
@@ -380,7 +336,7 @@ int32_t sgl_anim_path_linear(uint32_t elaps, uint32_t duration, int32_t start, i
  * @param end       End value
  * @return          Interpolated value at current time
  */
-int32_t sgl_anim_path_ease_in_out(uint32_t elaps, uint32_t duration, int32_t start, int32_t end);
+int32_t sgl_anim_path_ease_in_out(uint16_t elaps, uint16_t duration, int32_t start, int32_t end);
 #define SGL_ANIM_PATH_EASE_IN_OUT  sgl_anim_path_ease_in_out
 
 
@@ -396,7 +352,7 @@ int32_t sgl_anim_path_ease_in_out(uint32_t elaps, uint32_t duration, int32_t sta
  * @param end       End value
  * @return          Interpolated value at current time
  */
-int32_t sgl_anim_path_ease_out(uint32_t elaps, uint32_t duration, int32_t start, int32_t end);
+int32_t sgl_anim_path_ease_out(uint16_t elaps, uint16_t duration, int32_t start, int32_t end);
 #define SGL_ANIM_PATH_EASE_OUT  sgl_anim_path_ease_out
 
 
@@ -412,8 +368,26 @@ int32_t sgl_anim_path_ease_out(uint32_t elaps, uint32_t duration, int32_t start,
  * @param end       End value
  * @return          Interpolated value at current time
  */
-int32_t sgl_anim_path_ease_in(uint32_t elaps, uint32_t duration, int32_t start, int32_t end);
+int32_t sgl_anim_path_ease_in(uint16_t elaps, uint16_t duration, int32_t start, int32_t end);
 #define SGL_ANIM_PATH_EASE_IN  sgl_anim_path_ease_in
+
+
+/**
+ * sgl_anim_path_overshoot - Overshoot animation path
+ *
+ * This function creates an animation curve that overshoots the target end value
+ * slightly before settling back to it, creating a natural "bounce" or "spring-like"
+ * effect for a more dynamic and realistic animation.
+ *
+ * @param elaps     Elapsed time (ms) since the animation started
+ * @param duration  Total animation duration (ms)
+ * @param start     Initial value of the animated property at the start of the animation
+ * @param end       Target end value of the animated property
+ * @return          Interpolated value of the animated property at the current elapsed time
+ */
+int32_t sgl_anim_path_overshoot(uint16_t elaps, uint16_t duration, int32_t start, int32_t end);
+#define SGL_ANIM_PATH_OVERSHOOT  sgl_anim_path_overshoot
+
 
 #endif // ! CONFIG_SGL_ANIMATION
 

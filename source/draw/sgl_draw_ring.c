@@ -41,68 +41,62 @@
  */
 void sgl_draw_fill_ring(sgl_surf_t *surf, sgl_area_t *area, int16_t cx, int16_t cy, int16_t radius_in, int16_t radius_out, sgl_color_t color, uint8_t alpha)
 {
-    int y2 = 0, real_r2 = 0, edge_alpha = 0;
-    int in_r2 = sgl_pow2(radius_in);
-    int out_r2 = sgl_pow2(radius_out);
-    
-    int in_r2_max = sgl_pow2(radius_in - 1);
-    int out_r2_max = sgl_pow2(radius_out + 1);
-    sgl_color_t *buf = NULL, *blend = NULL;
-    sgl_area_t clip;
+    sgl_area_t clip = SGL_AREA_MAX;
+    sgl_surf_clip_area_return(surf, area, &clip);
+    if (unlikely(alpha == SGL_ALPHA_MIN)) return;
 
-    if (unlikely(alpha == SGL_ALPHA_MIN)) {
-        return;
-    }
+    const int cx2 = cx * 2 + 1;
+    const int cy2 = cy * 2 + 1;
+    const int out_diameter = radius_out << 1;
+    const int out_r2_max   = sgl_pow2(out_diameter);
+    const int out_r2       = sgl_max(sgl_pow2(out_diameter - 4), 0);
+    const int out_diff     = out_r2_max - out_r2;
+    const int out_fix      = (SGL_ALPHA_MAX << SGL_FIXED_SHIFT) / (out_diff > 0 ? out_diff : 1);
 
-    if (!sgl_surf_clip(surf, area, &clip)) {
-        return;
-    }
+    const int in_diameter  = radius_in << 1;
+    const int in_r2_max    = sgl_pow2(in_diameter);
+    const int in_r2        = sgl_max(sgl_pow2(in_diameter - 4), 0);
+    const int in_diff      = in_r2_max - in_r2;
+    const int in_fix       = (SGL_ALPHA_MAX << SGL_FIXED_SHIFT) / (in_diff > 0 ? in_diff : 1);
+    const uint8_t use_alpha = (alpha != SGL_ALPHA_MAX);
 
-    buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, clip.y1 - surf->y1);
+    uint8_t edge_alpha;
+    sgl_color_t edge_c;
+    sgl_color_t *blend, *buf = sgl_surf_get_buf(surf, clip.x1 - surf->x1, clip.y1 - surf->y1);
+    int dx2, dy2;
+
     for (int y = clip.y1; y <= clip.y2; y++) {
         blend = buf;
-        y2 = sgl_pow2(y - cy);
-        
+        dy2 = sgl_pow2(2 * y - cy2);
+
         for (int x = clip.x1; x <= clip.x2; x++, blend++) {
-            real_r2 = sgl_pow2(x - cx) + y2;
-
-            if (real_r2 >= out_r2_max) {
-               if (x > cx) break;
+            dx2 = sgl_pow2(2 * x - cx2) + dy2;
+            if (dx2 >= out_r2_max) {
+                if (x > cx) break;
                 continue;
             }
-            if (real_r2 < in_r2_max) {
+
+            if (dx2 <= in_r2) {
                 if (x < cx) {
-                    blend += ((cx - x) * 2);
-                    x = cx*2 - x;
+                    int skip = cx - x;
+                    blend += skip;
+                    x += skip;
                 }
                 continue;
             }
 
-            if (alpha == SGL_ALPHA_MAX) {
-                if (real_r2 < in_r2 ) {
-                    *blend = sgl_color_mixer(color, *blend, sgl_sqrt_error(real_r2));
-                }
-                else if (real_r2 > out_r2) {
-                    *blend = sgl_color_mixer(color, *blend, SGL_ALPHA_MAX - sgl_sqrt_error(real_r2));
-                }
-                else {
-                    *blend = color;
-                }
+            if (dx2 <= in_r2_max) {
+                edge_alpha = ((dx2 - in_r2) * in_fix) >> SGL_FIXED_SHIFT;
+                edge_c = sgl_color_mixer(color, *blend, edge_alpha);
+                *blend = use_alpha ? sgl_color_mixer(edge_c, *blend, alpha) : edge_c;
+            }
+            else if (dx2 <= out_r2) {
+                *blend = use_alpha ? sgl_color_mixer(color, *blend, alpha) : color;
             }
             else {
-                if (real_r2 < in_r2 ) {
-                    edge_alpha = sgl_sqrt_error(real_r2);
-                    sgl_color_t color_mix = sgl_color_mixer(color, *blend, edge_alpha);
-                    *blend = sgl_color_mixer(color_mix, *blend, alpha);
-                }
-                else if (real_r2 > out_r2) {
-                    edge_alpha = SGL_ALPHA_MAX - sgl_sqrt_error(real_r2);
-                    sgl_color_t color_mix = sgl_color_mixer(color, *blend, edge_alpha);
-                    *blend = sgl_color_mixer(color_mix, *blend, alpha);
-                }
-                else {
-                    *blend = sgl_color_mixer(color, *blend, alpha);
-                }
+                edge_alpha = ((out_r2_max - dx2) * out_fix) >> SGL_FIXED_SHIFT;
+                edge_c = sgl_color_mixer(color, *blend, edge_alpha);
+                *blend = use_alpha ? sgl_color_mixer(edge_c, *blend, alpha) : edge_c;
             }
         }
         buf += surf->w;

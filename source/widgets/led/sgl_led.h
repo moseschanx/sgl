@@ -41,12 +41,11 @@
  */
 typedef struct sgl_led {
     sgl_obj_t       obj;
-    uint8_t         alpha;
-    bool            status;
     sgl_color_t     on_color;
     sgl_color_t     off_color;
     sgl_color_t     bg_color;
-
+    uint8_t         alpha;
+    bool            status;
 }sgl_led_t;
 
 
@@ -57,6 +56,13 @@ typedef struct sgl_led {
  */
 sgl_obj_t* sgl_led_create(sgl_obj_t* parent);
 
+/**
+ * @brief set the radius of the led
+ * @param obj led object
+ * @param radius radius of the led
+ * @return none
+ */
+void sgl_led_set_radius(sgl_obj_t *obj, uint8_t radius);
 
 /**
  * @brief set the color of the led
@@ -64,12 +70,7 @@ sgl_obj_t* sgl_led_create(sgl_obj_t* parent);
  * @param color color of the led
  * @return none
  */
-static inline void sgl_led_set_on_color(sgl_obj_t *obj, sgl_color_t color)
-{
-    sgl_led_t *led = (sgl_led_t *)obj;
-    led->on_color = color;
-    sgl_obj_set_dirty(obj);
-}
+void sgl_led_set_on_color(sgl_obj_t *obj, sgl_color_t color);
 
 /**
  * @brief set the off color of the led
@@ -77,12 +78,7 @@ static inline void sgl_led_set_on_color(sgl_obj_t *obj, sgl_color_t color)
  * @param color off color of the led
  * @return none
  */
-static inline void sgl_led_set_off_color(sgl_obj_t *obj, sgl_color_t color)
-{
-    sgl_led_t *led = (sgl_led_t *)obj;
-    led->off_color = color;
-    sgl_obj_set_dirty(obj);
-}
+void sgl_led_set_off_color(sgl_obj_t *obj, sgl_color_t color);
 
 /**
  * @brief Set the background color of the led
@@ -90,12 +86,7 @@ static inline void sgl_led_set_off_color(sgl_obj_t *obj, sgl_color_t color)
  * @param color background color of the led
  * @return none
  */
-static inline void sgl_led_set_bg_color(sgl_obj_t *obj, sgl_color_t color)
-{
-    sgl_led_t *led = (sgl_led_t *)obj;
-    led->bg_color = color;
-    sgl_obj_set_dirty(obj);
-}
+void sgl_led_set_bg_color(sgl_obj_t *obj, sgl_color_t color);
 
 /**
  * @brief set the alpha of the led
@@ -103,12 +94,7 @@ static inline void sgl_led_set_bg_color(sgl_obj_t *obj, sgl_color_t color)
  * @param alpha alpha of the led
  * @return none
  */
-static inline void sgl_led_set_alpha(sgl_obj_t *obj, uint8_t alpha)
-{
-    sgl_led_t *led = (sgl_led_t *)obj;
-    led->alpha = alpha;
-    sgl_obj_set_dirty(obj);
-}
+void sgl_led_set_alpha(sgl_obj_t *obj, uint8_t alpha);
 
 /**
  * @brief set the status of the led
@@ -116,42 +102,27 @@ static inline void sgl_led_set_alpha(sgl_obj_t *obj, uint8_t alpha)
  * @param status status of the led
  * @return none
  */
-static inline void sgl_led_set_status(sgl_obj_t *obj, bool status)
-{
-    sgl_led_t *led = (sgl_led_t *)obj;
-    led->status = status;
-    sgl_obj_set_dirty(obj);
-}
+void sgl_led_set_status(sgl_obj_t *obj, bool status);
 
 /**
  * @brief get the status of the led
  * @param obj led object
  * @return status of the led
  */
-static inline bool sgl_led_get_status(sgl_obj_t *obj)
-{
-    sgl_led_t *led = (sgl_led_t *)obj;
-    return led->status;
-}
+bool sgl_led_get_status(sgl_obj_t *obj);
 
 /**
  * @brief turn on the led
  * @param obj led object
  * @return none
  */
-static inline void sgl_led_on(sgl_obj_t *obj)
-{
-    sgl_led_set_status(obj, true);
-}
+void sgl_led_on(sgl_obj_t *obj);
 
 /**
  * @brief turn off the led
  * @param obj led object
  * @return none
  */
-static inline void sgl_led_off(sgl_obj_t *obj)
-{
-    sgl_led_set_status(obj, false);
-}
+void sgl_led_off(sgl_obj_t *obj);
 
 #endif // !__SGL_LED_H__

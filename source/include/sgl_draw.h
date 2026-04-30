@@ -44,15 +44,17 @@ extern "C" {
  * @brief rect description
  * @color: color of rect
  * @alpha: alpha of rect
+ * @border_alpha: alpha of border
  * @border: border of rect
  * @border_color: border color of rect
  * @pixmap: pixmap of rect
  */
 typedef struct sgl_draw_rect {
-    sgl_color_t             color;
-    int16_t                 radius;
     uint8_t                 alpha;
     uint8_t                 border;
+    uint8_t                 border_alpha;
+    sgl_color_t             color;
+    int16_t                 radius;
     sgl_color_t             border_color;
     const sgl_pixmap_t      *pixmap;
 } sgl_draw_rect_t;
@@ -60,16 +62,22 @@ typedef struct sgl_draw_rect {
 
 /**
  * @brief line draw description
- * @start: start point
- * @end: end point
- * @color: line color
- * @width: line width
+ * @x1: x1 coordinate
+ * @y1: y1 coordinate
+ * @x2: x2 coordinate
+ * @y2: y2 coordinate
+ * @color: color
  * @alpha: alpha
+ * @width: width of line
  */
 typedef struct sgl_draw_line {
-    sgl_color_t      color;
-    uint8_t          width;
     uint8_t          alpha;
+    uint8_t          width;
+    sgl_color_t      color;
+    int16_t          x1;
+    int16_t          y1;
+    int16_t          x2;
+    int16_t          y2;
 } sgl_draw_line_t;
 
 
@@ -85,13 +93,13 @@ typedef struct sgl_draw_line {
  * @pixmap: pixmap of rectangle
  */
 typedef struct sgl_draw_circle {
-    int16_t            cx;
-    int16_t            cy;
-    sgl_color_t        color;
-    int16_t            radius;
     uint8_t            alpha;
     uint8_t            border;
+    sgl_color_t        color;
+    int16_t            radius;
     sgl_color_t        border_color;
+    int16_t            cx;
+    int16_t            cy;
     const sgl_pixmap_t *pixmap;
 } sgl_draw_circle_t;
 
@@ -110,12 +118,12 @@ typedef struct sgl_draw_circle {
  * @bg_color: background color of arc
  */
 typedef struct sgl_draw_arc {
+    uint8_t          alpha;
+    sgl_color_t      color;
     int16_t          cx;
     int16_t          cy;
     int16_t          radius_in;
     int16_t          radius_out;
-    sgl_color_t      color;
-    uint8_t          alpha;
     uint32_t         start_angle: 9;
     uint32_t         end_angle: 9;
     uint32_t         mode: 2;
@@ -130,10 +138,10 @@ typedef struct sgl_draw_arc {
  * @alpha: alpha of icon
  */
 typedef struct sgl_draw_icon {
-    const sgl_icon_pixmap_t *icon;
-    sgl_color_t       color;
     uint8_t           alpha;
     uint8_t           align;
+    sgl_color_t       color;
+    const sgl_icon_pixmap_t *icon;
 } sgl_draw_icon_t;
 
 
@@ -143,7 +151,7 @@ typedef struct sgl_draw_icon {
  *       it will direct return if the area is not overlap with surface, otherwise, continue
  */
 #if (CONFIG_SGL_USE_FBDEV_VRAM)
-#define sgl_surf_clip_area_return(surf, rect, clip)         do {SGL_UNUSED(rect);} while(0)
+#define sgl_surf_clip_area_return(surf, rect, clip)         if (!sgl_area_clip(surf->dirty, rect, clip)) return
 #else
 #define sgl_surf_clip_area_return(surf, rect, clip)         if (!sgl_surf_clip(surf, rect, clip)) return
 #endif
@@ -230,6 +238,19 @@ static inline void sgl_surf_vline(sgl_surf_t *surf, int16_t x, int16_t y1, int16
 
 
 /**
+ * @brief draw a wireframe rectangle with alpha
+ * @param surf point to surface
+ * @param area area of rectangle that you want to draw
+ * @param rect point to rectangle that you want to draw
+ * @param width width of wireframe
+ * @param color color of rectangle
+ * @param alpha alpha of rectangle
+ * @return none
+ */
+void sgl_draw_wireframe(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *rect, int16_t width, sgl_color_t color, uint8_t alpha);
+
+
+/**
  * @brief fill a round rectangle with alpha
  * @param surf point to surface
  * @param area area of rectangle that you want to draw
@@ -252,9 +273,10 @@ void sgl_draw_fill_rect(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *rect, in
  * @param border_color color of border
  * @param border_width width of border
  * @param alpha alpha of rectangle
+ * @param border_alpha alpha of border
  * @return none
  */
-void sgl_draw_fill_rect_with_border(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *rect, int16_t radius, sgl_color_t color, sgl_color_t border_color, uint8_t border_width, uint8_t alpha);
+void sgl_draw_fill_rect_with_border(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *rect, int16_t radius, sgl_color_t color, sgl_color_t border_color, uint8_t border_width, uint8_t alpha, uint8_t border_alpha);
 
 
 /**
@@ -458,11 +480,10 @@ void draw_line_fill_slanted(sgl_surf_t *surf, sgl_area_t *area, int16_t x1, int1
  * @brief draw a line
  * @param surf surface
  * @param area area that contains the line
- * @param coords line coords
  * @param desc line description
  * @return none
  */
-void sgl_draw_line(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *coords, sgl_draw_line_t *desc);
+void sgl_draw_line(sgl_surf_t *surf, sgl_area_t *area, sgl_draw_line_t *desc);
 
 
 /**
@@ -473,6 +494,33 @@ void sgl_draw_line(sgl_surf_t *surf, sgl_area_t *area, sgl_area_t *coords, sgl_d
  * @return none
  */
 void sgl_draw_fill_arc(sgl_surf_t *surf, sgl_area_t *area, sgl_draw_arc_t *desc);
+
+
+/**
+ * @brief calculate a point color by bilinear interpolate (with mask support)
+ * @param buffer point to image pixmap start buffer (RGB)
+ * @param mask   point to mask buffer (8bit: 0=transparent, non-0=opaque)
+ * @param w      width of buffer
+ * @param h      height of buffer
+ * @param fx     x coordinate of point (fixed point, SGL_FIXED_SHIFT bits fraction)
+ * @param fy     y coordinate of point (fixed point, SGL_FIXED_SHIFT bits fraction)
+ * @return point color (RGB: interpolated if mask non-0, transparent/black if mask 0)
+ */
+sgl_color_t sgl_draw_biln_color(const sgl_color_t *buffer, const uint8_t *mask, int16_t w, int16_t h, int32_t fx, int32_t fy);
+
+
+/**
+ * @brief transform a surface
+ * @param dst destination surface
+ * @param src source surface
+ * @param area area of surface
+ * @param x x coordinate of surface
+ * @param y y coordinate of surface
+ * @param rotation rotation angle
+ * @return none
+ * @note This function has implemented angle normalization to the range of 0 to 360 degrees.
+ */
+void sgl_draw_xform_surf(sgl_surf_t *dst, sgl_surf_t *src, sgl_area_t *area, int16_t x, int16_t y, int16_t rotation);
 
 
 #ifdef __cplusplus

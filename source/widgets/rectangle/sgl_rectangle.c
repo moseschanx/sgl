@@ -42,10 +42,11 @@
  */
 static void sgl_rectangle_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_rectangle_t *rect = (sgl_rectangle_t*)obj;
+    sgl_rectangle_t *rect = sgl_container_of(obj, sgl_rectangle_t, obj);
     sgl_draw_rect_t desc = {
         .color = rect->color,
         .alpha = rect->alpha,
+        .border_alpha = rect->border_alpha,
         .border = obj->border,
         .border_color = rect->border_color,
         .pixmap = rect->pixmap,
@@ -53,7 +54,6 @@ static void sgl_rectangle_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_eve
     };
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
-
         sgl_draw_rect(surf, &obj->area, &obj->coords, &desc);
     }
     else if(evt->type == SGL_EVENT_PRESSED) {
@@ -95,9 +95,113 @@ sgl_obj_t* sgl_rect_create(sgl_obj_t* parent)
     obj->construct_fn = sgl_rectangle_construct_cb;
 
     rect->alpha = SGL_THEME_ALPHA;
+    rect->border_alpha = SGL_THEME_ALPHA;
     rect->color = SGL_THEME_COLOR;
     rect->border_color = SGL_THEME_BORDER_COLOR;
     rect->pixmap = NULL;
 
     return obj;
+}
+
+/**
+ * @brief  set rectangle color
+ * @param  obj: rectangle object
+ * @param  color: rectangle color
+ * @retval none
+ */
+void sgl_rect_set_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_rectangle_t *rect = sgl_container_of(obj, sgl_rectangle_t, obj);
+    rect->color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief  set rectangle alpha
+ * @param  obj: rectangle object
+ * @param  alpha: rectangle alpha
+ * @retval none
+ */
+void sgl_rect_set_alpha(sgl_obj_t *obj, uint8_t alpha)
+{
+    sgl_rectangle_t *rect = sgl_container_of(obj, sgl_rectangle_t, obj);
+    rect->alpha = alpha;
+    rect->border_alpha = alpha;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief  set rectangle main body alpha
+ * @param  obj: rectangle object
+ * @param  alpha: rectangle main body alpha
+ * @retval none
+ */
+void sgl_rect_set_main_alpha(sgl_obj_t *obj, uint8_t alpha)
+{
+    sgl_rectangle_t *rect = sgl_container_of(obj, sgl_rectangle_t, obj);
+    rect->alpha = alpha;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief  set rectangle radius
+ * @param  obj: rectangle object
+ * @param  radius: rectangle radius
+ * @retval none
+ */
+void sgl_rect_set_radius(sgl_obj_t *obj, uint8_t radius)
+{
+    sgl_obj_set_radius(obj, radius);
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief  set rectangle border width
+ * @param  obj: rectangle object
+ * @param  width: rectangle border width
+ * @retval none
+ */
+void sgl_rect_set_border_width(sgl_obj_t *obj, uint8_t width)
+{
+    sgl_obj_set_border_width(obj, width);
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief  set rectangle border color
+ * @param  obj: rectangle object
+ * @param  color: rectangle border color
+ * @retval none
+ */
+void sgl_rect_set_border_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_rectangle_t *rect = sgl_container_of(obj, sgl_rectangle_t, obj);
+    rect->border_color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief  set rectangle border alpha
+ * @param  obj: rectangle object
+ * @param  alpha: rectangle border alpha
+ * @retval none
+ */
+void sgl_rect_set_border_alpha(sgl_obj_t *obj, uint8_t alpha)
+{
+    sgl_rectangle_t *rect = sgl_container_of(obj, sgl_rectangle_t, obj);
+    rect->border_alpha = alpha;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief  set rectangle pixmap
+ * @param  obj: rectangle object
+ * @param  pixmap: rectangle pixmap
+ * @retval none
+ */
+void sgl_rect_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pixmap)
+{
+    sgl_rectangle_t *rect = sgl_container_of(obj, sgl_rectangle_t, obj);
+    rect->pixmap = pixmap;
+    sgl_obj_set_dirty(obj);
 }

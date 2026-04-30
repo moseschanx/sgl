@@ -35,185 +35,129 @@ extern "C" {
 /**
  * @brief sgl config fix file, it will fix the macro if not defined
  * @note please add the macro in this file if you want to add new macro into source code
- * 
- * @description:
- * 
- * CONFIG_SGL_FBDEV_PIXEL_DEPTH:
- *      The pixel depth of framebuffer device, it will be used to define the color type
- *
- * CONFIG_SGL_FBDEV_ROTATION:
- *      The rotation of framebuffer device, default: 0
- * 
- * CONFIG_SGL_FBDEV_RUNTIME_ROTATION:
- *      If you want to use runtime rotation, please define this macro to 1
- * 
- * CONFIG_SGL_USE_FBDEV_VRAM:
- *      If you want to use full framebuffer, please define this macro to 1
- *
- * CONFIG_SGL_SYSTICK_MS:
- *      The macro should be defined to the system tick ms, default: 10
- * 
- * CONFIG_SGL_COLOR16_SWAP:
- *      Its for 16 bit color, the color will be swapped
- * 
- * CONFIG_SGL_EVENT_QUEUE_SIZE:
- *      the size of event queue, default: 32
- * 
- * CONFIG_SGL_EVENT_CLICK_INTERVAL:
- *      The click interval, default: 10
- * 
- * CONFIG_SGL_OBJ_SLOT_DYNAMIC
- *      If the object slot is dynamic, the object slot size will be dynamic allocated, otherwise, the object 
- *      slot size will be static allocated that you should define CONFIG_SGL_OBJ_NUM_MAX macro
- * 
- * CONFIG_SGL_OBJ_NUM_MAX:
- *      If CONFIG_SGL_OBJ_SLOT_DYNAMIC is 0 or not defined, you should define CONFIG_SGL_OBJ_NUM_MAX macro
- * 
- * CONFIG_SGL_PIXMAP_BILINEAR_INTERP:
- *      If you want to use pixmap bilinear interpolation, please define this macro to 1
- * 
- * CONFIG_SGL_ANIMATION:
- *      If you want to use animation, please define this macro to 1
- * 
- * CONFIG_SGL_DEBUG:
- *      If you want to use debug, please define this macro to 1
- * 
- * CONFIG_SGL_USE_OBJ_ID:
- *      If you want to use obj id, please define this macro to 1, at mostly, the CONFIG_SGL_USE_OBJ_ID should be 0
- * 
- * CONFIG_SGL_HEAP_ALGO:
- *      The heap algorithm, default: lwmem
- * 
- * CONFIG_SGL_HEAP_MEMORY_SIZE:
- *      The heap memory size, default: 10240
- * 
- * CONFIG_SGL_FONT_COMPRESSED:
- *      If you want to use font compressed, please define this macro to 1
- * 
- * CONFIG_SGL_FONT_SMALL_TABLE:
- *      If you want to use font small table, please define this macro to 1
- * 
- * CONFIG_SGL_FONT_SONG23:
- *      If you want to use font song23, please define this macro to 1
- * 
- * CONFIG_SGL_FONT_CONSOLAS23:
- *      If you want to use font consolas23, please define this macro to 1
- * 
  */
 
 #ifndef CONFIG_SGL_FBDEV_PIXEL_DEPTH
-#define CONFIG_SGL_FBDEV_PIXEL_DEPTH                               (16)
+#define CONFIG_SGL_FBDEV_PIXEL_DEPTH                               (16)  /* FBDEV pixel depth (16/24/32) */
 #endif
 
 #ifndef CONFIG_SGL_FBDEV_ROTATION
-#define CONFIG_SGL_FBDEV_ROTATION                                  (0)
+#define CONFIG_SGL_FBDEV_ROTATION                                  (0)  /* FBDEV rotation (0/90/180/270 deg) */
 #endif
 
 #ifndef CONFIG_SGL_FBDEV_RUNTIME_ROTATION
-#define CONFIG_SGL_FBDEV_RUNTIME_ROTATION                          (0)
+#define CONFIG_SGL_FBDEV_RUNTIME_ROTATION                          (0)  /* Runtime display rotation enable */
 #endif
 
 #ifndef CONFIG_SGL_USE_FBDEV_VRAM
-#define CONFIG_SGL_USE_FBDEV_VRAM                                  (0)
+#define CONFIG_SGL_USE_FBDEV_VRAM                                  (0)  /* Use FBDEV VRAM directly */
 #endif
 
 #ifndef CONFIG_SGL_SYSTICK_MS
-#define CONFIG_SGL_SYSTICK_MS                                      (10)
+#define CONFIG_SGL_SYSTICK_MS                                      (10)  /* System tick interval (ms) */
 #endif
 
 #ifndef CONFIG_SGL_COLOR16_SWAP
-#define CONFIG_SGL_COLOR16_SWAP                                    (0)
+#define CONFIG_SGL_COLOR16_SWAP                                    (0)  /* Swap 16-bit color bytes */
 #endif
 
 #ifndef CONFIG_SGL_EVENT_QUEUE_SIZE
-#define CONFIG_SGL_EVENT_QUEUE_SIZE                                (16)
-#endif
-
-#ifndef CONFIG_SGL_EVENT_CLICK_INTERVAL
-#define CONFIG_SGL_EVENT_CLICK_INTERVAL                            (10)
+#define CONFIG_SGL_EVENT_QUEUE_SIZE                                (16)  /* Max input event queue size */
 #endif
 
 #ifndef CONFIG_SGL_DIRTY_AREA_NUM_MAX
-#define CONFIG_SGL_DIRTY_AREA_NUM_MAX                              (16)
+#define CONFIG_SGL_DIRTY_AREA_NUM_MAX                              (16)  /* Max dirty regions for partial refresh */
+#endif
+
+#ifndef CONFIG_SGL_DIRTY_AREA_TRACE
+#define CONFIG_SGL_DIRTY_AREA_TRACE                                (0)  /* Dirty region debug trace */
+#endif
+
+#ifndef CONFIG_SGL_DIRTY_AREA_TRACE_COLOR
+#define CONFIG_SGL_DIRTY_AREA_TRACE_COLOR                          sgl_rgb(0, 0, 0)  /* Dirty region debug trace color */
 #endif
 
 #ifndef CONFIG_SGL_PIXMAP_BILINEAR_INTERP
-#define CONFIG_SGL_PIXMAP_BILINEAR_INTERP                          (0)
+#define CONFIG_SGL_PIXMAP_BILINEAR_INTERP                          (0)  /* Pixmap bilinear interpolation */
 #endif
 
 #ifndef CONFIG_SGL_ANIMATION
-#define CONFIG_SGL_ANIMATION                                       (0)
+#define CONFIG_SGL_ANIMATION                                       (0)  /* Global animation enable */
 #endif
 
 #ifndef CONFIG_SGL_DEBUG
-#   define CONFIG_SGL_DEBUG                                        (0)
+#   define CONFIG_SGL_DEBUG                                        (0)  /* Global debug log enable */
 #elif (CONFIG_SGL_DEBUG == 1)
 #   ifndef CONFIG_SGL_LOG_COLOR
-#       define CONFIG_SGL_LOG_COLOR                                (0)
+#       define CONFIG_SGL_LOG_COLOR                                (0)  /* Colored log output */
 #   endif
 #   ifndef CONFIG_SGL_LOG_LEVEL
-#       define CONFIG_SGL_LOG_LEVEL                                (1)
+#       define CONFIG_SGL_LOG_LEVEL                                (1)  /* Log level (err/warn/info/debug) */
 #   endif
 #endif
 
 #ifndef CONFIG_SGL_OBJ_USE_NAME
-#define CONFIG_SGL_OBJ_USE_NAME                                    (0)
+#define CONFIG_SGL_OBJ_USE_NAME                                    (0)  /* Enable object name support */
 #endif
 
 #ifndef CONFIG_SGL_HEAP_ALGO
-#define CONFIG_SGL_HEAP_ALGO                                       (lwmem)
+#define CONFIG_SGL_HEAP_ALGO                                       (lwmem)  /* Heap allocation algorithm */
 #endif
 
 #ifndef CONFIG_SGL_HEAP_MEMORY_SIZE
-#   define CONFIG_SGL_HEAP_MEMORY_SIZE                             (10240)
+#   define CONFIG_SGL_HEAP_MEMORY_SIZE                             (10240)  /* GUI heap size (bytes) */
 #   ifndef CONFIG_SGL_FL_INDEX_MAX
-#       define CONFIG_SGL_FL_INDEX_MAX                             (20)
+#       define CONFIG_SGL_FL_INDEX_MAX                             (20)  /* Max font link index */
 #   endif
 #endif
 
 #ifndef CONFIG_SGL_FONT_COMPRESSED
-#define CONFIG_SGL_FONT_COMPRESSED                                 (0)
+#define CONFIG_SGL_FONT_COMPRESSED                                 (0)  /* Enable font compression */
 #endif
 
 #ifndef CONFIG_SGL_FONT_SMALL_TABLE
-#define CONFIG_SGL_FONT_SMALL_TABLE                                (0)
+#define CONFIG_SGL_FONT_SMALL_TABLE                                (0)  /* Use small font table */
+#endif
+
+#ifndef CONFIG_SGL_LABEL_ROTATION
+#define CONFIG_SGL_LABEL_ROTATION                                  (0)  /* Label text rotation support */
 #endif
 
 #ifndef CONFIG_SGL_FONT_SONG23
-#define CONFIG_SGL_FONT_SONG23                                     (0)
+#define CONFIG_SGL_FONT_SONG23                                     (0)  /* Enable Song23 font */
 #endif
 
 #ifndef CONFIG_SGL_FONT_CONSOLAS14
-#define CONFIG_SGL_FONT_CONSOLAS14                                 (0)
+#define CONFIG_SGL_FONT_CONSOLAS14                                 (0)  /* Enable Consolas14 font */
 #endif
 
 #ifndef CONFIG_SGL_FONT_CONSOLAS23
-#define CONFIG_SGL_FONT_CONSOLAS23                                 (0)
+#define CONFIG_SGL_FONT_CONSOLAS23                                 (0)  /* Enable Consolas23 font */
 #endif
 
 #ifndef CONFIG_SGL_FONT_CONSOLAS24
-#define CONFIG_SGL_FONT_CONSOLAS24                                 (0)
+#define CONFIG_SGL_FONT_CONSOLAS24                                 (0)  /* Enable Consolas24 font */
 #endif
 
 #ifndef CONFIG_SGL_FONT_CONSOLAS32
-#define CONFIG_SGL_FONT_CONSOLAS32                                 (0)
+#define CONFIG_SGL_FONT_CONSOLAS32                                 (0)  /* Enable Consolas32 font */
 #endif
 
 #if !(CONFIG_SGL_THEME_DARK || CONFIG_SGL_THEME_LIGHT)
 #   ifndef CONFIG_SGL_THEME_DEFAULT
-#   define CONFIG_SGL_THEME_DEFAULT                                (1)
+#   define CONFIG_SGL_THEME_DEFAULT                                (1)  /* Default theme if not specified */
 #   endif
 #endif
 
 #ifndef CONFIG_SGL_BOOT_LOGO
-#define CONFIG_SGL_BOOT_LOGO                                       (1)
+#define CONFIG_SGL_BOOT_LOGO                                       (1)  /* Show boot logo */
 #endif
 
 #ifndef CONFIG_SGL_BOOT_ANIMATION
-#   define CONFIG_SGL_BOOT_ANIMATION                               (0)
+#   define CONFIG_SGL_BOOT_ANIMATION                               (0)  /* Boot animation enable */
 #elif (CONFIG_SGL_ANIMATION == 0)
 #   undef CONFIG_SGL_BOOT_ANIMATION
-#   define CONFIG_SGL_BOOT_ANIMATION                               (0)
+#   define CONFIG_SGL_BOOT_ANIMATION                               (0)  /* Force disable if animation off */
 #endif
 
 #ifdef __cplusplus

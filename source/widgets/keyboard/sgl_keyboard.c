@@ -146,7 +146,7 @@ static const sgl_font_table_t font_table[] = {
     {.bitmap_index = 711, .adv_w = 368, .box_w = 8, .box_h = 12, .ofs_x = 8, .ofs_y = 2}
 };
 
-static const uint32_t unicode_list_0[] = {
+static const uint16_t unicode_list_0[] = {
     0x0000, 0xe81e, 0xe866, 0xe997, 0xe998, 0xea0a, 0xea0b
 };
 
@@ -313,7 +313,7 @@ static inline uint8_t keyboard_index_to_ascii(uint8_t keymode, uint8_t index)
 }
 
 
-static int8_t keyboard_pos_to_index(int16_t x, int16_t y, sgl_keyboard_t *keyboard, int16_t width, int16_t height)
+static int8_t keyboard_pos_to_index(int16_t x, int16_t y, sgl_keyboard_t *keyboard, int16_t width, int16_t height, sgl_area_t *area)
 {
     sgl_obj_t *obj = &keyboard->obj;
     int16_t index = 0, x_index = -1, y_index = -1, key_mode = KEYBOARD_KEY_MODE(keyboard->key_mode);
@@ -360,6 +360,8 @@ static int8_t keyboard_pos_to_index(int16_t x, int16_t y, sgl_keyboard_t *keyboa
         index += keyboard_btn_count[key_mode][i];
     }
 
+    *area = btn;
+
     return (index + x_index);
 }
 
@@ -373,7 +375,7 @@ static int8_t keyboard_pos_to_index(int16_t x, int16_t y, sgl_keyboard_t *keyboa
  */
 static void sgl_keyboard_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_keyboard_t *keyboard = (sgl_keyboard_t*)obj;
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
     int16_t body_w = obj->coords.x2 - obj->coords.x1 + 1;
     int16_t body_h = obj->coords.y2 - obj->coords.y1 + 1;
 
@@ -384,7 +386,7 @@ static void sgl_keyboard_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
     const sgl_font_t *font = keyboard->font;
     int16_t btn_width[KEYBOARD_BTN_COLUMNS] = {0};
     int16_t btn_height[KEYBOARD_BTN_LINES] = {0};
-    sgl_rect_t btn_coords = {0}, btn_area = {0};
+    sgl_rect_t btn_coords = {0}, btn_area;
 
     /* calculate button height */
     sgl_split_len(keybd_btn_height, KEYBOARD_BTN_LINES, body_h, keyboard->key_margin, btn_height);
@@ -438,9 +440,9 @@ static void sgl_keyboard_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
 
         keyboard->btn_desc.color = btn_color;
     }
-    else if(evt->type == SGL_EVENT_PRESSED || evt->type == SGL_EVENT_OPTION_TAP) {
+    else if (evt->type == SGL_EVENT_PRESSED || evt->type == SGL_EVENT_OPTION_TAP) {
+        index = keyboard_pos_to_index(evt->pos.x, evt->pos.y, keyboard, body_w, body_h, &keyboard->btn_area);
         if  (evt->type == SGL_EVENT_PRESSED) {
-            index = keyboard_pos_to_index(evt->pos.x, evt->pos.y, keyboard, body_w, body_h);
             if(index < 0) {
                 return;
             }
@@ -451,14 +453,17 @@ static void sgl_keyboard_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
         if(key_ascii == KEYBOARD_KEY_TO_UPPER) {
             keyboard->key_mode = KEYBOARD_KEYMODE_UPPER;
             keyboard->key_index = KEYBOARD_KEY_INVALID;
+            goto dirty;
         }
         else if(key_ascii == KEYBOARD_KEY_TO_LOWER) {
             keyboard->key_mode = KEYBOARD_KEYMODE_LOWER;
             keyboard->key_index = KEYBOARD_KEY_INVALID;
+            goto dirty;
         }
         else if(key_ascii == KEYBOARD_KEY_TO_SPEC) {
             keyboard->key_mode = KEYBOARD_KEYMODE_SPEC;
             keyboard->key_index = KEYBOARD_KEY_INVALID;
+            goto dirty;
         }
         else if(key_ascii == KEYBOARD_KEY_TO_CLOSE) {
             sgl_obj_set_destroyed(obj);
@@ -471,11 +476,11 @@ static void sgl_keyboard_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
             }
         }
 
-        sgl_obj_set_dirty(obj);
+        sgl_obj_update_area(&keyboard->btn_area);
     }
     else if(evt->type == SGL_EVENT_RELEASED) {
+        sgl_obj_update_area(&keyboard->btn_area);
         keyboard->key_index = KEYBOARD_KEY_INVALID;
-        sgl_obj_set_dirty(obj);
     }
     else if(evt->type == SGL_EVENT_DRAW_INIT) {
         keyboard->opcode = 0;
@@ -497,8 +502,11 @@ static void sgl_keyboard_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_even
         if (keyboard->key_index >= KEYBOARD_BTN_NUM) {
             keyboard->key_index = 0;
         }
-        sgl_obj_set_dirty(obj);
+        sgl_obj_update_area(&keyboard->btn_area);
     }
+    return;
+dirty:
+    sgl_obj_set_dirty(obj);
 }
 
 
@@ -527,6 +535,7 @@ sgl_obj_t* sgl_keyboard_create(sgl_obj_t* parent)
     obj->needinit  = 1;
 
     keyboard->body_desc.alpha = SGL_THEME_ALPHA;
+    keyboard->body_desc.border_alpha = SGL_THEME_ALPHA;
     keyboard->body_desc.color = SGL_THEME_COLOR;
     keyboard->body_desc.radius = SGL_THEME_RADIUS;
     keyboard->body_desc.border = 1;
@@ -549,3 +558,265 @@ sgl_obj_t* sgl_keyboard_create(sgl_obj_t* parent)
     return obj;
 }
 
+/**
+ * @brief set keyboard color
+ * @param obj keyboard object
+ * @param color color
+ * @return none
+ */
+void sgl_keyboard_set_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
+    keyboard->body_desc.color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set keyboard alpha
+ * @param obj keyboard object
+ * @param alpha alpha [0 ~ 255]
+ * @return none
+ */
+void sgl_keyboard_set_alpha(sgl_obj_t *obj, uint8_t alpha)
+{
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
+    keyboard->body_desc.alpha = alpha;
+    keyboard->body_desc.border_alpha = alpha;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set keyboard main body alpha
+ * @param obj keyboard object
+ * @param alpha alpha [0 ~ 255]
+ * @return none
+ */
+void sgl_keyboard_set_main_alpha(sgl_obj_t *obj, uint8_t alpha)
+{
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
+    keyboard->body_desc.alpha = alpha;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set keyboard radius
+ * @param obj keyboard object
+ * @param radius radius [0 ~ 255]
+ * @return none
+ */
+void sgl_keyboard_set_radius(sgl_obj_t *obj, uint8_t radius)
+{
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
+    sgl_obj_set_radius(obj, radius);
+    keyboard->body_desc.radius = obj->radius;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set keyboard pixmap
+ * @param obj keyboard object
+ * @param pixmap pixmap
+ * @return none
+ */
+void sgl_keyboard_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pixmap)
+{
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
+    keyboard->body_desc.pixmap = pixmap;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set keyboard border color
+ * @param obj keyboard object
+ * @param color border color
+ * @return none
+ * 
+ */
+void sgl_keyboard_set_border_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
+    keyboard->body_desc.border_color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set keyboard border width
+ * @param obj keyboard object
+ * @param width border width [0 ~ 255]
+ * @return none
+ */
+void sgl_keyboard_set_border_width(sgl_obj_t *obj, uint8_t width)
+{
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
+    keyboard->btn_desc.border = width;
+    sgl_obj_set_border_width(obj, width);
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set keyboard border alpha
+ * @param obj keyboard object
+ * @param alpha border alpha [0 ~ 255]
+ * @return none
+ */
+void sgl_keyboard_set_border_alpha(sgl_obj_t *obj, uint8_t alpha)
+{
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
+    keyboard->body_desc.border_alpha = alpha;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set keyboard text color
+ * @param obj keyboard object
+ * @param color text color
+ * @return none
+ */
+void sgl_keyboard_set_text_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
+    keyboard->text_color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set keyboard text font
+ * @param obj keyboard object
+ * @param font text font
+ * @return none
+ */
+void sgl_keyboard_set_text_font(sgl_obj_t *obj, const sgl_font_t *font)
+{
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
+    keyboard->font = font;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set keyboard button radius
+ * @param obj keyboard object
+ * @param radius button radius [0 ~ 255]
+ * @return none
+ */
+void sgl_keyboard_set_btn_radius(sgl_obj_t *obj, uint8_t radius)
+{
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
+    keyboard->btn_desc.radius = radius;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set keyboard button alpha
+ * @param obj keyboard object
+ * @param alpha button alpha [0 ~ 255]
+ * @return none
+ */
+void sgl_keyboard_set_btn_alpha(sgl_obj_t *obj, uint8_t alpha)
+{
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
+    keyboard->btn_desc.alpha = alpha;
+    keyboard->btn_desc.border_alpha = alpha;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set keyboard button main alpha
+ * @param obj keyboard object
+ * @param alpha button alpha [0 ~ 255]
+ * @return none
+ */
+void sgl_keyboard_set_btn_main_alpha(sgl_obj_t *obj, uint8_t alpha)
+{
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
+    keyboard->btn_desc.alpha = alpha;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set keyboard button color
+ * @param obj keyboard object
+ * @param color button color
+ * @return none
+ */
+void sgl_keyboard_set_btn_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
+    keyboard->btn_desc.color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set keyboard button pixmap
+ * @param obj keyboard object
+ * @param pixmap button pixmap
+ * @return none
+ */
+void sgl_keyboard_set_btn_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pixmap)
+{
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
+    keyboard->btn_desc.pixmap = pixmap;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set keyboard button border color
+ * @param obj keyboard object
+ * @param color button border color
+ * @return none
+ */
+void sgl_keyboard_set_btn_border_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
+    keyboard->btn_desc.border_color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set keyboard button border width
+ * @param obj keyboard object
+ * @param width button border width [0 ~ 255]
+ * @return none
+ */
+void sgl_keyboard_set_btn_border_width(sgl_obj_t *obj, uint8_t width)
+{
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
+    keyboard->btn_desc.border = width;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set keyboard button border alpha
+ * @param obj keyboard object
+ * @param alpha button border alpha [0 ~ 255]
+ * @return none
+ */
+void sgl_keyboard_set_btn_border_alpha(sgl_obj_t *obj, uint8_t alpha)
+{
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
+    keyboard->btn_desc.border_alpha = alpha;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief get keyboard opcode
+ * @param obj keyboard object
+ * @return opcode [0 ~ 255]
+ */
+uint8_t sgl_keyboard_get_opcode(sgl_obj_t *obj)
+{
+    return ((sgl_keyboard_t*)obj)->opcode;
+}
+
+
+/**
+ * @brief set keyboard text buffer
+ * @param obj keyboard object
+ * @param buffer edit buffer
+ * @param buf_max_len edit buffer max length
+ */
+void sgl_keyboard_set_textarea(sgl_obj_t *obj, char *buffer, int buf_max_len)
+{
+    sgl_keyboard_t *keyboard = sgl_container_of(obj, sgl_keyboard_t, obj);
+    keyboard->edit = buffer;
+    keyboard->edit_max_len = buf_max_len;
+}

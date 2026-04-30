@@ -1,4 +1,4 @@
-/* source/include/sgl_misc.c
+/* source/core/sgl_misc.c
  *
  * MIT License
  *
@@ -79,7 +79,7 @@ static void sgl_logo_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t 
             rect.x2 = sgl_logo_s[i][2] * scale_x + obj->area.x1 - 1;
             rect.y2 = sgl_logo_s[i][3] * scale_y + obj->area.y1 - 1;
 
-            sgl_draw_fill_rect_with_border(surf, &clip, &rect, obj->radius, SGL_COLOR_RED, SGL_COLOR_BLUE, 0, logo->alpha);
+            sgl_draw_fill_rect(surf, &clip, &rect, obj->radius, SGL_COLOR_RED, logo->alpha);
         }
 
         for (uint32_t i = 0; i < SGL_ARRAY_SIZE(sgl_logo_g); i++) {
@@ -88,7 +88,7 @@ static void sgl_logo_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t 
             rect.x2 = sgl_logo_g[i][2] * scale_x + obj->area.x1 - 1;
             rect.y2 = sgl_logo_g[i][3] * scale_y + obj->area.y1 - 1;
 
-            sgl_draw_fill_rect_with_border(surf, &clip, &rect, obj->radius, SGL_COLOR_GREEN, SGL_COLOR_BLUE, 0, logo->alpha);
+            sgl_draw_fill_rect(surf, &clip, &rect, obj->radius, SGL_COLOR_GREEN, logo->alpha);
         }
 
         for (uint32_t i = 0; i < SGL_ARRAY_SIZE(sgl_logo_l); i++) {
@@ -97,7 +97,7 @@ static void sgl_logo_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t 
             rect.x2 = sgl_logo_l[i][2] * scale_x + obj->area.x1 - 1;
             rect.y2 = sgl_logo_l[i][3] * scale_y + obj->area.y1 - 1;
 
-            sgl_draw_fill_rect_with_border(surf, &clip, &rect, obj->radius, SGL_COLOR_BLUE, SGL_COLOR_BLUE, 0, logo->alpha);
+            sgl_draw_fill_rect(surf, &clip, &rect, obj->radius, SGL_COLOR_BLUE, logo->alpha);
         }
     }
 }
@@ -153,14 +153,14 @@ void sgl_boot_logo(void)
     sgl_anim_set_start_value(anim, SGL_ALPHA_MAX);
     sgl_anim_set_end_value(anim, SGL_ALPHA_MIN);
     sgl_anim_set_path(anim, sgl_logo_anim, SGL_ANIM_PATH_LINEAR);
-    sgl_anim_start(anim);
+    sgl_anim_start(anim, SGL_ANIM_REPEAT_ONCE);
 
     while (!sgl_anim_is_finished(anim)) {
-        sgl_task_handle();
+        sgl_task_handler();
     }
 
-    sgl_anim_free(anim);
-    sgl_obj_delete(logo);
+    sgl_anim_delete(anim);
+    sgl_obj_delete_sync(logo);
 }
 
 #endif // !CONFIG_SGL_BOOT_LOGO

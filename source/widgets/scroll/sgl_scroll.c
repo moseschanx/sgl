@@ -43,7 +43,7 @@
  */
 static void sgl_scroll_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_scroll_t *scroll = (sgl_scroll_t*)obj;
+    sgl_scroll_t *scroll = sgl_container_of(obj, sgl_scroll_t, obj);
     sgl_rect_t fill = {0};
     sgl_color_t tmp = scroll->desc.color;
     uint16_t len = 0, pos = 0;
@@ -153,4 +153,92 @@ sgl_obj_t* sgl_scroll_create(sgl_obj_t* parent)
     scroll->desc.pixmap = NULL;
 
     return obj;
+}
+
+void sgl_scroll_bind_obj(sgl_obj_t *obj, sgl_obj_t *bind)
+{
+    SGL_ASSERT(obj != NULL);
+    sgl_scroll_t *scroll = sgl_container_of(obj, sgl_scroll_t, obj);
+    scroll->bind = bind;
+    sgl_obj_set_dirty(obj);
+}
+
+void sgl_scroll_set_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    SGL_ASSERT(obj != NULL);
+    sgl_scroll_t *scroll = sgl_container_of(obj, sgl_scroll_t, obj);
+    scroll->desc.color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+void sgl_scroll_set_alpha(sgl_obj_t *obj, uint8_t alpha)
+{
+    SGL_ASSERT(obj != NULL);
+    sgl_scroll_t *scroll = sgl_container_of(obj, sgl_scroll_t, obj);
+    scroll->desc.alpha = alpha;
+    sgl_obj_set_dirty(obj);
+}
+
+void sgl_scroll_set_radius(sgl_obj_t *obj, uint16_t radius)
+{
+    SGL_ASSERT(obj != NULL);
+    sgl_scroll_t *scroll = sgl_container_of(obj, sgl_scroll_t, obj);
+    scroll->desc.radius = radius;
+    sgl_obj_set_dirty(obj);
+}
+
+void sgl_scroll_set_border_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    SGL_ASSERT(obj != NULL);
+    sgl_scroll_t *scroll = sgl_container_of(obj, sgl_scroll_t, obj);
+    scroll->desc.border_color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+void sgl_scroll_set_border_width(sgl_obj_t *obj, uint8_t width)
+{
+    SGL_ASSERT(obj != NULL);
+    sgl_scroll_t *scroll = sgl_container_of(obj, sgl_scroll_t, obj);
+    scroll->desc.border = width;
+    sgl_obj_set_border_width(obj, width);
+    sgl_obj_set_dirty(obj);
+}
+
+void sgl_scroll_set_width(sgl_obj_t *obj, uint8_t width)
+{
+    SGL_ASSERT(obj != NULL);
+    sgl_scroll_t *scroll = sgl_container_of(obj, sgl_scroll_t, obj);
+    scroll->width = width;
+    sgl_obj_set_dirty(obj);
+}
+
+void sgl_scroll_set_direct(sgl_obj_t *obj, uint8_t direct)
+{
+    SGL_ASSERT(obj != NULL);
+    sgl_scroll_t *scroll = sgl_container_of(obj, sgl_scroll_t, obj);
+    scroll->direct = direct;
+    sgl_obj_set_dirty(obj);
+}
+
+void sgl_scroll_set_hidden(sgl_obj_t *obj, uint8_t hidden)
+{
+    SGL_ASSERT(obj != NULL);
+    sgl_scroll_t *scroll = sgl_container_of(obj, sgl_scroll_t, obj);
+    scroll->hidden = hidden;
+    sgl_obj_set_dirty(obj);
+}
+
+void sgl_scroll_set_value(sgl_obj_t *obj, uint8_t value)
+{
+    SGL_ASSERT(obj != NULL);
+    sgl_scroll_t *scroll = sgl_container_of(obj, sgl_scroll_t, obj);
+    scroll->value = value;
+    sgl_obj_set_dirty(obj);
+}
+
+uint8_t sgl_scroll_get_value(sgl_obj_t *obj)
+{
+    SGL_ASSERT(obj != NULL);
+    sgl_scroll_t *scroll = sgl_container_of(obj, sgl_scroll_t, obj);
+    return scroll->value;
 }

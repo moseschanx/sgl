@@ -35,37 +35,52 @@
 
 static void sgl_slider_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_slider_t *slider = (sgl_slider_t*)obj;
-
-    sgl_draw_rect_t desc = {
-        .alpha = slider->alpha,
-        .border = obj->border,
-        .border_color = slider->border_color,
-        .pixmap = slider->pixmap,
-        .color = slider->track_color,
-        .radius = obj->radius,
-    };
-
-    sgl_area_t knob = {
-        .x1 = obj->coords.x1 + obj->border,
-        .x2 = obj->coords.x2 - obj->border,
-        .y1 = obj->coords.y1 + obj->border,
-        .y2 = obj->coords.y2 - obj->border,
-    };
+    sgl_slider_t *slider = sgl_container_of(obj, sgl_slider_t, obj);
+    int16_t w = obj->coords.x2 - obj->coords.x1 + 1;
+    int16_t h = obj->coords.y2 - obj->coords.y1 + 1;
+    int16_t knob_r, fill_pos, thickness, radius;
+    sgl_rect_t bar;
+    sgl_area_t desc_area = obj->area;
 
     if(evt->type == SGL_EVENT_DRAW_MAIN) {
         if(slider->direct == SGL_DIRECT_HORIZONTAL) {
-            knob.x2 = obj->coords.x1 + (obj->coords.x2 - obj->coords.x1) * slider->value / 100 - obj->border;
+            knob_r = h / 2 - 1;
+            thickness = sgl_min(slider->thickness, knob_r);
+            bar.x1 = obj->coords.x1 + knob_r;
+            bar.x2 = obj->coords.x2 - knob_r;
+            bar.y1 = obj->coords.y1 + (h - thickness) / 2;
+            bar.y2 = bar.y1 + thickness - 1;
+            fill_pos = obj->coords.x1 + (w) * slider->value / 100 - obj->border;
+            fill_pos = sgl_clamp(fill_pos, bar.x1, bar.x2);
+            desc_area.x1 = sgl_max(bar.x1, obj->area.x1);
+            desc_area.x2 = sgl_min(fill_pos, obj->area.x2);
+
+            radius = sgl_min(thickness / 2, obj->radius);
+            sgl_draw_fill_rect(surf, &desc_area, &bar, radius, slider->fill_color, SGL_ALPHA_MAX);
+            desc_area.x1 = sgl_max(fill_pos, obj->area.x1);
+            desc_area.x2 = sgl_min(bar.x2, obj->area.x2);
+            sgl_draw_fill_rect(surf, &desc_area, &bar, radius, slider->track_color, SGL_ALPHA_MAX);
+            sgl_draw_fill_circle(surf, &obj->area, fill_pos, sgl_mid(bar.y1, bar.y2), knob_r, slider->knob_color, SGL_ALPHA_MAX);
         }
         else {
-            knob.y1 = obj->coords.y2 - (obj->coords.y2 - obj->coords.y1) * slider->value / 100 + obj->border;
+            knob_r = w / 2 - 1;
+            thickness = sgl_min(slider->thickness, knob_r);
+            bar.y1 = obj->coords.y1 + knob_r;
+            bar.y2 = obj->coords.y2 - knob_r;
+            bar.x1 = obj->coords.x1 + (w - thickness) / 2;
+            bar.x2 = bar.x1 + thickness - 1;
+            fill_pos = obj->coords.y2 - (h) * slider->value / 100 + obj->border;
+            fill_pos = sgl_clamp(fill_pos, bar.y1, bar.y2);
+            desc_area.y2 = sgl_min(bar.y2, obj->area.y2);
+            desc_area.y1 = sgl_max(fill_pos, obj->area.y1);
+
+            radius = sgl_min(thickness / 2, obj->radius);
+            sgl_draw_fill_rect(surf, &desc_area, &bar, radius, slider->fill_color, SGL_ALPHA_MAX);
+            desc_area.y2 = sgl_min(fill_pos, obj->area.y2);
+            desc_area.y1 = sgl_max(bar.y1, obj->area.y1);
+            sgl_draw_fill_rect(surf, &desc_area, &bar, radius, slider->track_color, SGL_ALPHA_MAX);
+            sgl_draw_fill_circle(surf, &obj->area, sgl_mid(bar.x1, bar.x2), fill_pos, knob_r, slider->knob_color, SGL_ALPHA_MAX);
         }
-
-        /* set knob area */
-        sgl_area_selfclip(&knob, &obj->area);
-
-        sgl_draw_rect(surf, &obj->area, &obj->coords, &desc);
-        sgl_draw_fill_rect_with_border(surf, &knob, &obj->coords, obj->radius, slider->fill_color, slider->border_color, obj->border, slider->alpha);
     }
     else if(evt->type == SGL_EVENT_PRESSED ||
         evt->type == SGL_EVENT_MOVE_DOWN || evt->type == SGL_EVENT_MOVE_UP || evt->type == SGL_EVENT_MOVE_LEFT || evt->type == SGL_EVENT_MOVE_RIGHT
@@ -113,11 +128,121 @@ sgl_obj_t* sgl_slider_create(sgl_obj_t* parent)
     sgl_obj_set_border_width(obj, SGL_THEME_BORDER_WIDTH);
 
     slider->direct = SGL_DIRECT_HORIZONTAL;
-    slider->alpha = SGL_THEME_ALPHA;
-    slider->track_color = SGL_THEME_COLOR;
-    slider->border_color = SGL_THEME_BORDER_COLOR;
+    slider->track_color = sgl_color_mixer(SGL_THEME_COLOR, SGL_THEME_BG_COLOR, 128);
+    slider->knob_color = SGL_THEME_BG_COLOR;
     slider->fill_color = SGL_THEME_BG_COLOR;
-    slider->alpha = SGL_THEME_ALPHA;
-
+    slider->thickness = 255;
     return obj;
+}
+
+/**
+ * @brief set the fill color of the slider
+ * @param obj slider object
+ * @param color fill color
+ * @return none
+ */
+void sgl_slider_set_fill_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_slider_t *slider = sgl_container_of(obj, sgl_slider_t, obj);
+    slider->fill_color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set the track color of the slider
+ * @param obj slider object
+ * @param color track color
+ * @return none
+ */
+void sgl_slider_set_track_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_slider_t *slider = sgl_container_of(obj, sgl_slider_t, obj);
+    slider->track_color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set the slider knob color
+ * @param obj slider object
+ * @param color knob color
+ */
+void sgl_slider_set_knob_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_slider_t *slider = sgl_container_of(obj, sgl_slider_t, obj);
+    slider->knob_color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set the slider direction
+ * @param obj slider object
+ * @param direct slider direction
+ * @return none
+ * @note direct : SGL_DIRECT_HORIZONTAL or SGL_DIRECT_VERTICAL
+ */
+void sgl_slider_set_direct(sgl_obj_t *obj, uint8_t direct)
+{
+    sgl_slider_t *slider = sgl_container_of(obj, sgl_slider_t, obj);
+    slider->direct = direct;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set the slider radius
+ * @param obj slider object
+ * @param radius slider radius
+ * @return none
+ */
+void sgl_slider_set_radius(sgl_obj_t *obj, uint8_t radius)
+{
+    sgl_obj_set_radius(obj, radius);
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set the slider knob thickness
+ * @param obj slider object
+ * @param thickness knob thickness
+ * @return none
+ */
+void sgl_slider_set_thickness(sgl_obj_t *obj, uint8_t thickness)
+{
+    sgl_slider_t *slider = sgl_container_of(obj, sgl_slider_t, obj);
+    slider->thickness = sgl_max(thickness, 4);
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set the slider value
+ * @param obj slider object
+ * @param value slider value
+ * @return none
+ */
+void sgl_slider_set_value(sgl_obj_t *obj, uint8_t value)
+{
+    sgl_slider_t *slider = sgl_container_of(obj, sgl_slider_t, obj);
+    slider->value = value;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief get the slider value
+ * @param obj slider object
+ * @return slider value
+ */
+uint8_t sgl_slider_get_value(sgl_obj_t *obj)
+{
+    sgl_slider_t *slider = sgl_container_of(obj, sgl_slider_t, obj);
+    return slider->value;
+}
+
+/**
+ * @brief set the slider border width
+ * @param obj slider object
+ * @param width border width
+ */
+void sgl_slider_set_border_width(sgl_obj_t *obj, uint8_t width)
+{
+    sgl_obj_set_border_width(obj, width);
+    sgl_obj_set_dirty(obj);
 }

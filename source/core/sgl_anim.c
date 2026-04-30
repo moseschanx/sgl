@@ -31,10 +31,9 @@
 
 #if (CONFIG_SGL_ANIMATION)
 
-sgl_anim_ctx_t anim_ctx = {
+sgl_anim_ctx_t sgl_anim_ctx = {
     .anim_list_head = NULL,
     .anim_list_tail = NULL,
-    .anim_cnt = 0,
 };
 
 
@@ -47,7 +46,6 @@ void sgl_anim_init(sgl_anim_t *anim)
 {
     anim->next = NULL;
     anim->data = NULL;
-    anim->act_time = 0;
     anim->act_delay = 0;
     anim->act_duration = 0;
     anim->start_value = 0;
@@ -55,11 +53,10 @@ void sgl_anim_init(sgl_anim_t *anim)
 
     anim->path_cb = NULL;
     anim->path_algo = NULL;
-    anim->repeat_cnt = 1;
 
     anim->finish_cb = NULL;
     anim->auto_free = 0;
-    anim->finished = 0;
+    anim->finished = 1;
 }
 
 
@@ -86,19 +83,19 @@ sgl_anim_t* sgl_anim_create(void)
  * @param  anim animation object
  * @return none
 */
-void sgl_anim_add(sgl_anim_t *anim)
+static void sgl_anim_add(sgl_anim_t *anim)
 {
-    if (anim_ctx.anim_list_tail != NULL) {
-        anim_ctx.anim_list_tail->next = anim;
-        anim_ctx.anim_list_tail = anim;
+    if (sgl_anim_ctx.anim_list_tail != NULL) {
+        sgl_anim_ctx.anim_list_tail->next = anim;
+        sgl_anim_ctx.anim_list_tail = anim;
     }
     else {
-        anim_ctx.anim_list_head = anim;
-        anim_ctx.anim_list_tail = anim;
+        sgl_anim_ctx.anim_list_head = anim;
+        sgl_anim_ctx.anim_list_tail = anim;
     }
 
     anim->next = NULL;
-    anim_ctx.anim_cnt++;
+    anim->finished = 0;
 }
 
 
@@ -107,21 +104,20 @@ void sgl_anim_add(sgl_anim_t *anim)
  * @param  anim animation object
  * @return none
 */
-void sgl_anim_remove(sgl_anim_t *anim)
+static void sgl_anim_remove(sgl_anim_t *anim)
 {
     SGL_ASSERT(anim != NULL);
     sgl_anim_t *prev = NULL;
 
-    if (anim_ctx.anim_list_head == anim) {
-        anim_ctx.anim_list_head = anim->next;
-        if (anim_ctx.anim_list_head == NULL) {
-            anim_ctx.anim_list_tail = NULL;
+    if (sgl_anim_ctx.anim_list_head == anim) {
+        sgl_anim_ctx.anim_list_head = anim->next;
+        if (sgl_anim_ctx.anim_list_head == NULL) {
+            sgl_anim_ctx.anim_list_tail = NULL;
         }
-        anim_ctx.anim_cnt--;
         return;
     }
 
-    prev = anim_ctx.anim_list_head;
+    prev = sgl_anim_ctx.anim_list_head;
     while (prev != NULL && prev->next != anim) {
         prev = prev->next;
     }
@@ -131,11 +127,64 @@ void sgl_anim_remove(sgl_anim_t *anim)
     }
     prev->next = anim->next;
 
-    if (anim == anim_ctx.anim_list_tail) {
-        anim_ctx.anim_list_tail = prev;
+    if (anim == sgl_anim_ctx.anim_list_tail) {
+        sgl_anim_ctx.anim_list_tail = prev;
+    }
+}
+
+
+/**
+ * @brief start animation
+ * @param  anim animation object
+ * @para  repeat_cnt repeat count of animation
+ * @return none
+*/
+void sgl_anim_start(sgl_anim_t *anim, uint32_t repeat_cnt)
+{
+    SGL_ASSERT(anim != NULL);
+    if (anim->finished && repeat_cnt) {
+        sgl_anim_add(anim);
+        anim->finished = 0;
     }
 
-    anim_ctx.anim_cnt--;
+    if (anim->act_duration == 0) {
+        SGL_LOG_WARN("animation duration is 0, you must set animation duration larger than 0");
+        return;
+    }
+
+    anim->act_time = sgl_tick_get() + anim->act_delay;
+    anim->repeat_cnt = repeat_cnt & SGL_ANIM_REPEAT_LOOP;
+    anim->last_value = anim->start_value;
+}
+
+
+/**
+ * @brief stop animation
+ * @param  anim animation object
+ * @return none
+*/
+void sgl_anim_stop(sgl_anim_t *anim)
+{
+    SGL_ASSERT(anim != NULL);
+    if (!anim->finished) {
+        sgl_anim_remove(anim);
+        anim->finished = 1;
+    }
+}
+
+
+/**
+ * @brief delete animation object
+ * @param anim animation object
+ * @return none
+*/
+void sgl_anim_delete(sgl_anim_t *anim)
+{
+    SGL_ASSERT(anim != NULL);
+    if (!anim->finished) {
+        sgl_anim_stop(anim);
+    } 
+    sgl_free(anim);
 }
 
 
@@ -148,28 +197,23 @@ void sgl_anim_remove(sgl_anim_t *anim)
 void sgl_anim_task(void)
 {
     int32_t value = 0;
-    uint32_t elaps_time = 0;
-    sgl_anim_t *anim = anim_ctx.anim_list_head, *next = NULL;
+    uint16_t elaps_time = 0;
+    const uint32_t current_tick = sgl_tick_get();
+    sgl_anim_t *anim = NULL, *next = NULL;
 
-    /* if no anim object, do nothing */
-    if (unlikely(anim_ctx.anim_cnt == 0)) {
-        return;
-    }
-
-    while (anim != NULL) {
-        anim->act_time += sgl_tick_get();
-
-        if(anim->act_time < anim->act_delay) {
+    sgl_anim_for_each_safe(anim, next, &sgl_anim_ctx) {
+        if(current_tick < anim->act_time) {
             continue;
         }
-
-        elaps_time = anim->act_time - anim->act_delay;
+        elaps_time = current_tick - anim->act_time;
 
         /* check callback function for debug */
         SGL_ASSERT(anim->path_cb != NULL);
         SGL_ASSERT(anim->path_algo != NULL);
         value = anim->path_algo(sgl_min(elaps_time, anim->act_duration), anim->act_duration, anim->start_value, anim->end_value);
-        anim->path_cb(anim, value);
+        if (value != anim->last_value) {
+            anim->path_cb(anim, value);
+        }
 
         if (elaps_time > anim->act_duration) {
             if (anim->repeat_cnt != SGL_ANIM_REPEAT_LOOP) {
@@ -180,25 +224,19 @@ void sgl_anim_task(void)
                 anim->finish_cb(anim);
             }
 
-            /* reset anim active time */
-            anim->act_time = 0;
-
             /* remove anim object if repeat count is 0 */
             if (anim->repeat_cnt == 0) {
-                anim->finished = 1;
                 sgl_anim_stop(anim);
 
                 /* if animation is auto free, free it */
                 if (anim->auto_free) {
-                    next = anim->next;
                     sgl_free(anim);
-                    anim = next;
                     continue;
                 }
             }
-        }
 
-        anim = anim->next;
+            anim->act_time += elaps_time + anim->act_delay;
+        }
     }
 }
 
@@ -221,12 +259,12 @@ void sgl_anim_task(void)
  *                  Uses 32-bit integer arithmetic to avoid floating-point operations
  *                  for better performance on embedded systems
  */
-int32_t sgl_anim_path_linear(uint32_t elaps, uint32_t duration, int32_t start, int32_t end)
+int32_t sgl_anim_path_linear(uint16_t elaps, uint16_t duration, int32_t start, int32_t end)
 {
     int64_t progress_fixed, delta, result;
 
     // If duration is zero or elapsed time exceeds duration, return end value
-    if (duration == 0 || elaps >= duration) {
+    if (elaps >= duration) {
         return (int32_t)end;
     }
 
@@ -262,7 +300,7 @@ int32_t sgl_anim_path_linear(uint32_t elaps, uint32_t duration, int32_t start, i
  * @param end       End value
  * @return          Interpolated value at current time
  */
-int32_t sgl_anim_path_ease_in_out(uint32_t elaps, uint32_t duration, int32_t start, int32_t end)
+int32_t sgl_anim_path_ease_in_out(uint16_t elaps, uint16_t duration, int32_t start, int32_t end)
 {
     int32_t t_180, cos_val, delta;
     if (elaps >= duration)
@@ -297,7 +335,7 @@ int32_t sgl_anim_path_ease_in_out(uint32_t elaps, uint32_t duration, int32_t sta
  * @param end       End value
  * @return          Interpolated value at current time
  */
-int32_t sgl_anim_path_ease_out(uint32_t elaps, uint32_t duration, int32_t start, int32_t end)
+int32_t sgl_anim_path_ease_out(uint16_t elaps, uint16_t duration, int32_t start, int32_t end)
 {
     int32_t angle, sin_val, delta;
     if (elaps >= duration)
@@ -327,7 +365,7 @@ int32_t sgl_anim_path_ease_out(uint32_t elaps, uint32_t duration, int32_t start,
  * @param end       End value
  * @return          Interpolated value at current time
  */
-int32_t sgl_anim_path_ease_in(uint32_t elaps, uint32_t duration, int32_t start, int32_t end)
+int32_t sgl_anim_path_ease_in(uint16_t elaps, uint16_t duration, int32_t start, int32_t end)
 {
     int32_t angle, cos_val, delta;
     if (elaps >= duration)
@@ -344,5 +382,42 @@ int32_t sgl_anim_path_ease_in(uint32_t elaps, uint32_t duration, int32_t start, 
     return start + ((delta * (32767 - cos_val)) >> 15);
 }
 
+
+/**
+ * sgl_anim_path_overshoot - Overshoot animation path
+ *
+ * This function creates an animation curve that overshoots the target end value
+ * slightly before settling back to it, creating a natural "bounce" or "spring-like"
+ * effect for a more dynamic and realistic animation.
+ *
+ * @param elaps     Elapsed time (ms) since the animation started
+ * @param duration  Total animation duration (ms)
+ * @param start     Initial value of the animated property at the start of the animation
+ * @param end       Target end value of the animated property
+ * @return          Interpolated value of the animated property at the current elapsed time
+ */
+int32_t sgl_anim_path_overshoot(uint16_t elaps, uint16_t duration, int32_t start, int32_t end)
+{
+    int64_t t, t1, t2, inv_t2, ease_back, diff, progress;
+    if (elaps >= duration)
+        return end;
+
+    t = (int64_t)elaps * 16384 / duration;
+    diff = end - start;
+
+    if (t < 11468) {
+        t1 = t * 16384 / 11468;
+        progress = (t1 * (32768 - t1)) >> 14; 
+        progress = (progress * 18841) >> 14; 
+    }
+    else {
+        t2 = (t - 11468) * 16384 / (16384 - 11468);
+        inv_t2 = 16384 - t2;
+        ease_back = (inv_t2 * inv_t2) >> 14;
+        progress = 16384 + (ease_back * (18841 - 16384) >> 14);
+    }
+
+    return start + (int32_t)((diff * progress) >> 14);
+}
 
 #endif // !CONFIG_SGL_ANIMATION

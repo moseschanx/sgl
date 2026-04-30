@@ -43,13 +43,13 @@
  */
 static void sgl_button_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_t *evt)
 {
-    sgl_button_t *button = (sgl_button_t*)obj;
+    sgl_button_t *button = sgl_container_of(obj, sgl_button_t, obj);
     sgl_pos_t align_pos;
-    sgl_rect_t fill_area;
     sgl_draw_rect_t rect = {
         .alpha = button->alpha,
         .color = button->color,
         .border = obj->border,
+        .border_alpha = button->alpha,
         .border_color = button->border_color,
         .pixmap = button->pixmap,
         .radius = obj->radius,
@@ -60,8 +60,7 @@ static void sgl_button_construct_cb(sgl_surf_t *surf, sgl_obj_t* obj, sgl_event_
 
         if(button->text) {
             SGL_ASSERT(button->font != NULL);
-            fill_area = sgl_obj_get_fill_rect(obj);
-            align_pos = sgl_get_text_pos(&fill_area, button->font, button->text, 0, (sgl_align_type_t)button->align);
+            align_pos = sgl_get_text_pos(&obj->coords, button->font, button->text, 0, (sgl_align_type_t)button->align);
 
             sgl_draw_string(surf, &obj->area, align_pos.x, align_pos.y, button->text, button->text_color, button->alpha, button->font);
         }
@@ -112,10 +111,138 @@ sgl_obj_t* sgl_button_create(sgl_obj_t* parent)
     button->border_color = SGL_THEME_BORDER_COLOR;
     button->pixmap = NULL;
 
-    button->text = " ";
+    button->text = NULL;
     button->text_color = SGL_THEME_TEXT_COLOR;
     button->font = sgl_get_system_font();
     button->align = SGL_ALIGN_CENTER;
 
     return obj;
+}
+
+/**
+ * @brief set button color
+ * @param obj: object pointer
+ * @param color: color
+ * @return none
+ */
+void sgl_button_set_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_button_t *button = sgl_container_of(obj, sgl_button_t, obj);
+    button->color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set button alpha
+ * @param obj: object pointer
+ * @param alpha: alpha
+ * @return none
+ */
+void sgl_button_set_alpha(sgl_obj_t *obj, uint8_t alpha)
+{
+    sgl_button_t *button = sgl_container_of(obj, sgl_button_t, obj);
+    button->alpha = alpha;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set button border width
+ * @param obj: object pointer
+ * @param width: border width
+ * @return none
+ */
+void sgl_button_set_border_width(sgl_obj_t *obj, uint8_t width)
+{
+    sgl_obj_set_border_width(obj, width);
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set button border color
+ * @param obj: object pointer
+ * @param color: border color
+ * @return none
+ */
+void sgl_button_set_border_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_button_t *button = sgl_container_of(obj, sgl_button_t, obj);
+    button->border_color = color;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set button pixmap
+ * @param obj: object pointer
+ * @param pixmap: pixmap pointer
+ * @return none
+ */
+void sgl_button_set_pixmap(sgl_obj_t *obj, const sgl_pixmap_t *pixmap)
+{
+    sgl_button_t *button = sgl_container_of(obj, sgl_button_t, obj);
+    button->pixmap = pixmap;
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set button radius
+ * @param obj: object pointer
+ * @param radius: radius
+ * @return none
+ */
+void sgl_button_set_radius(sgl_obj_t *obj, uint8_t radius)
+{
+    sgl_obj_set_radius(obj, radius);
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set button text
+ * @param obj: object pointer
+ * @param text: text
+ * @return none
+ */
+void sgl_button_set_text(sgl_obj_t *obj, const char *text)
+{
+    sgl_button_t *button = sgl_container_of(obj, sgl_button_t, obj);
+    button->text = text; 
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set button text color
+ * @param obj: object pointer
+ * @param color: text color
+ * @return none
+ */
+void sgl_button_set_text_color(sgl_obj_t *obj, sgl_color_t color)
+{
+    sgl_button_t *button = sgl_container_of(obj, sgl_button_t, obj);
+    button->text_color = color; 
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set button text align
+ * @param obj: object pointer
+ * @param align: align type
+ * @return none
+ */
+void sgl_button_set_text_align(sgl_obj_t *obj, uint8_t align)
+{
+    sgl_button_t *button = sgl_container_of(obj, sgl_button_t, obj);
+    button->align = align; 
+    sgl_obj_set_dirty(obj);
+}
+
+/**
+ * @brief set button text font
+ * @param obj: object pointer
+ * @param font: font pointer
+ * @return none
+ */
+void sgl_button_set_font(sgl_obj_t *obj, const sgl_font_t *font)
+{
+    sgl_button_t *button = sgl_container_of(obj, sgl_button_t, obj);
+    button->font = font; 
+    sgl_obj_set_dirty(obj);
 }

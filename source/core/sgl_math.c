@@ -124,6 +124,7 @@ static const uint8_t sqrt_error_init_table[32] = {
  * @brief Calculate the sine of an angle
  * @param angle: Angle in degrees such 0-359
  * @return sine of the angle from sin0_90_table
+ * @note This function has implemented angle normalization to the range of 0 to 360 degrees.
  */
 int32_t sgl_sin(int16_t angle)
 {
@@ -389,7 +390,7 @@ void sgl_split_len(const uint8_t *weight, int count, int16_t length, int16_t gap
  */
 void sgl_split_len_avg(int length, int count, int16_t gap, int16_t *out)
 {
-    int16_t available_length = length - (count + 1) * gap;
+    int16_t available_length = length - (count - 1) * gap;
     int16_t base = available_length / count;
     int16_t remainder = available_length % count;
 
